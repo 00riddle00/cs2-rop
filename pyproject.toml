@@ -1,0 +1,22 @@
+[project]
+name = "cs2-rop"
+version = "0.1.0"
+description = "Counter-Strike 2 Round Outcome Predictor"
+readme = "README.md"
+authors = [
+    { name = "Augustas Markevičius" },
+    { name = "Petras Radžiūnas" },
+    { name = "Titas Burinskas" },
+    { name = "Tomas Giedraitis" },
+]
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "awpy>=2.0.2",
+]
+
+[project.scripts]
+cs2-rop = "cs2_rop:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
