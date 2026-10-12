@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -13,13 +14,29 @@ import (
 )
 
 func main() {
-	demoPath := `..\demos\mouz-vs-spirit-m1-dust2.dem`
+	input := flag.String("input", "", "Path to the input .dem file")
+	output := flag.String("output", "", "Path to the output CSV file")
+	flag.Parse()
 
-	// Generate the output filename from the demo filename.
-	matchName := filepath.Base(demoPath)
-	matchName = matchName[:len(matchName)-len(filepath.Ext(matchName))]
-	outputPath := matchName + "_snapshots.csv"
+	if *input == "" {
+		log.Fatal("Missing required --input flag")
+	}
 
+	demoPath := *input
+	outputPath := *output
+
+	if outputPath == "" {
+		matchName := filepath.Base(demoPath)
+		matchName = matchName[:len(matchName)-len(filepath.Ext(matchName))]
+		outputPath = filepath.Join("..", "data", "processed", matchName+"_snapshots.csv")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {
+		log.Fatal("Could not create output directory: ", err)
+	}
+
+	// Overwrite the output CSV if it already exists.
+	// This is safe for generated datasets in data/processed/.
 	out, err := os.Create(outputPath)
 	if err != nil {
 		log.Fatal("Could not create CSV: ", err)
