@@ -66,19 +66,20 @@ venv/
 .idea/
 .vscode/
 
-# Counter-Strike demo files
-# Raw demos can exceed GitHub's 100 MiB file limit.
-*.dem
-
-# Raw and processed datasets
-#   Ignore datasets by default. Smaller datasets may be committed later
-#   if useful for reproducibility; update these rules accordingly.
-/data/raw/*
-!/data/raw/.gitkeep
-
-/data/processed/*
-!/data/processed/.gitkeep
-
 # Go binaries and test artifacts
 /bin/
 *.test
+
+# Raw datasets
+#   Counter-Strike demos can exceed GitHub's 100 MiB file limit.
+#   Ignore raw datasets by default. Smaller files may be committed later
+#   if useful for reproducibility; update these rules accordingly.
+*.dem
+/data/raw/*
+!/data/raw/.gitkeep
+
+# Processed datasets
+#   Small generated datasets may be committed for reproducibility.
+#   Reconsider this policy if datasets become substantially larger.
+#/data/processed/*
+#!/data/processed/.gitkeep
