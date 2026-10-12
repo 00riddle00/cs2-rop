@@ -1,0 +1,29 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [
+        "Augustas",
+        "awpy",
+        "Bioinformatics",
+        "Burinskas",
+        "codz",
+        "demoinfocs",
+        "Giedraitis",
+        "htmlcov",
+        "Ingame",
+        "ipython",
+        "Markevičius",
+        "markus",
+        "mouz",
+        "Petras",
+        "pycache",
+        "pytest",
+        "Radžiūnas",
+        "steamid",
+        "Titas"
+    ],
+    "ignoreWords": [],
+    "import": []
+}
