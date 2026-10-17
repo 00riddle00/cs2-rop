@@ -201,7 +201,7 @@ The [`Makefile`](./Makefile) lists its targets with `make help`. Useful shortcut
 - `make golint`: `go fmt` and `go vet` for Go.
 - `make shlint`: [ShellCheck](https://github.com/koalaman/shellcheck) and
   [shfmt](https://github.com/mvdan/sh) for shell scripts (install separately).
-- `make check`: Run all three lint/format targets.
+- `make lint`: Run all three lint/format targets.
 - `make clean`: Remove disposable caches, preserving environments and datasets.
 
 To lint and format without Make (including in native Windows PowerShell), run from
@@ -214,7 +214,7 @@ uv run ruff check . --fix
 uv run black .
 ```
 
-**Linting and check targets modify files** through automatic fixes and formatting.
+**Linting targets also modify files** through automatic fixes and formatting.
 Inspect `git diff` afterwards.
 
 When changing dependencies, commit [`uv.lock`](./uv.lock) alongside

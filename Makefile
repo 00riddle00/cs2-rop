@@ -27,7 +27,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # --- Phony targets --------------------------------------------------------------
-.PHONY: all help setup parse parse-dust2 parse-mirage pylint golint shlint check clean
+.PHONY: all help setup parse parse-dust2 parse-mirage pylint golint shlint lint clean
 
 # --- Default ------------------------------------------------------------------
 .DEFAULT_GOAL := help
@@ -46,7 +46,7 @@ help:
 	@echo "  make pylint         Lint & format Python code"
 	@echo "  make golint         Lint & format Go code"
 	@echo "  make shlint         Lint & format shell scripts"
-	@echo "  make check          Run pylint & golint & shlint"
+	@echo "  make lint           Run pylint & golint & shlint"
 	@echo "  make clean          Remove generated caches"
 	@echo "  make help           Show this message"
 	@echo ""
@@ -94,8 +94,9 @@ shlint:
 		-exec shfmt -ln=bash -s -i 2 -bn -ci -sr -w {} +
 
 # --- Grouped dev tasks ---------------------------------------------------------
-check: pylint golint shlint
-	@echo "==> Development checks complete"
+# Lint and also format (!) all supported languages (modifies files).
+lint: pylint golint shlint
+	@echo "==> Linting and formatting complete"
 
 # --- Clean -------------------------------------------------------------------
 # Remove disposable caches without deleting environments or datasets.
