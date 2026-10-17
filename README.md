@@ -46,7 +46,7 @@ event data such as kills, damage, and grenades. Their outputs have different sch
 ## Quick start
 
 You need Git, [uv](https://docs.astral.sh/uv/getting-started/installation/), and
-[Go](https://go.dev/doc/install) (Go 1.20+ for `go -C`). uv manages Python:
+[Go](https://go.dev/doc/install) (Go 1.27.2+). uv manages Python:
 [`.python-version`](./.python-version) pins **3.13.16**, so you do not need to
 install Python manually.
 
