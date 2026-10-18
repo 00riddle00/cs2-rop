@@ -27,7 +27,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # --- Phony targets --------------------------------------------------------------
-.PHONY: all help setup parse parse-dust2 parse-mirage pylint golint shlint lint clean
+.PHONY: all help setup parse parse-dust2 parse-mirage pylint golint shlint lint clean check-env smoke-test
 
 # --- Default ------------------------------------------------------------------
 .DEFAULT_GOAL := help
@@ -47,6 +47,8 @@ help:
 	@echo "  make golint         Lint & format Go code"
 	@echo "  make shlint         Lint & format shell scripts"
 	@echo "  make lint           Run pylint & golint & shlint"
+	@echo "  make check-env      Verify environment, Go build, and datasets"
+	@echo "  make smoke-test     Verify demos and compare parser output"
 	@echo "  make clean          Remove generated caches"
 	@echo "  make help           Show this message"
 	@echo ""
@@ -94,6 +96,12 @@ shlint:
 		-exec shfmt -ln=bash -s -i 2 -bn -ci -sr -w {} +
 
 # --- Grouped dev tasks ---------------------------------------------------------
+check-env:
+	uv run --no-sync python -B scripts/verify.py check-env
+
+smoke-test:
+	uv run --no-sync python -B scripts/verify.py smoke-test
+
 # Lint and also format (!) all supported languages (modifies files).
 lint: pylint golint shlint
 	@echo "==> Linting and formatting complete"

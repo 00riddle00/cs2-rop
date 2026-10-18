@@ -15,15 +15,15 @@ and a Jupyter notebook for examining parser output.
 for two MOUZ vs. Spirit matches (Dust2 and Mirage). It is a starting point for the
 team's data-mining work, not yet a finished analysis or predictive model.
 
-**Parameters and description:** 
+**Parameters and description:**
 
 - Timeframe: 01.08.2026 - 11.10.2026
 - Teams: TOP 10 Between each other [HLTV]
 - Games: LAN
 - Maps: Dust2, Mirage
 - Snapshots: Every 5 seconds, (320 ticks)
-- Variables: 
-- [In-Game] Side, Coordinates, Health, Round time, Win condition, Economy, Weapons, Utilities, Alive/Dead, X vs. X, C4 Position 
+- Variables:
+- [In-Game] Side, Coordinates, Health, Round time, Win condition, Economy, Weapons, Utilities, Alive/Dead, X vs. X, C4 Position
 - [Meta] Teams, Players, Player ranking, Team ranking, History
 - Goal: Round outcome prediction based on position & other variables
 - H0: Round outcomes are random and independent on position & other in-game variables
@@ -34,6 +34,7 @@ Check for more detail in PAR_DESC.txt.
 ## Table of contents
 
 <!--toc:start-->
+- [Table of contents](#table-of-contents)
 - [Overview](#overview)
 - [Quick start](#quick-start)
 - [Repository layout](#repository-layout)
@@ -41,6 +42,7 @@ Check for more detail in PAR_DESC.txt.
 - [Explore the data in Jupyter](#explore-the-data-in-jupyter)
 - [Data organization and CSV columns](#data-organization-and-csv-columns)
 - [Development commands](#development-commands)
+  - [Environment and parser verification](#environment-and-parser-verification)
 - [Troubleshooting](#troubleshooting)
 <!--toc:end-->
 
@@ -218,6 +220,10 @@ The [`Makefile`](./Makefile) lists its targets with `make help`. Useful shortcut
 - `make shlint`: [ShellCheck](https://github.com/koalaman/shellcheck) and
   [shfmt](https://github.com/mvdan/sh) for shell scripts (install separately).
 - `make lint`: Run all three lint/format targets.
+- `make check-env`: Verify the Python environment, dependencies, Go compilation, and
+  required datasets.
+- `make smoke-test`: Run environment checks, verify both raw demo checksums, parse both
+  demos, and compare every output row against the tracked references.
 - `make clean`: Remove disposable caches, preserving environments and datasets.
 
 To lint and format without Make (including in native Windows PowerShell), run from
@@ -233,15 +239,61 @@ uv run black .
 **Linting targets also modify files** through automatic fixes and formatting.
 Inspect `git diff` afterwards.
 
+### Environment and parser verification
+
+After `uv sync` and downloading both demos, run from the repository root:
+
+```text
+make check-env
+make smoke-test
+```
+
+Without GNU Make, use these equivalent commands in native Windows PowerShell, Linux, or
+macOS:
+
+```text
+uv run --no-sync python -B scripts/verify.py check-env
+uv run --no-sync python -B scripts/verify.py smoke-test
+```
+
+Verification requires uv, Go 1.27.2+ (as specified by `go-parser/go.mod`), and the
+project `.venv` using the exact interpreter pinned in `.python-version`. It checks
+dependency compatibility with `uv pip check`, imports runtime packages, exercises
+dataframe conversion, and compiles Go with `-mod=readonly`. It does not check exact
+dependency versions against the lockfile or install or synchronize Python dependencies;
+run `uv sync` to synchronize the environment. Go may populate its normal dependency/build
+caches or download a required toolchain.
+
+Both raw demos and both `data/processed/` reference CSVs are required. `check-env`
+checks demo headers and validates CSV schemas, field types, and unique player keys.
+`smoke-test` also requires Git on `PATH` and rejects staged or unstaged changes to
+either reference CSV relative to `HEAD`. Review and commit intentional reference
+updates before testing against the new baseline; unrelated file changes are allowed.
+This checks regression against the current commit, not the baseline's scientific validity.
+`smoke-test` additionally checks both raw SHA-256 values before parsing either demo. The
+expected values in [`data/raw_checksums.json`](./data/raw_checksums.json) identify the
+project's local baseline demos; they were not independently verified against the shared
+download source.
+
+The compiled binary and generated CSVs use a temporary directory that is removed on
+completion or failure. Tracked datasets are never overwritten. CSV comparisons ignore
+row order and line endings but require exact field values, including the parser's
+three-decimal coordinates. Failures print diagnostics and return a nonzero exit code.
+The notebook is neither executed nor modified by these commands.
+
+These two Makefile targets require no Bash or Unix utilities and can run with a native
+Windows GNU Make installation. Existing lint and cleanup targets still require the Unix
+utilities described below.
+
 When changing dependencies, commit [`uv.lock`](./uv.lock) alongside
 [`pyproject.toml`](./pyproject.toml), or [`go.sum`](./go-parser/go.sum) alongside
 [`go.mod`](./go-parser/go.mod), as applicable.
 
 GNU Make is optional: all essential setup and parsing commands appear in Quick start.
-On Windows, run Make in a Unix-like environment such as
-[MSYS2](https://www.msys2.org/) or WSL, with
-[GNU Make](https://www.gnu.org/software/make/) and Unix utilities installed. Git Bash
-alone may not include Make.
+For the existing lint and cleanup targets on Windows, run Make in an environment such as
+[MSYS2](https://www.msys2.org/) or WSL, with [GNU
+Make](https://www.gnu.org/software/make/) and Unix utilities installed. Git Bash alone
+may not include Make.
 
 ## Troubleshooting
 
