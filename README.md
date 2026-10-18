@@ -38,6 +38,7 @@ Check for more detail in PAR_DESC.txt.
 - [Table of contents](#table-of-contents)
 - [Overview](#overview)
 - [Quick start](#quick-start)
+  - [Without GNU Make](#without-gnu-make)
 - [Repository layout](#repository-layout)
 - [Parse demos with Go](#parse-demos-with-go)
 - [Explore the data in Jupyter](#explore-the-data-in-jupyter)
@@ -69,9 +70,12 @@ You need Git, [uv](https://docs.astral.sh/uv/getting-started/installation/), and
 [`.python-version`](./.python-version) pins **3.13.16**, so you do not need to install
 Python manually.
 
-The commands below work on Linux, macOS, and native Windows PowerShell;
+The primary workflow uses GNU Make with uv and Go on `PATH`. It works on Linux,
+macOS, and native Windows with GNU Make installed;
 [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) is not required.
-Windows users can obtain Git from [Git for Windows](https://git-scm.com/downloads/win).
+For native Windows PowerShell without GNU Make, use the
+[alternative workflow below](#without-gnu-make). Windows users can obtain Git from
+[Git for Windows](https://git-scm.com/downloads/win).
 
 1. **Clone the repository.** On its GitHub page, select **Code**, copy the HTTPS or SSH
    clone URL, and run:
@@ -85,19 +89,18 @@ Windows users can obtain Git from [Git for Windows](https://git-scm.com/download
 
 2. **Install dependencies:**
 
-   ```bash
-   uv sync
-   go -C go-parser mod download
+   ```text
+   make setup
    ```
 
-   uv creates a local `.venv/` and downloads the pinned Python version if necessary. You
-   can use `uv run ...` without activating the environment.
+   This installs Python and Go dependencies. uv creates a local `.venv/` and downloads
+   the pinned Python version if necessary; activating the environment is not required.
 
 3. **Download and verify the full dataset** from the shared
    [Drive](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989):
 
    ```text
-   uv run --no-sync python -B scripts/download_demos.py
+   make download-demos
    ```
 
    This downloads all **61 demos (approximately 21.4 GB)** listed in
@@ -126,15 +129,17 @@ Windows users can obtain Git from [Git for Windows](https://git-scm.com/download
    [`.gitignore`](./.gitignore) excludes them, and
    [`data/raw/.gitkeep`](./data/raw/.gitkeep) preserves the directory in Git.
 
-4. **Generate or refresh the CSVs:**
+4. **Verify the environment and parser:**
 
-   ```bash
-   go -C go-parser run . --input ../data/raw/mouz-vs-spirit-m1-dust2.dem
-   go -C go-parser run . --input ../data/raw/mouz-vs-spirit-m2-mirage.dem
+   ```text
+   make check-env
+   make smoke-test
    ```
 
-   The results are written to [`data/processed/`](./data/processed/). If you have GNU
-   Make, `make setup` and `make parse` are shortcuts for steps 2 and 4.
+   These checks require only the two baseline demos. The smoke test parses them into
+   temporary CSVs and compares them against the committed references without
+   overwriting them. See the
+   [verification details](#environment-and-parser-verification).
 
 5. **Explore the results** in
    [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb); see [Explore the
@@ -143,6 +148,31 @@ Windows users can obtain Git from [Git for Windows](https://git-scm.com/download
 The small CSVs in [`data/processed/`](./data/processed/) and
 [`data/samples/`](./data/samples/) are committed to Git and can be inspected without raw
 demos. Parsing with Go or Awpy requires the corresponding `.dem` files.
+
+CSV regeneration is optional because reference CSVs are already committed. Use
+[`make parse`](#parse-demos-with-go) only when intentionally regenerating the two
+baseline CSVs; it **overwrites existing output files**.
+
+### Without GNU Make
+
+After cloning, run these equivalent commands from the repository root in native
+Windows PowerShell, Linux, or macOS:
+
+```text
+uv sync
+go -C go-parser mod download
+uv run --no-sync python -B scripts/download_demos.py
+uv run --no-sync python -B scripts/verify.py check-env
+uv run --no-sync python -B scripts/verify.py smoke-test
+```
+
+Only when intentionally regenerating the two baseline CSVs, use these equivalents
+of `make parse`. They **overwrite existing CSVs** in `data/processed/`:
+
+```text
+go -C go-parser run . --input ../data/raw/mouz-vs-spirit-m1-dust2.dem
+go -C go-parser run . --input ../data/raw/mouz-vs-spirit-m2-mirage.dem
+```
 
 ## Repository layout
 
@@ -166,9 +196,18 @@ The Go parser is a separate module under [`go-parser/`](./go-parser/), with its 
 
 ## Parse demos with Go
 
+To intentionally regenerate the two baseline snapshot CSVs, run:
+
+```text
+make parse
+```
+
+This step is optional during initialization because the reference CSVs are committed.
+It writes to `data/processed/` and **overwrites existing CSVs** with matching names.
+For the equivalent direct commands, see [Without GNU Make](#without-gnu-make).
+
 The Go parser requires `--input` and accepts an optional `--output`. By default, it
-writes `data/processed/<demo-name>_snapshots.csv`. An existing CSV with the same name is
-**overwritten**.
+writes `data/processed/<demo-name>_snapshots.csv`.
 
 The `go -C go-parser` command changes the working directory to `go-parser/`, so paths
 passed to the parser are relative to that directory (hence `../data/raw/` above).
@@ -182,7 +221,7 @@ individually; `make all` performs setup and parses both demos.
 Open the [parser inspection notebook](./notebooks/parser_check.ipynb) in a
 Jupyter-capable editor, such as VS Code with its Python and
 [Jupyter](https://code.visualstudio.com/docs/datascience/jupyter-notebooks) extensions.
-The project's `ipykernel` dependency is installed by `uv sync`. Select the `.venv`
+The project's `ipykernel` dependency is installed by `make setup`. Select the `.venv`
 Python environment as the kernel, then run cells in order.
 
 In the notebook's configuration cell, select the full match identifier:
@@ -238,12 +277,15 @@ The [`Makefile`](./Makefile) lists its targets with `make help`. Useful shortcut
 - `make shlint`: [ShellCheck](https://github.com/koalaman/shellcheck) and
   [shfmt](https://github.com/mvdan/sh) for shell scripts (install separately).
 - `make lint`: Run all three lint/format targets.
+- `make setup`: Install Python and Go dependencies.
 - `make download-demos`: Download all 61 manifest demos, verifying checksums and skipping
   valid local files.
 - `make check-env`: Verify the Python environment, dependencies, Go compilation, and
   required datasets.
 - `make smoke-test`: Run environment checks, verify the two baseline demo checksums,
   parse those demos, and compare every output row against the tracked references.
+- `make parse`: Intentionally regenerate the two baseline CSVs, overwriting existing
+  output files.
 - `make clean`: Remove disposable caches, preserving environments and datasets.
 
 To lint and format without Make (including in native Windows PowerShell), run from the
@@ -261,27 +303,10 @@ uv run black .
 
 ### Environment and parser verification
 
-The complete initialization and verification workflow from the repository root is:
+Follow [Quick start](#quick-start) for the Makefile workflow or
+[Without GNU Make](#without-gnu-make) for equivalent direct commands.
 
-```text
-make setup
-make download-demos
-make check-env
-make smoke-test
-```
-
-Without GNU Make, use these equivalent commands in native Windows PowerShell, Linux, or
-macOS:
-
-```text
-uv sync
-go -C go-parser mod download
-uv run --no-sync python -B scripts/download_demos.py
-uv run --no-sync python -B scripts/verify.py check-env
-uv run --no-sync python -B scripts/verify.py smoke-test
-```
-
-Downloads use [gdown](https://github.com/wkentaro/gdown), installed by `uv sync`.
+Downloads use [gdown](https://github.com/wkentaro/gdown), installed by `make setup`.
 Neither `setup` nor `check-env` downloads demo datasets automatically.
 `download-demos` covers the full manifest; `check-env` and `smoke-test` require only
 the original MOUZ vs. Spirit Dust2 and Mirage demos and their two reference CSVs.
@@ -292,7 +317,7 @@ project `.venv` using the exact interpreter pinned in `.python-version`. It chec
 dependency compatibility with `uv pip check`, imports runtime packages, exercises
 dataframe conversion, and compiles Go with `-mod=readonly`. It does not check exact
 dependency versions against the lockfile or install or synchronize Python dependencies;
-run `uv sync` to synchronize the environment. Go may populate its normal
+rerun `make setup` to synchronize the environment. Go may populate its normal
 dependency/build caches or download a required toolchain.
 
 Both baseline raw demos and both `data/processed/` reference CSVs are required. `check-env`
@@ -323,7 +348,7 @@ When changing dependencies, commit [`uv.lock`](./uv.lock) alongside
 [`pyproject.toml`](./pyproject.toml), or [`go.sum`](./go-parser/go.sum) alongside
 [`go.mod`](./go-parser/go.mod), as applicable.
 
-GNU Make is optional: all essential setup and parsing commands appear in Quick start.
+GNU Make is optional: see [Without GNU Make](#without-gnu-make) for the direct workflow.
 For the existing lint and cleanup targets on Windows, run Make in an environment such as
 [MSYS2](https://www.msys2.org/) or WSL, with [GNU
 Make](https://www.gnu.org/software/make/) and Unix utilities installed. Git Bash alone
@@ -332,11 +357,13 @@ may not include Make.
 ## Troubleshooting
 
 - **Demo download fails:** Check your connection and open the shared Drive folder in
-  a browser. The two files must permit public downloads. Google Drive quotas may
-  require retrying later. Checksum mismatches discard the temporary download and
+  a browser. All 61 files listed in `data/raw_checksums.json` must permit public
+  downloads. Google Drive quotas may require retrying later. Checksum mismatches
+  discard the temporary download and
   preserve any previous file; retry, then contact the team if mismatches persist.
 - **`uv` or `go` is not recognized:** Check `uv --version` or `go version`, and ensure
   the tool is installed and on `PATH`.
-- **The notebook cannot import a package:** Confirm `uv sync` completed, check the
-  selected Python interpreter, and restart the kernel. The interpreter is usually
+- **The notebook cannot import a package:** Confirm `make setup` completed (or its
+  direct equivalent), check the selected Python interpreter, and restart the kernel.
+  The interpreter is usually
   `.venv/Scripts/python.exe` on Windows or `.venv/bin/python` on Linux/macOS.
