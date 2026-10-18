@@ -93,15 +93,34 @@ Windows users can obtain Git from [Git for Windows](https://git-scm.com/download
    uv creates a local `.venv/` and downloads the pinned Python version if necessary. You
    can use `uv run ...` without activating the environment.
 
-3. **Download demos** from the shared
-   [Drive](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989).
+3. **Download and verify the full dataset** from the shared
+   [Drive](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989):
 
-   Place these files in [`data/raw/`](./data/raw/):
+   ```text
+   uv run --no-sync python -B scripts/download_demos.py
+   ```
+
+   This downloads all **61 demos (approximately 21.4 GB)** listed in
+   [`data/raw_checksums.json`](./data/raw_checksums.json) into [`data/raw/`](./data/raw/).
+   That manifest defines the dataset using each filename's `drive_id` and `sha256`.
+   It includes the two baseline demos used by the parser smoke test:
 
    ```text
    data/raw/mouz-vs-spirit-m1-dust2.dem
    data/raw/mouz-vs-spirit-m2-mirage.dem
    ```
+
+   Files with valid SHA-256 checksums are skipped without contacting Drive. Missing
+   or invalid files are downloaded and verified against `data/raw_checksums.json`
+   before being placed at their final paths. An invalid existing file is replaced
+   only after a verified download succeeds. Temporary downloads are cleaned up on
+   failure or interruption; retrying starts a fresh download. You can also download
+   the files manually from Drive and place them in `data/raw/` with the manifest filenames.
+   Local files not listed in the manifest are left untouched. Repeated runs still
+   read all listed files to calculate streaming SHA-256 hashes, but valid files are
+   not downloaded again. Future additions to the Drive folder are not automatically
+   included: add a manifest record with the filename, Drive ID, and SHA-256 to expand
+   the project dataset without editing the downloader.
 
    Do not commit `.dem` files: they may exceed GitHub's 100 MiB file limit.
    [`.gitignore`](./.gitignore) excludes them, and
@@ -219,10 +238,12 @@ The [`Makefile`](./Makefile) lists its targets with `make help`. Useful shortcut
 - `make shlint`: [ShellCheck](https://github.com/koalaman/shellcheck) and
   [shfmt](https://github.com/mvdan/sh) for shell scripts (install separately).
 - `make lint`: Run all three lint/format targets.
+- `make download-demos`: Download all 61 manifest demos, verifying checksums and skipping
+  valid local files.
 - `make check-env`: Verify the Python environment, dependencies, Go compilation, and
   required datasets.
-- `make smoke-test`: Run environment checks, verify both raw demo checksums, parse both
-  demos, and compare every output row against the tracked references.
+- `make smoke-test`: Run environment checks, verify the two baseline demo checksums,
+  parse those demos, and compare every output row against the tracked references.
 - `make clean`: Remove disposable caches, preserving environments and datasets.
 
 To lint and format without Make (including in native Windows PowerShell), run from the
@@ -240,9 +261,11 @@ uv run black .
 
 ### Environment and parser verification
 
-After `uv sync` and downloading both demos, run from the repository root:
+The complete initialization and verification workflow from the repository root is:
 
 ```text
+make setup
+make download-demos
 make check-env
 make smoke-test
 ```
@@ -251,9 +274,18 @@ Without GNU Make, use these equivalent commands in native Windows PowerShell, Li
 macOS:
 
 ```text
+uv sync
+go -C go-parser mod download
+uv run --no-sync python -B scripts/download_demos.py
 uv run --no-sync python -B scripts/verify.py check-env
 uv run --no-sync python -B scripts/verify.py smoke-test
 ```
+
+Downloads use [gdown](https://github.com/wkentaro/gdown), installed by `uv sync`.
+Neither `setup` nor `check-env` downloads demo datasets automatically.
+`download-demos` covers the full manifest; `check-env` and `smoke-test` require only
+the original MOUZ vs. Spirit Dust2 and Mirage demos and their two reference CSVs.
+The other 59 demos are not parsed or required by those verification commands.
 
 Verification requires uv, Go 1.27.2+ (as specified by `go-parser/go.mod`), and the
 project `.venv` using the exact interpreter pinned in `.python-version`. It checks
@@ -263,16 +295,19 @@ dependency versions against the lockfile or install or synchronize Python depend
 run `uv sync` to synchronize the environment. Go may populate its normal
 dependency/build caches or download a required toolchain.
 
-Both raw demos and both `data/processed/` reference CSVs are required. `check-env`
+Both baseline raw demos and both `data/processed/` reference CSVs are required. `check-env`
 checks demo headers and validates CSV schemas, field types, and unique player keys.
 `smoke-test` also requires Git on `PATH` and rejects staged or unstaged changes to
 either reference CSV relative to `HEAD`. Review and commit intentional reference updates
 before testing against the new baseline; unrelated file changes are allowed. This checks
 regression against the current commit, not the baseline's scientific validity.
 `smoke-test` additionally checks both raw SHA-256 values before parsing either demo. The
-expected values in [`data/raw_checksums.json`](./data/raw_checksums.json) identify the
-project's local baseline demos; they were not independently verified against the shared
-download source.
+expected values come from the `sha256` fields in
+[`data/raw_checksums.json`](./data/raw_checksums.json), the single manifest for all
+61 demos. Hashes were calculated from the locally downloaded files. Actual Drive
+downloads have confirmed the two original baseline hashes and the hash for
+`9z-vs-g2-m1-dust2.dem`; the full remote collection has not been independently
+downloaded again for verification.
 
 The compiled binary and generated CSVs use a temporary directory that is removed on
 completion or failure. Tracked datasets are never overwritten. CSV comparisons ignore
@@ -280,9 +315,9 @@ row order and line endings but require exact field values, including the parser'
 three-decimal coordinates. Failures print diagnostics and return a nonzero exit code.
 The notebook is neither executed nor modified by these commands.
 
-These two Makefile targets require no Bash or Unix utilities and can run with a native
-Windows GNU Make installation. Existing lint and cleanup targets still require the Unix
-utilities described below.
+The download and verification Makefile targets require no Bash or Unix utilities and
+can run with a native Windows GNU Make installation. Existing lint and cleanup targets
+still require the Unix utilities described below.
 
 When changing dependencies, commit [`uv.lock`](./uv.lock) alongside
 [`pyproject.toml`](./pyproject.toml), or [`go.sum`](./go-parser/go.sum) alongside
@@ -296,6 +331,10 @@ may not include Make.
 
 ## Troubleshooting
 
+- **Demo download fails:** Check your connection and open the shared Drive folder in
+  a browser. The two files must permit public downloads. Google Drive quotas may
+  require retrying later. Checksum mismatches discard the temporary download and
+  preserve any previous file; retry, then contact the team if mismatches persist.
 - **`uv` or `go` is not recognized:** Check `uv --version` or `go version`, and ensure
   the tool is installed and on `PATH`.
 - **The notebook cannot import a package:** Confirm `uv sync` completed, check the

@@ -27,7 +27,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # --- Phony targets --------------------------------------------------------------
-.PHONY: all help setup
+.PHONY: all help setup download-demos
 .PHONY: parse parse-dust2 parse-mirage
 .PHONY: pylint golint shlint lint
 .PHONY: clean check-env smoke-test
@@ -43,6 +43,7 @@ help:
 	@echo ""
 	@echo "  make all            Run setup and parse both demos"
 	@echo "  make setup          Install Python and Go dependencies"
+	@echo "  make download-demos Download and verify all manifest demos"
 	@echo "  make parse          Parse both demos"
 	@echo "  make parse-dust2    Parse the Dust2 demo"
 	@echo "  make parse-mirage   Parse the Mirage demo"
@@ -62,6 +63,9 @@ setup:
 	uv sync
 	@echo "==> Downloading Go dependencies"
 	go -C $(GO_PARSER) mod download
+
+download-demos:
+	uv run --no-sync python -B scripts/download_demos.py
 
 # --- Demo parsing -------------------------------------------------------------
 # Generated CSVs are saved to data/processed/.

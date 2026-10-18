@@ -1,4 +1,246 @@
 {
-  "mouz-vs-spirit-m1-dust2.dem": "49fabf21b1c26f1010df7bde71ce1ee5efd0e8f06b977c6cbef664c99916d494",
-  "mouz-vs-spirit-m2-mirage.dem": "585d972b6bcf05f54588e9cc831d82d80ba420df8e7fbcfb540958a748c94722"
+  "9z-vs-g2-m1-dust2.dem": {
+    "drive_id": "1xx8eDCFNppcfRQh-N5DKnOkB4JAo0TDm",
+    "sha256": "8810f8ebb726886e4df9bbd69938be99f8161fd72b2b487741502d1d7678cab3"
+  },
+  "aurora-vs-spirit-m1-mirage.dem": {
+    "drive_id": "1o8DslGGzYG_wKF3wcSru8DxeYo-HpKZW",
+    "sha256": "17accc02fe6ec2727063ba225593cab0efbf096033bb84e1f81c77173317eff7"
+  },
+  "aurora-vs-vitality-m3-mirage.dem": {
+    "drive_id": "13h5-l0wPxpZM1xSnIYu_AfGA597z3qSS",
+    "sha256": "3ef7bfc9c4cb1bcd3960bf0f0c91b61272789e121ae8fdd42fcb7d15612bc4bf"
+  },
+  "aurora-vs-vitality-m3-mirage_09-20.dem": {
+    "drive_id": "1LfJeeQwziLIwE_XZBmw8RMiqfdHOo9az",
+    "sha256": "d93c77ee6c9c87b69505028fe2cd79ceac14e344a2fbf5ab6f214730717fbbb0"
+  },
+  "falcons-vs-aurora-m1-mirage.dem": {
+    "drive_id": "1W3IKZ5gD0gNUDWGpvk3BtabrbHeLSfZp",
+    "sha256": "d5f490863f92aea3adba37efc418cabf0477b04c4519862dbbf65722acff144f"
+  },
+  "falcons-vs-aurora-m2-dust2.dem": {
+    "drive_id": "10QwVVDtsS_NHtxFZngoitaVMYph9uKSY",
+    "sha256": "25b6620452498e32e8507ea46986e092387b9b09900dd926c00f43295cdf543a"
+  },
+  "falcons-vs-g2-m2-dust2.dem": {
+    "drive_id": "1NGG5PztRvwizP9l-zvhiVBcUYoE6LnE3",
+    "sha256": "afc9f9eb3b1327f7c33f399ce7be755a544efb32006a387e78d70b99af84f842"
+  },
+  "falcons-vs-natus-vincere-m3-mirage-p1.dem": {
+    "drive_id": "1cZNn7rADgxEmlGWxfeGwdmt54VqUEkmF",
+    "sha256": "f60dea5b579ab435b6f6202fb5540926c62c0da8b4caf1957242f0b1d52d6940"
+  },
+  "falcons-vs-natus-vincere-m3-mirage-p2.dem": {
+    "drive_id": "1-hD6V7OmQlRQ0NEUcdtLhI2q9cyVSd2F",
+    "sha256": "07cc2048043417d5ab29cfcf0c4745299a6103d8680117e2cdf6d30e1c30ac03"
+  },
+  "falcons-vs-spirit-m1-mirage.dem": {
+    "drive_id": "1M_VP0CCpUwpjvDQ3FjpnvB0nDH3hPfWK",
+    "sha256": "bc6251413daa2447c1ff8ffea3029f92cfe5c53a6e71f286419abdc421eae410"
+  },
+  "faze-vs-spirit-m1-dust2.dem": {
+    "drive_id": "1Y6YdGMr_6HbEXa3eGpZUo0MGJTdL40tB",
+    "sha256": "788f9141aacbd8298f62ce18761c7add373ad6a5c8e3c9f8180b63241777ff92"
+  },
+  "faze-vs-vitality-m1-dust2.dem": {
+    "drive_id": "1vjT1sp-bjZu7c1h9yfBSWXGG1ErH6EdI",
+    "sha256": "2575e4e22ce1616daca4b5b4f5796d80a0a70e8d791e823fd27f5b8ee5d87ddc"
+  },
+  "furia-vs-9z-m1-dust2.dem": {
+    "drive_id": "1wG9jhcIVISv4mEd2XnBS0B1PuwzJSqkA",
+    "sha256": "523658de2e12eb60ae8669cb1937646bcbffc29392122bf8e35fc3b4f6e6d77b"
+  },
+  "furia-vs-9z-m2-mirage.dem": {
+    "drive_id": "1Z3KDeim7OZ4swORsZgmYfXP4lVvSQkqh",
+    "sha256": "6cf330bc9d931cffdc088d59fcf38db9afa79d7a4f101268b677b5a635bcc468"
+  },
+  "furia-vs-aurora-m1-dust2.dem": {
+    "drive_id": "1GdUKLo-4onvvR6qvW-O93ZUS3DUUcSKw",
+    "sha256": "0dff5f4d96ba70f21ad14ac45bfd4d88fb00a57131c2627496fa96e13fab7cef"
+  },
+  "furia-vs-aurora-m2-mirage.dem": {
+    "drive_id": "1HzKFsFnUKTK5ZQvtSQPhrn2ZWtMfRUup",
+    "sha256": "1b9d5eac73de0b3877014de0bd1adc8d1a701e0cc17128fcf7aea039e0a48086"
+  },
+  "furia-vs-aurora-m3-mirage.dem": {
+    "drive_id": "1sTZuAlGlAkl-dehhawp2FbUJrPGIHa-0",
+    "sha256": "8800d56bb4ed02833612f03056d642b836435e35f4eabff4bfc8d0b8e53f91d6"
+  },
+  "furia-vs-fut-m3-dust2.dem": {
+    "drive_id": "1Nc938S7U4q3EC6_l64KFmdlosBP45a5U",
+    "sha256": "c239935a46fa53719e25292c020c365559469283223b0748d756347231b1fbad"
+  },
+  "furia-vs-g2-m2-dust2.dem": {
+    "drive_id": "1TlPHDFFB8d3uk5D7WCipfQhGa17A5XOQ",
+    "sha256": "6431eb36d0351b3d9774fd533348fa54038a46131bf71149e9efefb28e6c0641"
+  },
+  "furia-vs-legacy-m3-dust2.dem": {
+    "drive_id": "1_qGQXyaspB37qktl9q73pw-LffsLDYDe",
+    "sha256": "f3079a77e5b6b276bc792740c5d43513070723af4976315ca3888e428cc69eb4"
+  },
+  "furia-vs-mouz-m2-mirage.dem": {
+    "drive_id": "1JMFHIHPyVLHxfq46M72uWDSubjJehaJ8",
+    "sha256": "52b87fd6a3c8b7c769ecf00637baaa323d6a700fb1f1b95ca30bc99649834393"
+  },
+  "furia-vs-vitality-m3-dust2.dem": {
+    "drive_id": "107QEkBt8--VbLzGIglliedF2roASZBMp",
+    "sha256": "11f095dc6dd0dc9d10976f1b929ee6a1272a6651c85f3fb7247356e3da709be3"
+  },
+  "fut-vs-mouz-m1-dust2.dem": {
+    "drive_id": "17PwJW1H2yKqSP2V4Nb5q7F8sKuK4cGfV",
+    "sha256": "fb8538dc32ef170220c9703ec879c10e6c56a4326c1c5e305937e0e3c19c2157"
+  },
+  "fut-vs-mouz-m3-mirage.dem": {
+    "drive_id": "105y017QlHiLPGD_NBHltqzbZyJkLyiJ0",
+    "sha256": "5a837c8300474f2927998a6b82edd86053344933653f812490e761b7f4690a3c"
+  },
+  "fut-vs-vitality-m2-dust2.dem": {
+    "drive_id": "1T1iTovmLD2cXpS0amkXooXdBtacFlV3D",
+    "sha256": "653def6a2efa9545380a2bfb4c551e616fc1b7dc8628171720ef07b7345f16e1"
+  },
+  "g2-vs-aurora-m3-mirage.dem": {
+    "drive_id": "1nDlhdUHCx7FQh6Nj6o0cfbfDu8l2Hli9",
+    "sha256": "e348879717172add00b80285c20f884f4e180aa8cffa5a7ae9990d0d1d20b9fd"
+  },
+  "g2-vs-furia-m3-dust2.dem": {
+    "drive_id": "1VESCv0DRQwSx2rNrdPNQI4V1AoCQtkqQ",
+    "sha256": "c618c00af9a39125f1b3fea509e1ef474968af7d6335d36f583b341263bd656a"
+  },
+  "g2-vs-spirit-m1-dust2.dem": {
+    "drive_id": "1gzvaRwzq--wOGgYK0X9HZ-jGfbEjB_0G",
+    "sha256": "0bdc35274f874fcbb1f250f0b37209c3ea6e9bd015de88c22826f80ad40c2629"
+  },
+  "legacy-vs-falcons-m1-mirage.dem": {
+    "drive_id": "1GXvPMRzs05L7gK2lhyADhnQislFSA21i",
+    "sha256": "deeda64a7c879f69a10c1bd344e6966e4db44e75d74af1d26a733ee7add4e093"
+  },
+  "legacy-vs-falcons-m1-mirage_08-29.dem": {
+    "drive_id": "1YcNKMD1cPOGDBKxrKSrn0jtPbVAtNo2e",
+    "sha256": "162670cf5a470898f05e265f6d72c83618baba7d671eff2f7c094656581a247b"
+  },
+  "legacy-vs-falcons-m2-dust2.dem": {
+    "drive_id": "1bDYTFw_A5PlQ39rNNzuUNoTYw6qNn3Ln",
+    "sha256": "8fc1bae5b52a7580b89053f3896cb3bd77b39e89e073787fe002bb4b552934f9"
+  },
+  "legacy-vs-falcons-m3-dust2.dem": {
+    "drive_id": "1BpgMA8FDZjUFR3u7BlH-7ZyoXZ5YUza9",
+    "sha256": "85960b4725578c22fc4dc7f84a9b9636278049dc954a5653c5bf1d083a168a16"
+  },
+  "legacy-vs-faze-m2-mirage.dem": {
+    "drive_id": "1g_tksjkNhJnVjzu5nYetIfcFjEfpSSKa",
+    "sha256": "c2f492c3f30ec0532c9e0cf0925f5dc8321da55dfa7fea6c11819ba23ec226bb"
+  },
+  "legacy-vs-furia-m1-mirage.dem": {
+    "drive_id": "145dJ3-oEXkOLvR5L1l3kOvOyB3Zf2kpc",
+    "sha256": "9d32199cf8881024a41240030198070448ebf097bf7bc311ec743a8ce8631b69"
+  },
+  "legacy-vs-fut-m2-dust2.dem": {
+    "drive_id": "1AuMy9pgfZvOjzdh4eH9MZZtMRD_gkxDm",
+    "sha256": "a9568d57e8ab86dd7cd809d0670dedca4b17d0d5dc57fb54ce43a903ca0790aa"
+  },
+  "legacy-vs-g2-m2-mirage.dem": {
+    "drive_id": "1SvlFok5MjR5hTxhdHli-bjWdlHwcoFqw",
+    "sha256": "4fd4096962abf9ee4a8323daf5fefde659ddaa7763d5ff716dce87d94e161fdb"
+  },
+  "legacy-vs-g2-m3-dust2.dem": {
+    "drive_id": "12qshj8i1FQfjOweJQBC6ueTgaUJLuRVd",
+    "sha256": "3831a2ff57773f59f89879132cf5df23dff0c77abb0d26ecf688d8fc44415278"
+  },
+  "legacy-vs-spirit-m1-dust2.dem": {
+    "drive_id": "1KNX4r40dyK2bIl6avRCugCFsWm-jf3WO",
+    "sha256": "a0928b4638d8674cb2f8134465f14f1ba400c80b1fdf994a1f1d59169513e085"
+  },
+  "mouz-vs-furia-m2-mirage.dem": {
+    "drive_id": "1VnImQ2T_MkFZDBcyxjC-6tPbfkj4kZmY",
+    "sha256": "f61b5098c80d0256439ba920678482dd404cd655eb8bd35dd9937c7925f2b1a7"
+  },
+  "mouz-vs-natus-vincere-m3-mirage.dem": {
+    "drive_id": "1cTF4NxPEh6uzGrp03q2z4IbGxgG-INVt",
+    "sha256": "deb45af3ce4ffaa9ec39c56d05399fcef5aa6ee6afeeb7e865b95c0e9e04a623"
+  },
+  "mouz-vs-spirit-m1-dust2.dem": {
+    "drive_id": "1M15T_xtQm98Ib9muhGxPyw7y6ZDsJ8jW",
+    "sha256": "49fabf21b1c26f1010df7bde71ce1ee5efd0e8f06b977c6cbef664c99916d494"
+  },
+  "mouz-vs-spirit-m2-mirage.dem": {
+    "drive_id": "1nHHQ4HLcLgz_xJvo1OKgi-a5EIxO1HqE",
+    "sha256": "585d972b6bcf05f54588e9cc831d82d80ba420df8e7fbcfb540958a748c94722"
+  },
+  "mouz-vs-vitality-m1-dust2.dem": {
+    "drive_id": "19SogrwC4eVtXbfsuk4ACBP8F1KbhAuj5",
+    "sha256": "57fb9a105d2c4f989024cc29ad40dc27ed34e65a1c51986c9f6d7ee63d44e190"
+  },
+  "mouz-vs-vitality-m2-mirage.dem": {
+    "drive_id": "1KExkQ-blQ7Kg4-HkJi2kflzUS3nRGPnj",
+    "sha256": "1b8097794845b8994846d52d47db86faec78c838b345d3013c57e883ad230126"
+  },
+  "natus-vincere-vs-aurora-m2-mirage.dem": {
+    "drive_id": "1v62zK4WVbvKGgfmOo_AI4Lk8FC27RFu4",
+    "sha256": "067680a00c73c69dbc79218c5d799940c8573b56ed172dccc095090a2ec05fbb"
+  },
+  "spirit-vs-mouz-m1-dust2.dem": {
+    "drive_id": "1tgvOZK7r4SmLBJnSzGoNZ0Ot9q5lD6z3",
+    "sha256": "06075d8cd46422ea9cfd989a4eb849556cd87bcce6b5c83c6343d8e031c9ae19"
+  },
+  "spirit-vs-mouz-m1-dust2_09-06.dem": {
+    "drive_id": "1CqB4F7Fjsgn77--SfTI1MyPc1gH2dr49",
+    "sha256": "9a831761cc494a500c808b1311b00a315f4af7b940fc2db28dc3e9830ae44de1"
+  },
+  "spirit-vs-mouz-m1-dust2_10-05.dem": {
+    "drive_id": "1PPvOgjFvoeUQu3P-luLXJ4VmlFpx4QUo",
+    "sha256": "deb2a52b8ef138c44fe063a05618e9339b7b87a6904fa8c095ad79f106649f3f"
+  },
+  "spirit-vs-mouz-m2-mirage.dem": {
+    "drive_id": "1jm5VSRNkholrbdSV8ROSN2lQTVHxjdju",
+    "sha256": "a1d8cc6e2f9e709d17519157fd577f98db98ea80edd2177c12c9b8c666b11c89"
+  },
+  "spirit-vs-mouz-m2-mirage_09-06.dem": {
+    "drive_id": "1TUZPU4EIENsMOXuuowPtvT5ji9w-HKWm",
+    "sha256": "6ea1f1f71b12bec446fbf70f11cb0d42988a8cee4f268b74643226ce0b5be54c"
+  },
+  "spirit-vs-mouz-m2-mirage_10-05.dem": {
+    "drive_id": "15GhWmfjtUnMnNgGIcyod9oEYb_2P9xGP",
+    "sha256": "21a2c34da37a8e81c42740861111db00cdb839aa533fa8191e9da8ca2106a95d"
+  },
+  "vitality-vs-9z-m1-dust2.dem": {
+    "drive_id": "1TDa3xzar9LYRLdzNFougb0Y4qJaQa93l",
+    "sha256": "9abc6a520f089608cfc2967b10ec97c5e71973fe16656a147a80e6ba6eeefd4d"
+  },
+  "vitality-vs-falcons-m2-dust2.dem": {
+    "drive_id": "1Qkxlz7pzVx02TqE13Y8T_UIhLxadzIy9",
+    "sha256": "1c4fa8f15de6cbb137e2cb4a9424a52c64f0c15dd7d8561ef7f5858cc5c26a8c"
+  },
+  "vitality-vs-falcons-m3-mirage.dem": {
+    "drive_id": "1o76yVJvIQHgRKUHIrLVBsBclDOCJu2hj",
+    "sha256": "f1d8725268c9f30ce844d97fb1df3329800db5b1a5d2def4a98a8e65177397c6"
+  },
+  "vitality-vs-furia-m1-mirage.dem": {
+    "drive_id": "1owzkgodt-A1RIetPrcdN10PA_HqQaSyP",
+    "sha256": "7cb6e7de5a4fa24476be4add95642b363a548822f859d79cf0aa38901c813573"
+  },
+  "vitality-vs-furia-m2-dust2.dem": {
+    "drive_id": "1767QVTJW2jIbMtyyKIoj3kv4MCnCZ2UI",
+    "sha256": "55257dd6a6c0ae4d314fd645a240145b9902da10a34b1fc97027b88d26250c1d"
+  },
+  "vitality-vs-legacy-m2-mirage.dem": {
+    "drive_id": "1Ts4TQ0fYwzvXbedh4o6fepToT7hV5AWH",
+    "sha256": "70d7ab0078f6833ff149de026e48199cf94b179487abe9a2b70965bf4db3eec8"
+  },
+  "vitality-vs-legacy-m3-dust2.dem": {
+    "drive_id": "1L8zoqD8j3ucPBvDgM857_U7PElTqj_zo",
+    "sha256": "dca45a99b7e0e0b9a4f225eb51d5d45c78f9225146386733238f13ee9d9e4bbe"
+  },
+  "vitality-vs-mouz-m3-dust2.dem": {
+    "drive_id": "1I89GOBgiPX_SJjQpHSbTiMoiMVA4awxw",
+    "sha256": "5c8743102c5a1e28f8eeb23a838b949d70d9c561435cb2a01394d157f2f4f142"
+  },
+  "vitality-vs-natus-vincere-m3-mirage.dem": {
+    "drive_id": "1O5N2mkWR1xZX23UEogau8bxbAvSLkFdG",
+    "sha256": "059e8a0abfc550087c91ad706de58ae5d2f959c6153ebbc799a35db6eaf2753c"
+  },
+  "vitality-vs-spirit-m3-mirage.dem": {
+    "drive_id": "1RGvJ-8LflAW78yPMXLqLwmVXd357mluj",
+    "sha256": "9026edcdd8b8026a01de5b81727c83766e397b74b57ff764ac96a6c9dbede7ec"
+  }
 }

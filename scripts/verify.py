@@ -173,13 +173,12 @@ def smoke_test(binary: Path, references: dict, work: Path) -> None:
         (ROOT / "data" / "raw_checksums.json").read_text(encoding="utf-8")
     )
     if not isinstance(checksums, dict):
-        raise CheckError(
-            "data/raw_checksums.json must contain a filename-to-SHA-256 object"
-        )
+        raise CheckError("data/raw_checksums.json must contain demo records")
     # Check both inputs before running either demo through the parser.
     for match in MATCHES:
         demo = ROOT / "data" / "raw" / f"{match}.dem"
-        expected = checksums.get(demo.name)
+        entry = checksums.get(demo.name)
+        expected = entry.get("sha256") if isinstance(entry, dict) else None
         if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
             raise CheckError(
                 f"Missing or invalid SHA-256 for {demo.name} in data/raw_checksums.json"
