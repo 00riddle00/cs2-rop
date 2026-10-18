@@ -27,7 +27,10 @@ ifneq (,$(wildcard .env))
 endif
 
 # --- Phony targets --------------------------------------------------------------
-.PHONY: all help setup parse parse-dust2 parse-mirage pylint golint shlint lint clean check-env smoke-test
+.PHONY: all help setup
+.PHONY: parse parse-dust2 parse-mirage
+.PHONY: pylint golint shlint lint
+.PHONY: clean check-env smoke-test
 
 # --- Default ------------------------------------------------------------------
 .DEFAULT_GOAL := help
