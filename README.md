@@ -17,17 +17,17 @@ team's data-mining work, not yet a finished analysis or predictive model.
 
 **Parameters and description:** 
 
-Timeframe: 01.08.2026 - 11.10.2026
-Teams: TOP 10 Between each other [HLTV]
-Games: LAN
-Maps: Dust2, Mirage
-Snapshots: Every 5 seconds, (320 ticks)
-Variables: 
-[In-Game] Side, Coordinates, Health, Round time, Win condition, Economy, Weapons, Utilities, Alive/Dead, X vs. X, C4 Position 
-[Meta] Teams, Players, Player ranking, Team ranking, History
-Goal: Round outcome prediction based on position & other variables
-H0: Round outcomes are random and independent on position & other in-game variables
-H1: Round outcomes are predictable and dependent on position & other in-game variables
+- Timeframe: 01.08.2026 - 11.10.2026
+- Teams: TOP 10 Between each other [HLTV]
+- Games: LAN
+- Maps: Dust2, Mirage
+- Snapshots: Every 5 seconds, (320 ticks)
+- Variables: 
+- [In-Game] Side, Coordinates, Health, Round time, Win condition, Economy, Weapons, Utilities, Alive/Dead, X vs. X, C4 Position 
+- [Meta] Teams, Players, Player ranking, Team ranking, History
+- Goal: Round outcome prediction based on position & other variables
+- H0: Round outcomes are random and independent on position & other in-game variables
+- H1: Round outcomes are predictable and dependent on position & other in-game variables
 
 Check for more detail in PAR_DESC.txt.
 
