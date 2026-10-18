@@ -37,6 +37,7 @@ Check for more detail in PAR_DESC.txt.
 <!--toc:start-->
 - [Table of contents](#table-of-contents)
 - [Overview](#overview)
+- [Resources and literature](#resources-and-literature)
 - [Quick start](#quick-start)
   - [Without GNU Make](#without-gnu-make)
 - [Repository layout](#repository-layout)
@@ -62,6 +63,13 @@ The project currently consists of:
 
 The Go exporter provides compact positional snapshots, while Awpy offers detailed event
 data such as kills, damage, and grenades. Their outputs have different schemas.
+
+## Resources and literature
+
+- [Project resources](./docs/resources.md): Taiga, HLTV statistics, demo-parsing
+  libraries, and related CS2 research projects.
+- [Research papers](./docs/papers/): Academic literature,
+  references, and available PDFs.
 
 ## Quick start
 
@@ -96,8 +104,8 @@ For native Windows PowerShell without GNU Make, use the
    This installs Python and Go dependencies. uv creates a local `.venv/` and downloads
    the pinned Python version if necessary; activating the environment is not required.
 
-3. **Download and verify the full dataset** from the shared
-   [Drive](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989):
+3. **Download and verify the full dataset** from the shared [Google Drive
+   demos](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989):
 
    ```text
    make download-demos
