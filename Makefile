@@ -13,12 +13,13 @@
 # =============================================================================
 
 # --- Configuration ------------------------------------------------------------
-# Paths passed to Go are relative to go-parser/ because of go -C.
+# Demo paths are relative to the repository root; Go dependencies use go -C.
 GO_PARSER := go-parser
-RAW_DIR := ../data/raw
+RAW_DIR := data/raw
 
 DUST2_DEMO := $(RAW_DIR)/mouz-vs-spirit-m1-dust2.dem
 MIRAGE_DEMO := $(RAW_DIR)/mouz-vs-spirit-m2-mirage.dem
+PARSE_FLAGS = $(if $(filter 1,$(FORCE)),--force,)
 
 # Load environment variables from .env file if it exists
 ifneq (,$(wildcard .env))
@@ -28,7 +29,7 @@ endif
 
 # --- Phony targets --------------------------------------------------------------
 .PHONY: all help setup download-demos
-.PHONY: parse parse-dust2 parse-mirage
+.PHONY: parse parse-all parse-dust2 parse-mirage
 .PHONY: pylint golint shlint lint
 .PHONY: clean check-env smoke-test
 
@@ -41,10 +42,12 @@ all: setup parse
 
 help:
 	@echo ""
-	@echo "  make all            Run setup and parse both demos"
+	@echo "  make all            Run setup and parse missing baseline CSVs"
 	@echo "  make setup          Install Python and Go dependencies"
 	@echo "  make download-demos Download and verify all manifest demos"
-	@echo "  make parse          Parse both demos"
+	@echo "  make parse          Parse baseline demos, skipping existing CSVs"
+	@echo "  make parse-all      Parse all local demos, skipping existing CSVs"
+	@echo "                       Add FORCE=1 to replace selected CSVs"
 	@echo "  make parse-dust2    Parse the Dust2 demo"
 	@echo "  make parse-mirage   Parse the Mirage demo"
 	@echo "  make pylint         Lint & format Python code"
@@ -69,15 +72,19 @@ download-demos:
 
 # --- Demo parsing -------------------------------------------------------------
 # Generated CSVs are saved to data/processed/.
-# Existing output files with matching names will be overwritten.
+# Existing output files are skipped unless FORCE=1 is explicitly supplied.
 
-parse: parse-dust2 parse-mirage
+parse:
+	uv run --no-sync python -B scripts/parse_demos.py "$(DUST2_DEMO)" "$(MIRAGE_DEMO)" $(PARSE_FLAGS)
+
+parse-all:
+	uv run --no-sync python -B scripts/parse_demos.py --all $(PARSE_FLAGS)
 
 parse-dust2:
-	go -C $(GO_PARSER) run . --input $(DUST2_DEMO)
+	uv run --no-sync python -B scripts/parse_demos.py "$(DUST2_DEMO)" $(PARSE_FLAGS)
 
 parse-mirage:
-	go -C $(GO_PARSER) run . --input $(MIRAGE_DEMO)
+	uv run --no-sync python -B scripts/parse_demos.py "$(MIRAGE_DEMO)" $(PARSE_FLAGS)
 
 # --- Lint & format Python -----------------------------------------------------
 pylint:

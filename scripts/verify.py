@@ -139,6 +139,9 @@ def check_env(work: Path) -> tuple[Path, dict]:
 
 
 def check_references() -> None:
+    # Require unchanged committed references before regression testing.
+    # Regenerating a CSV may reorder otherwise identical rows, producing a
+    # Git diff even though the subsequent CSV comparison ignores row order.
     paths = [f"data/processed/{match}_snapshots.csv" for match in MATCHES]
     try:
         result = subprocess.run(

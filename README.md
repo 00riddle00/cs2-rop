@@ -37,6 +37,7 @@ Check for more detail in PAR_DESC.txt.
 <!--toc:start-->
 - [Table of contents](#table-of-contents)
 - [Overview](#overview)
+- [Workflow](#workflow)
 - [Resources and literature](#resources-and-literature)
 - [Quick start](#quick-start)
   - [Without GNU Make](#without-gnu-make)
@@ -47,6 +48,7 @@ Check for more detail in PAR_DESC.txt.
 - [Development commands](#development-commands)
   - [Environment and parser verification](#environment-and-parser-verification)
 - [Troubleshooting](#troubleshooting)
+  - [Regenerated CSVs differ from Git references](#regenerated-csvs-differ-from-git-references)
 <!--toc:end-->
 
 ## Overview
@@ -63,6 +65,24 @@ The project currently consists of:
 
 The Go exporter provides compact positional snapshots, while Awpy offers detailed event
 data such as kills, damage, and grenades. Their outputs have different schemas.
+
+## Workflow
+
+The diagram shows the recommended workflow; commands do not automatically run the
+next step. Verification uses the two baseline demos, while `make parse-all` processes
+all local demos and skips existing CSVs. The notebook can also inspect the committed
+reference CSVs without running bulk processing first.
+
+```mermaid
+flowchart TD
+    A["<b>make setup</b><br/>Install Python and Go dependencies"]
+    B["<b>make download-demos</b><br/>Download and verify all 61 demos"]
+    C["<b>make check-env</b> and <b>make smoke-test</b><br/>Verify the environment and reproduce<br/>the two reference CSVs"]
+    D["<b>make parse-all</b><br/>Generate CSVs for all local demos,<br/>skipping existing outputs"]
+    E["<b>Open Jupyter notebook manually</b><br/>Explore the resulting data<br/>and develop analysis"]
+
+    A --> B --> C --> D --> E
+```
 
 ## Resources and literature
 
@@ -157,9 +177,9 @@ The small CSVs in [`data/processed/`](./data/processed/) and
 [`data/samples/`](./data/samples/) are committed to Git and can be inspected without raw
 demos. Parsing with Go or Awpy requires the corresponding `.dem` files.
 
-CSV regeneration is optional because reference CSVs are already committed. Use
-[`make parse`](#parse-demos-with-go) only when intentionally regenerating the two
-baseline CSVs; it **overwrites existing output files**.
+Parsing is optional during initialization because reference CSVs are already committed.
+Use [`make parse-all`](#parse-demos-with-go) to process other local demos. Normal parsing
+skips existing CSVs; intentional regeneration requires `FORCE=1`.
 
 ### Without GNU Make
 
@@ -174,13 +194,21 @@ uv run --no-sync python -B scripts/verify.py check-env
 uv run --no-sync python -B scripts/verify.py smoke-test
 ```
 
-Only when intentionally regenerating the two baseline CSVs, use these equivalents
-of `make parse`. They **overwrite existing CSVs** in `data/processed/`:
+To process all discovered demos, use the equivalent of `make parse-all`:
 
 ```text
-go -C go-parser run . --input ../data/raw/mouz-vs-spirit-m1-dust2.dem
-go -C go-parser run . --input ../data/raw/mouz-vs-spirit-m2-mirage.dem
+uv run --no-sync python -B scripts/parse_demos.py --all
 ```
+
+For a selected demo, pass its path to the same script. Add `--force` only when
+intentionally replacing its output, including a tracked reference CSV:
+
+```text
+uv run --no-sync python -B scripts/parse_demos.py data/raw/mouz-vs-spirit-m1-dust2.dem
+uv run --no-sync python -B scripts/parse_demos.py data/raw/mouz-vs-spirit-m1-dust2.dem --force
+```
+
+Pass both baseline paths to the script to reproduce the selection of `make parse`.
 
 ## Repository layout
 
@@ -204,25 +232,50 @@ The Go parser is a separate module under [`go-parser/`](./go-parser/), with its 
 
 ## Parse demos with Go
 
-To intentionally regenerate the two baseline snapshot CSVs, run:
+To process all `.dem` files directly inside `data/raw/`, run:
 
 ```text
-make parse
+make parse-all
 ```
 
-This step is optional during initialization because the reference CSVs are committed.
-It writes to `data/processed/` and **overwrites existing CSVs** with matching names.
-For the equivalent direct commands, see [Without GNU Make](#without-gnu-make).
+The Python helper discovers demos in sorted order, independently of the download
+manifest, and invokes the existing Go parser sequentially. Each output is named
+`data/processed/<demo-name>_snapshots.csv`. New local demos are included automatically.
+Existing outputs are skipped, so rerunning the command processes only missing CSVs.
+An empty discovery is an error. No Go build is needed if every output is skipped;
+otherwise the parser is compiled once into a temporary directory for the batch.
 
-The Go parser requires `--input` and accepts an optional `--output`. By default, it
-writes `data/processed/<demo-name>_snapshots.csv`.
+`make parse` selects the two baseline demos; `make parse-dust2` and `make parse-mirage`
+select one each. All use the same skip-existing behavior. `make all` runs setup followed
+by baseline parsing, preserving existing CSVs by default. None of these commands
+downloads demos. See [Without GNU Make](#without-gnu-make) for direct equivalents.
 
-The `go -C go-parser` command changes the working directory to `go-parser/`, so paths
-passed to the parser are relative to that directory (hence `../data/raw/` above).
+To intentionally regenerate outputs, use:
 
-To choose an output file, append `--output ../data/processed/dust2_custom.csv` to a
-parsing command. With Make, you can run `make parse-dust2` or `make parse-mirage`
-individually; `make all` performs setup and parses both demos.
+```text
+make parse-dust2 FORCE=1
+make parse-all FORCE=1
+```
+
+**`FORCE=1` permits replacing every selected output, including tracked reference CSVs.**
+With `parse-all`, this includes both baseline references. Review reference changes
+before committing them; `smoke-test` rejects staged or unstaged reference changes
+relative to `HEAD` until they are reviewed and committed or restored.
+
+CSV output is generated in temporary storage on the destination filesystem and
+published only after the parser succeeds and validation passes. Validation reuses
+`scripts/verify.py`: it requires the expected ten columns, at least one data row,
+valid field types, and unique `(round_num, tick, steamid)` keys. Failed parsing or
+validation preserves any existing destination and removes temporary output. The batch
+continues after individual failures, reports processed/skipped/failed totals, and exits
+nonzero if any demo fails. Publishing without force requires filesystem hard-link
+support (available on native Linux filesystems and Windows NTFS); unsupported filesystems
+fail without replacing an existing output.
+
+New generated CSVs are not ignored by Git under the current tracking policy. Review
+their sizes and usefulness before deliberately adding them; bulk parsing does not
+stage or commit them. The Go parser and its low-level `--input`/`--output` interface
+are unchanged; direct invocation bypasses the helper's overwrite protection.
 
 ## Explore the data in Jupyter
 
@@ -292,8 +345,9 @@ The [`Makefile`](./Makefile) lists its targets with `make help`. Useful shortcut
   required datasets.
 - `make smoke-test`: Run environment checks, verify the two baseline demo checksums,
   parse those demos, and compare every output row against the tracked references.
-- `make parse`: Intentionally regenerate the two baseline CSVs, overwriting existing
-  output files.
+- `make parse`: Parse the two baseline demos, skipping existing outputs.
+- `make parse-all`: Parse all discovered local demos, skipping existing outputs.
+  Add `FORCE=1` to a parsing target to intentionally replace selected outputs.
 - `make clean`: Remove disposable caches, preserving environments and datasets.
 
 To lint and format without Make (including in native Windows PowerShell), run from the
@@ -375,3 +429,40 @@ may not include Make.
   direct equivalent), check the selected Python interpreter, and restart the kernel.
   The interpreter is usually
   `.venv/Scripts/python.exe` on Windows or `.venv/bin/python` on Linux/macOS.
+
+### Regenerated CSVs differ from Git references
+
+The Go parser may produce CSV rows in a different order from the committed references.
+Regenerating the two baseline CSVs can therefore produce large Git diffs even when
+the actual records are identical. This was observed for both baseline matches:
+
+| Match  | Rows  | Comparison ignoring row order |
+| ------ | ----- | ----------------------------- |
+| Dust2  | 5,820 | Identical                     |
+| Mirage | 4,750 | Identical                     |
+
+The smoke test compares generated CSV records independently of row order. However,
+it first requires the tracked reference CSVs to match `HEAD` exactly, including
+staged and unstaged changes. Harmless row reordering in a reference CSV therefore
+causes `make smoke-test` to fail before the regression comparison begins. This is
+intentional: the committed CSVs serve as fixed regression baselines.
+
+If the references were regenerated unintentionally, restore them from `HEAD`.
+**The following commands discard both staged and unstaged changes to these two
+files. Review intentional changes before restoring them.**
+
+```text
+git restore --source=HEAD --staged --worktree -- data/processed/mouz-vs-spirit-m1-dust2_snapshots.csv
+git restore --source=HEAD --staged --worktree -- data/processed/mouz-vs-spirit-m2-mirage_snapshots.csv
+```
+
+Then rerun:
+
+```text
+make smoke-test
+```
+
+Different row ordering alone does not indicate incorrect parser output. Genuine
+differences in row contents, missing records, or additional records must be
+investigated before updating the committed references. The cause of the varying
+row order has not been confirmed.
