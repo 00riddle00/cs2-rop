@@ -80,6 +80,7 @@ MLP
 
 LSTM
 
+Sci-kit learn
 
 
 https://github.com/markus-wa/demoinfocs-golang \[Go Demo-parser]
@@ -91,6 +92,12 @@ https://github.com/ratulsarker/CS2\_RoundPrediction \[Deep-Learning, a good exam
 https://github.com/Gary2005/cs-net \[Transformer-based round win prediction, predicts movement]
 
 https://github.com/wyn0n0/CSMapWinPredict \[Replay and prediction with a display]
+
+https://github.com/eigenpaul/cs2-evalbar
+
+https://github.com/kamalchah/CounterStrikeWinProb
+
+https://github.com/TaiZo1/cs2-win-prediction
 
 
 
@@ -106,6 +113,14 @@ The question of "Why these two? Why not one or the other?"
 
 5\. CsMapWinPredict: CS Demo Map is a Counter-Strike 2 replay and win-probability analysis project. It turns .dem recordings into an interactive radar replay, showing match progress alongside round-win estimates based on player status, equipment and the bomb situation. The model uses information available at the current point in the recording, with estimates usually updated about once per second. The prediction target is the current round winner, not the final result of the map or match. Last update 2026-10-18, Mirage-only.
 
+6. A CS2 round-probability and demo-analysis toolkit. It combines a gradient-boosted baseline with a temporal graph-transformer model, probability calibration, and a web-based analysis interface. It currently focuses on Inferno.
+
+7. A CS:GO round-win probability pipeline that specifically investigates player-position embeddings. This is conceptually relevant to your spatial-feature goal, although it targets the older CS:GO dataset and may require adaptation for CS2 demos.
+
+8. A professional-match round prediction pipeline with demo parsing, feature engineering, and logistic regression. It predicts from the freeze-time state, making it useful as a baseline, but it doesn't capture the full evolution of a round.
+
 LITERATURE REVIEW:
 
 One of the key challenges to initialize a relevant database was to parse the so-called Demo files that store the entire information about the game tick-by-tick. Tickrate is the rate of recorded instances per second. Actual matches have 128 tickrate, Demo files have 16 tickrate to save space. While this may incure some loss of information, 16 instances per second is considered enough to account for all of the important events, except micromovements or minuscule information about crosshair placement or accurate hitbox hit instances. We primarily used golang Demo parser https://github.com/markus-wa/demoinfocs-golang to deal with the challenge of translating raw files into usable data. It is one of the most widely used tools in the scene for these exact application. Its features include tracking game events (kills, shots, round starts/ends, footsteps), game state (players, teams, grenades, ConVars), grenade projectiles/trajectories, and various other functions which are less important for our research. One of the stated top priorities of golang developers are performance and concurrency, making it a great option if scaling our project should ever be considered. Another tool that we used by way of functionality extension rather than substitution of golang was Awpy https://github.com/pnxenopoulos/awpy, which was programmed on Rust and built on top of the original golang and is a port to Python programming language to which our group members have a greater affinity. Another reason why Awpy was relevant is that while, at least on the surface, it gives less-control, it may provide a more clearer and ready-made functionality which is convenient for quick review of a given Demo file. Awpy doesn't require writing a custom code for it, making it a fast inspection tool. However, one has to keep in mind that these tools are not that different and choosing one over the other comes down to preference.
+
+As for the CS2 round prediction models, there are many varying kinds, hence evaluating them is critical, and some might be deemed a good baseline to kick off our research. One of these is https://github.com/ratulsarker/CS2_RoundPrediction which "Predicts which team (CT or T) will win a given round in CS2 using deep learning on mid-round game state snapshots." At the time of writing, since there is not stated license, and we didn't get confirmation if we can reuse the project's material for our purposes, we may only use claimed results as a benchmark and infer the efficiency of methods that were used. Their research has shown that MLP Tuned (Optuna, 50 trials) has shown best results [Test accuracy - 95.75%, AUC-ROC 0.9945] with MLP Standard (86 features) coming second [93.86%, 0.989] and KNN (k=3) coming in third [93.79%, 0.978], with Random Forest (500 Trees), XGBoost (86 features), Logistic Regression and LSTM (round-start, 15 features) as runners-up in that particular order. Research claims that top predictive features are 1. player count differential man_advantage (29.8%), 2. equipment_advantage (8.4%), 3. health_advantage (4.7%), 4. and t_allive, kills_this_round_t, armor/helmet_counts (percentage not declared). Their analysis involved 530 matches, 9,746 rounds and 161,271 snapshots, with 86 features extractedd from mid-round game state, and class balance of 48.9% CT wins / 51.1% T wins. 
