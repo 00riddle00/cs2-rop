@@ -1,4 +1,5 @@
 <!-- vim: set ft=markdown tw=88 nu ai et ts=2 sw=2: -->
+<!-- markdownlint-disable-file MD041 -->
 
 **Course:** Data Mining (5 ECTS), VU GMC and VU MIF, Autumn 2026
 
@@ -15,15 +16,15 @@ and a Jupyter notebook for examining parser output.
 for two MOUZ vs. Spirit matches (Dust2 and Mirage). It is a starting point for the
 team's data-mining work, not yet a finished analysis or predictive model.
 
-**Parameters and description:** 
+**Parameters and description:**
 
 - Timeframe: 01.08.2026 - 11.10.2026
 - Teams: TOP 10 Between each other [HLTV]
 - Games: LAN
 - Maps: Dust2, Mirage
 - Snapshots: Every 5 seconds, (320 ticks)
-- Variables: 
-- [In-Game] Side, Coordinates, Health, Round time, Win condition, Economy, Weapons, Utilities, Alive/Dead, X vs. X, C4 Position 
+- Variables:
+- [In-Game] Side, Coordinates, Health, Round time, Win condition, Economy, Weapons, Utilities, Alive/Dead, X vs. X, C4 Position
 - [Meta] Teams, Players, Player ranking, Team ranking, History
 - Goal: Round outcome prediction based on position & other variables
 - H0: Round outcomes are random and independent on position & other in-game variables
@@ -34,14 +35,20 @@ Check for more detail in PAR_DESC.txt.
 ## Table of contents
 
 <!--toc:start-->
+- [Table of contents](#table-of-contents)
 - [Overview](#overview)
+- [Workflow](#workflow)
+- [Resources and literature](#resources-and-literature)
 - [Quick start](#quick-start)
+  - [Without GNU Make](#without-gnu-make)
 - [Repository layout](#repository-layout)
 - [Parse demos with Go](#parse-demos-with-go)
 - [Explore the data in Jupyter](#explore-the-data-in-jupyter)
 - [Data organization and CSV columns](#data-organization-and-csv-columns)
 - [Development commands](#development-commands)
+  - [Environment and parser verification](#environment-and-parser-verification)
 - [Troubleshooting](#troubleshooting)
+  - [Regenerated CSVs differ from Git references](#regenerated-csvs-differ-from-git-references)
 <!--toc:end-->
 
 ## Overview
@@ -56,22 +63,50 @@ The project currently consists of:
 - [`parser_check.ipynb`](./notebooks/parser_check.ipynb) (Jupyter): inspects Awpy data
   and the Go-exported CSVs.
 
-The Go exporter provides compact positional snapshots, while Awpy offers detailed
-event data such as kills, damage, and grenades. Their outputs have different schemas.
+The Go exporter provides compact positional snapshots, while Awpy offers detailed event
+data such as kills, damage, and grenades. Their outputs have different schemas.
+
+## Workflow
+
+The diagram shows the recommended workflow; commands do not automatically run the
+next step. Verification uses the two baseline demos, while `make parse-all` processes
+all local demos and skips existing CSVs. The notebook can also inspect the committed
+reference CSVs without running bulk processing first.
+
+```mermaid
+flowchart TD
+    A["<b>make setup</b><br/>Install Python and Go dependencies"]
+    B["<b>make download-demos</b><br/>Download and verify all 61 demos"]
+    C["<b>make check-env</b> and <b>make smoke-test</b><br/>Verify the environment and reproduce<br/>the two reference CSVs"]
+    D["<b>make parse-all</b><br/>Generate CSVs for all local demos,<br/>skipping existing outputs"]
+    E["<b>Open Jupyter notebook manually</b><br/>Explore the resulting data<br/>and develop analysis"]
+
+    A --> B --> C --> D --> E
+```
+
+## Resources and literature
+
+- [Project resources](./docs/resources.md): Taiga, HLTV statistics, demo-parsing
+  libraries, and related CS2 research projects.
+- [Research papers](./docs/papers/): Academic literature,
+  references, and available PDFs.
 
 ## Quick start
 
 You need Git, [uv](https://docs.astral.sh/uv/getting-started/installation/), and
 [Go](https://go.dev/doc/install) (Go 1.27.2+). uv manages Python:
-[`.python-version`](./.python-version) pins **3.13.16**, so you do not need to
-install Python manually.
+[`.python-version`](./.python-version) pins **3.13.16**, so you do not need to install
+Python manually.
 
-The commands below work on Linux, macOS, and native Windows PowerShell;
+The primary workflow uses GNU Make with uv and Go on `PATH`. It works on Linux,
+macOS, and native Windows with GNU Make installed;
 [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) is not required.
-Windows users can obtain Git from [Git for Windows](https://git-scm.com/downloads/win).
+For native Windows PowerShell without GNU Make, use the
+[alternative workflow below](#without-gnu-make). Windows users can obtain Git from
+[Git for Windows](https://git-scm.com/downloads/win).
 
-1. **Clone the repository.** On its GitHub page, select **Code**, copy the HTTPS or
-   SSH clone URL, and run:
+1. **Clone the repository.** On its GitHub page, select **Code**, copy the HTTPS or SSH
+   clone URL, and run:
 
    ```bash
    git clone <repository-url>
@@ -82,45 +117,98 @@ Windows users can obtain Git from [Git for Windows](https://git-scm.com/download
 
 2. **Install dependencies:**
 
-   ```bash
-   uv sync
-   go -C go-parser mod download
+   ```text
+   make setup
    ```
 
-   uv creates a local `.venv/` and downloads the pinned Python version if necessary.
-   You can use `uv run ...` without activating the environment.
+   This installs Python and Go dependencies. uv creates a local `.venv/` and downloads
+   the pinned Python version if necessary; activating the environment is not required.
 
-3. **Download demos** from the shared
-   [Drive](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989).
+3. **Download and verify the full dataset** from the shared [Google Drive
+   demos](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989):
 
-   Place these files in [`data/raw/`](./data/raw/):
+   ```text
+   make download-demos
+   ```
+
+   This downloads all **61 demos (approximately 21.4 GB)** listed in
+   [`data/raw_checksums.json`](./data/raw_checksums.json) into [`data/raw/`](./data/raw/).
+   That manifest defines the dataset using each filename's `drive_id` and `sha256`.
+   It includes the two baseline demos used by the parser smoke test:
 
    ```text
    data/raw/mouz-vs-spirit-m1-dust2.dem
    data/raw/mouz-vs-spirit-m2-mirage.dem
    ```
 
+   Files with valid SHA-256 checksums are skipped without contacting Drive. Missing
+   or invalid files are downloaded and verified against `data/raw_checksums.json`
+   before being placed at their final paths. An invalid existing file is replaced
+   only after a verified download succeeds. Temporary downloads are cleaned up on
+   failure or interruption; retrying starts a fresh download. You can also download
+   the files manually from Drive and place them in `data/raw/` with the manifest filenames.
+   Local files not listed in the manifest are left untouched. Repeated runs still
+   read all listed files to calculate streaming SHA-256 hashes, but valid files are
+   not downloaded again. Future additions to the Drive folder are not automatically
+   included: add a manifest record with the filename, Drive ID, and SHA-256 to expand
+   the project dataset without editing the downloader.
+
    Do not commit `.dem` files: they may exceed GitHub's 100 MiB file limit.
    [`.gitignore`](./.gitignore) excludes them, and
    [`data/raw/.gitkeep`](./data/raw/.gitkeep) preserves the directory in Git.
 
-4. **Generate or refresh the CSVs:**
+4. **Verify the environment and parser:**
 
-   ```bash
-   go -C go-parser run . --input ../data/raw/mouz-vs-spirit-m1-dust2.dem
-   go -C go-parser run . --input ../data/raw/mouz-vs-spirit-m2-mirage.dem
+   ```text
+   make check-env
+   make smoke-test
    ```
 
-   The results are written to [`data/processed/`](./data/processed/). If you have
-   GNU Make, `make setup` and `make parse` are shortcuts for steps 2 and 4.
+   These checks require only the two baseline demos. The smoke test parses them into
+   temporary CSVs and compares them against the committed references without
+   overwriting them. See the
+   [verification details](#environment-and-parser-verification).
 
 5. **Explore the results** in
-   [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb); see
-   [Explore the data in Jupyter](#explore-the-data-in-jupyter).
+   [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb); see [Explore the
+   data in Jupyter](#explore-the-data-in-jupyter).
 
 The small CSVs in [`data/processed/`](./data/processed/) and
-[`data/samples/`](./data/samples/) are committed to Git and can be inspected without
-raw demos. Parsing with Go or Awpy requires the corresponding `.dem` files.
+[`data/samples/`](./data/samples/) are committed to Git and can be inspected without raw
+demos. Parsing with Go or Awpy requires the corresponding `.dem` files.
+
+Parsing is optional during initialization because reference CSVs are already committed.
+Use [`make parse-all`](#parse-demos-with-go) to process other local demos. Normal parsing
+skips existing CSVs; intentional regeneration requires `FORCE=1`.
+
+### Without GNU Make
+
+After cloning, run these equivalent commands from the repository root in native
+Windows PowerShell, Linux, or macOS:
+
+```text
+uv sync
+go -C go-parser mod download
+uv run --no-sync python -B scripts/download_demos.py
+uv run --no-sync python -B scripts/verify.py check-env
+uv run --no-sync python -B scripts/verify.py smoke-test
+```
+
+To process all discovered demos, use the equivalent of `make parse-all`:
+
+```text
+uv run --no-sync python -B scripts/parse_demos.py --all
+```
+
+For a selected demo, pass its path to the same script. Add `--force` only when
+intentionally replacing its output, including a tracked reference CSV:
+
+```text
+uv run --no-sync python -B scripts/parse_demos.py data/raw/mouz-vs-spirit-m1-dust2.dem
+uv run --no-sync python -B scripts/parse_demos.py data/raw/mouz-vs-spirit-m1-dust2.dem --force
+```
+
+Pass both baseline paths to the script to reproduce the selection of `make parse`.
 
 ## Repository layout
 
@@ -144,24 +232,57 @@ The Go parser is a separate module under [`go-parser/`](./go-parser/), with its 
 
 ## Parse demos with Go
 
-The Go parser requires `--input` and accepts an optional `--output`. By default, it
-writes `data/processed/<demo-name>_snapshots.csv`. An existing CSV with the same name
-is **overwritten**.
+To process all `.dem` files directly inside `data/raw/`, run:
 
-The `go -C go-parser` command changes the working directory to `go-parser/`, so paths
-passed to the parser are relative to that directory (hence `../data/raw/` above).
+```text
+make parse-all
+```
 
-To choose an output file, append
-`--output ../data/processed/dust2_custom.csv` to a parsing command. With Make, you
-can run `make parse-dust2` or `make parse-mirage` individually; `make all` performs
-setup and parses both demos.
+The Python helper discovers demos in sorted order, independently of the download
+manifest, and invokes the existing Go parser sequentially. Each output is named
+`data/processed/<demo-name>_snapshots.csv`. New local demos are included automatically.
+Existing outputs are skipped, so rerunning the command processes only missing CSVs.
+An empty discovery is an error. No Go build is needed if every output is skipped;
+otherwise the parser is compiled once into a temporary directory for the batch.
+
+`make parse` selects the two baseline demos; `make parse-dust2` and `make parse-mirage`
+select one each. All use the same skip-existing behavior. `make all` runs setup followed
+by baseline parsing, preserving existing CSVs by default. None of these commands
+downloads demos. See [Without GNU Make](#without-gnu-make) for direct equivalents.
+
+To intentionally regenerate outputs, use:
+
+```text
+make parse-dust2 FORCE=1
+make parse-all FORCE=1
+```
+
+**`FORCE=1` permits replacing every selected output, including tracked reference CSVs.**
+With `parse-all`, this includes both baseline references. Review reference changes
+before committing them; `smoke-test` rejects staged or unstaged reference changes
+relative to `HEAD` until they are reviewed and committed or restored.
+
+CSV output is generated in temporary storage on the destination filesystem and
+published only after the parser succeeds and validation passes. Validation reuses
+`scripts/verify.py`: it requires the expected ten columns, at least one data row,
+valid field types, and unique `(round_num, tick, steamid)` keys. Failed parsing or
+validation preserves any existing destination and removes temporary output. The batch
+continues after individual failures, reports processed/skipped/failed totals, and exits
+nonzero if any demo fails. Publishing without force requires filesystem hard-link
+support (available on native Linux filesystems and Windows NTFS); unsupported filesystems
+fail without replacing an existing output.
+
+New generated CSVs are not ignored by Git under the current tracking policy. Review
+their sizes and usefulness before deliberately adding them; bulk parsing does not
+stage or commit them. The Go parser and its low-level `--input`/`--output` interface
+are unchanged; direct invocation bypasses the helper's overwrite protection.
 
 ## Explore the data in Jupyter
 
 Open the [parser inspection notebook](./notebooks/parser_check.ipynb) in a
 Jupyter-capable editor, such as VS Code with its Python and
 [Jupyter](https://code.visualstudio.com/docs/datascience/jupyter-notebooks) extensions.
-The project's `ipykernel` dependency is installed by `uv sync`. Select the `.venv`
+The project's `ipykernel` dependency is installed by `make setup`. Select the `.venv`
 Python environment as the kernel, then run cells in order.
 
 In the notebook's configuration cell, select the full match identifier:
@@ -175,8 +296,8 @@ Dust2 is match **1** (`m1`); Mirage is match **2** (`m2`). You can start the not
 from either the repository root or `notebooks/`. The Awpy section needs the
 corresponding `.dem` file; the CSV inspection section works with committed data.
 
-Notebook execution may save large outputs, execution counts, or local paths. Review
-`git diff` before committing notebook changes.
+Notebook execution may save large outputs, execution counts, or local paths. Review `git
+diff` before committing notebook changes.
 
 ## Data organization and CSV columns
 
@@ -186,12 +307,11 @@ Notebook execution may save large outputs, execution counts, or local paths. Rev
 | [`data/processed/`](./data/processed/) | Snapshot CSVs              | Yes, while small      |
 | [`data/samples/`](./data/samples/)     | Example CSVs               | Yes                   |
 
-**Sampling:** During active rounds, the Go exporter records player states every
-**320 demo ticks** (approximately **5 seconds** at 64 ticks per second). Each snapshot
-has one row per player, including dead players. For a normal 5v5 match,
-this typically means ten rows per sampled tick. These are not full per-tick
-trajectories or event logs; account for the sampling interval when computing
-time-dependent features.
+**Sampling:** During active rounds, the Go exporter records player states every **320
+demo ticks** (approximately **5 seconds** at 64 ticks per second). Each snapshot has one
+row per player, including dead players. For a normal 5v5 match, this typically means ten
+rows per sampled tick. These are not full per-tick trajectories or event logs; account
+for the sampling interval when computing time-dependent features.
 
 The current Go snapshot CSVs contain:
 
@@ -218,10 +338,20 @@ The [`Makefile`](./Makefile) lists its targets with `make help`. Useful shortcut
 - `make shlint`: [ShellCheck](https://github.com/koalaman/shellcheck) and
   [shfmt](https://github.com/mvdan/sh) for shell scripts (install separately).
 - `make lint`: Run all three lint/format targets.
+- `make setup`: Install Python and Go dependencies.
+- `make download-demos`: Download all 61 manifest demos, verifying checksums and skipping
+  valid local files.
+- `make check-env`: Verify the Python environment, dependencies, Go compilation, and
+  required datasets.
+- `make smoke-test`: Run environment checks, verify the two baseline demo checksums,
+  parse those demos, and compare every output row against the tracked references.
+- `make parse`: Parse the two baseline demos, skipping existing outputs.
+- `make parse-all`: Parse all discovered local demos, skipping existing outputs.
+  Add `FORCE=1` to a parsing target to intentionally replace selected outputs.
 - `make clean`: Remove disposable caches, preserving environments and datasets.
 
-To lint and format without Make (including in native Windows PowerShell), run from
-the repository root:
+To lint and format without Make (including in native Windows PowerShell), run from the
+repository root:
 
 ```bash
 go -C go-parser fmt ./...
@@ -230,23 +360,109 @@ uv run ruff check . --fix
 uv run black .
 ```
 
-**Linting targets also modify files** through automatic fixes and formatting.
-Inspect `git diff` afterwards.
+**Linting targets also modify files** through automatic fixes and formatting. Inspect
+`git diff` afterwards.
+
+### Environment and parser verification
+
+Follow [Quick start](#quick-start) for the Makefile workflow or
+[Without GNU Make](#without-gnu-make) for equivalent direct commands.
+
+Downloads use [gdown](https://github.com/wkentaro/gdown), installed by `make setup`.
+Neither `setup` nor `check-env` downloads demo datasets automatically.
+`download-demos` covers the full manifest; `check-env` and `smoke-test` require only
+the original MOUZ vs. Spirit Dust2 and Mirage demos and their two reference CSVs.
+The other 59 demos are not parsed or required by those verification commands.
+
+Verification requires uv, Go 1.27.2+ (as specified by `go-parser/go.mod`), and the
+project `.venv` using the exact interpreter pinned in `.python-version`. It checks
+dependency compatibility with `uv pip check`, imports runtime packages, exercises
+dataframe conversion, and compiles Go with `-mod=readonly`. It does not check exact
+dependency versions against the lockfile or install or synchronize Python dependencies;
+rerun `make setup` to synchronize the environment. Go may populate its normal
+dependency/build caches or download a required toolchain.
+
+Both baseline raw demos and both `data/processed/` reference CSVs are required. `check-env`
+checks demo headers and validates CSV schemas, field types, and unique player keys.
+`smoke-test` also requires Git on `PATH` and rejects staged or unstaged changes to
+either reference CSV relative to `HEAD`. Review and commit intentional reference updates
+before testing against the new baseline; unrelated file changes are allowed. This checks
+regression against the current commit, not the baseline's scientific validity.
+`smoke-test` additionally checks both raw SHA-256 values before parsing either demo. The
+expected values come from the `sha256` fields in
+[`data/raw_checksums.json`](./data/raw_checksums.json), the single manifest for all
+61 demos. Hashes were calculated from the locally downloaded files. Actual Drive
+downloads have confirmed the two original baseline hashes and the hash for
+`9z-vs-g2-m1-dust2.dem`; the full remote collection has not been independently
+downloaded again for verification.
+
+The compiled binary and generated CSVs use a temporary directory that is removed on
+completion or failure. Tracked datasets are never overwritten. CSV comparisons ignore
+row order and line endings but require exact field values, including the parser's
+three-decimal coordinates. Failures print diagnostics and return a nonzero exit code.
+The notebook is neither executed nor modified by these commands.
+
+The download and verification Makefile targets require no Bash or Unix utilities and
+can run with a native Windows GNU Make installation. Existing lint and cleanup targets
+still require the Unix utilities described below.
 
 When changing dependencies, commit [`uv.lock`](./uv.lock) alongside
 [`pyproject.toml`](./pyproject.toml), or [`go.sum`](./go-parser/go.sum) alongside
 [`go.mod`](./go-parser/go.mod), as applicable.
 
-GNU Make is optional: all essential setup and parsing commands appear in Quick start.
-On Windows, run Make in a Unix-like environment such as
-[MSYS2](https://www.msys2.org/) or WSL, with
-[GNU Make](https://www.gnu.org/software/make/) and Unix utilities installed. Git Bash
-alone may not include Make.
+GNU Make is optional: see [Without GNU Make](#without-gnu-make) for the direct workflow.
+For the existing lint and cleanup targets on Windows, run Make in an environment such as
+[MSYS2](https://www.msys2.org/) or WSL, with [GNU
+Make](https://www.gnu.org/software/make/) and Unix utilities installed. Git Bash alone
+may not include Make.
 
 ## Troubleshooting
 
-- **`uv` or `go` is not recognized:** Check `uv --version` or `go version`, and
-  ensure the tool is installed and on `PATH`.
-- **The notebook cannot import a package:** Confirm `uv sync` completed, check the
-  selected Python interpreter, and restart the kernel. The interpreter is usually
+- **Demo download fails:** Check your connection and open the shared Drive folder in
+  a browser. All 61 files listed in `data/raw_checksums.json` must permit public
+  downloads. Google Drive quotas may require retrying later. Checksum mismatches
+  discard the temporary download and
+  preserve any previous file; retry, then contact the team if mismatches persist.
+- **`uv` or `go` is not recognized:** Check `uv --version` or `go version`, and ensure
+  the tool is installed and on `PATH`.
+- **The notebook cannot import a package:** Confirm `make setup` completed (or its
+  direct equivalent), check the selected Python interpreter, and restart the kernel.
+  The interpreter is usually
   `.venv/Scripts/python.exe` on Windows or `.venv/bin/python` on Linux/macOS.
+
+### Regenerated CSVs differ from Git references
+
+The Go parser may produce CSV rows in a different order from the committed references.
+Regenerating the two baseline CSVs can therefore produce large Git diffs even when
+the actual records are identical. This was observed for both baseline matches:
+
+| Match  | Rows  | Comparison ignoring row order |
+| ------ | ----- | ----------------------------- |
+| Dust2  | 5,820 | Identical                     |
+| Mirage | 4,750 | Identical                     |
+
+The smoke test compares generated CSV records independently of row order. However,
+it first requires the tracked reference CSVs to match `HEAD` exactly, including
+staged and unstaged changes. Harmless row reordering in a reference CSV therefore
+causes `make smoke-test` to fail before the regression comparison begins. This is
+intentional: the committed CSVs serve as fixed regression baselines.
+
+If the references were regenerated unintentionally, restore them from `HEAD`.
+**The following commands discard both staged and unstaged changes to these two
+files. Review intentional changes before restoring them.**
+
+```text
+git restore --source=HEAD --staged --worktree -- data/processed/mouz-vs-spirit-m1-dust2_snapshots.csv
+git restore --source=HEAD --staged --worktree -- data/processed/mouz-vs-spirit-m2-mirage_snapshots.csv
+```
+
+Then rerun:
+
+```text
+make smoke-test
+```
+
+Different row ordering alone does not indicate incorrect parser output. Genuine
+differences in row contents, missing records, or additional records must be
+investigated before updating the committed references. The cause of the varying
+row order has not been confirmed.

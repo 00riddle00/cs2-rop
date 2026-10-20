@@ -13,12 +13,13 @@
 # =============================================================================
 
 # --- Configuration ------------------------------------------------------------
-# Paths passed to Go are relative to go-parser/ because of go -C.
+# Demo paths are relative to the repository root; Go dependencies use go -C.
 GO_PARSER := go-parser
-RAW_DIR := ../data/raw
+RAW_DIR := data/raw
 
 DUST2_DEMO := $(RAW_DIR)/mouz-vs-spirit-m1-dust2.dem
 MIRAGE_DEMO := $(RAW_DIR)/mouz-vs-spirit-m2-mirage.dem
+PARSE_FLAGS = $(if $(filter 1,$(FORCE)),--force,)
 
 # Load environment variables from .env file if it exists
 ifneq (,$(wildcard .env))
@@ -27,7 +28,10 @@ ifneq (,$(wildcard .env))
 endif
 
 # --- Phony targets --------------------------------------------------------------
-.PHONY: all help setup parse parse-dust2 parse-mirage pylint golint shlint lint clean
+.PHONY: all help setup download-demos
+.PHONY: parse parse-all parse-dust2 parse-mirage
+.PHONY: pylint golint shlint lint
+.PHONY: clean check-env smoke-test
 
 # --- Default ------------------------------------------------------------------
 .DEFAULT_GOAL := help
@@ -38,15 +42,20 @@ all: setup parse
 
 help:
 	@echo ""
-	@echo "  make all            Run setup and parse both demos"
+	@echo "  make all            Run setup and parse missing baseline CSVs"
 	@echo "  make setup          Install Python and Go dependencies"
-	@echo "  make parse          Parse both demos"
+	@echo "  make download-demos Download and verify all manifest demos"
+	@echo "  make parse          Parse baseline demos, skipping existing CSVs"
+	@echo "  make parse-all      Parse all local demos, skipping existing CSVs"
+	@echo "                       Add FORCE=1 to replace selected CSVs"
 	@echo "  make parse-dust2    Parse the Dust2 demo"
 	@echo "  make parse-mirage   Parse the Mirage demo"
 	@echo "  make pylint         Lint & format Python code"
 	@echo "  make golint         Lint & format Go code"
 	@echo "  make shlint         Lint & format shell scripts"
 	@echo "  make lint           Run pylint & golint & shlint"
+	@echo "  make check-env      Verify environment, Go build, and datasets"
+	@echo "  make smoke-test     Verify demos and compare parser output"
 	@echo "  make clean          Remove generated caches"
 	@echo "  make help           Show this message"
 	@echo ""
@@ -58,17 +67,24 @@ setup:
 	@echo "==> Downloading Go dependencies"
 	go -C $(GO_PARSER) mod download
 
+download-demos:
+	uv run --no-sync python -B scripts/download_demos.py
+
 # --- Demo parsing -------------------------------------------------------------
 # Generated CSVs are saved to data/processed/.
-# Existing output files with matching names will be overwritten.
+# Existing output files are skipped unless FORCE=1 is explicitly supplied.
 
-parse: parse-dust2 parse-mirage
+parse:
+	uv run --no-sync python -B scripts/parse_demos.py "$(DUST2_DEMO)" "$(MIRAGE_DEMO)" $(PARSE_FLAGS)
+
+parse-all:
+	uv run --no-sync python -B scripts/parse_demos.py --all $(PARSE_FLAGS)
 
 parse-dust2:
-	go -C $(GO_PARSER) run . --input $(DUST2_DEMO)
+	uv run --no-sync python -B scripts/parse_demos.py "$(DUST2_DEMO)" $(PARSE_FLAGS)
 
 parse-mirage:
-	go -C $(GO_PARSER) run . --input $(MIRAGE_DEMO)
+	uv run --no-sync python -B scripts/parse_demos.py "$(MIRAGE_DEMO)" $(PARSE_FLAGS)
 
 # --- Lint & format Python -----------------------------------------------------
 pylint:
@@ -94,6 +110,12 @@ shlint:
 		-exec shfmt -ln=bash -s -i 2 -bn -ci -sr -w {} +
 
 # --- Grouped dev tasks ---------------------------------------------------------
+check-env:
+	uv run --no-sync python -B scripts/verify.py check-env
+
+smoke-test:
+	uv run --no-sync python -B scripts/verify.py smoke-test
+
 # Lint and also format (!) all supported languages (modifies files).
 lint: pylint golint shlint
 	@echo "==> Linting and formatting complete"
