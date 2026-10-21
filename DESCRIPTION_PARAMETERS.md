@@ -28,7 +28,7 @@ DESCRIPTION:
 
 
 
-Our data mining research investigates a game of Counter-Strike 2 (CS 2 onwards) by trying to predict the outcome of the round based on player's position on the map and other important factors like health, weapons, team economy, etc. A single map is played until one of the teams win 13 rounds out of 24, or in case of a tie, 12-12, they play additional tie-breaker rounds.  Each map is played differently due to different geometry that produces unique game situations, timings and optimal positions for each side, so in order to predict a round-win outcome all of this must be taken into consideration and can't translate from map to map and must be evaluated for each map separately.
+Our data mining research investigates a game of Counter-Strike 2 (CS 2 onwards) by trying to predict the outcome of the round based on player's position on the map and other important factors like side, health, weapons, team economy, etc. A single map is played until one of the teams win 13 rounds out of 24, or in case of a tie, 12-12, they play additional tie-breaker rounds. There are two sides (also called teams) in each match, CT and T. Each map is played differently due to different geometry that produces unique game situations, timings and optimal positions for each side, so in order to predict a round-win outcome all of this must be taken into consideration and can't translate from map to map and must be evaluated for each map separately.
 
 
 
