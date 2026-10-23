@@ -1,31 +1,36 @@
-"""Cross-platform environment and parser checks; never write reference datasets."""
+"""Verify the Python environment and reproduce the two baseline Awpy matches."""
 
 import argparse
-import csv
 import hashlib
+import importlib.metadata
 import json
-import math
-import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MATCHES = ("mouz-vs-spirit-m1-dust2", "mouz-vs-spirit-m2-mirage")
-COLUMNS = (
-    "tick",
-    "round_num",
-    "steamid",
-    "name",
-    "team",
-    "alive",
-    "health",
-    "x",
-    "y",
-    "z",
+TABLES = (
+    "rounds",
+    "kills",
+    "damages",
+    "bomb",
+    "grenades",
+    "fires",
+    "smokes",
+    "shots",
+    "stats",
+    "players",
+    "round_economy",
+    "chat",
+    "blinds",
+    "item_events",
+    "header",
+    "convars",
+    "snapshots",
 )
 
 
@@ -37,53 +42,46 @@ def report(message: str) -> None:
     print(message, flush=True)
 
 
-def run(args: list[str], *, cwd: Path = ROOT, env=None) -> None:
+def run(args: list[str]) -> None:
     report(f"Running: {subprocess.list2cmdline(args)}")
     try:
-        subprocess.run(args, cwd=cwd, env=env, check=True)
+        subprocess.run(args, cwd=ROOT, check=True)
     except FileNotFoundError as exc:
         raise CheckError(f"Command not found: {args[0]}. Check PATH.") from exc
     except subprocess.CalledProcessError as exc:
         raise CheckError(f"Command failed (exit {exc.returncode}): {args[0]}") from exc
 
 
-def read_csv(path: Path) -> dict:
-    """Validate and index exact field values without depending on row order."""
-    rows = {}
-    with path.open(encoding="utf-8", newline="") as stream:
-        reader = csv.reader(stream, strict=True)
-        if next(reader, None) != list(COLUMNS):
-            raise CheckError(f"{path}: expected CSV columns {', '.join(COLUMNS)}")
-        for line, values in enumerate(reader, start=2):
-            try:
-                if len(values) != len(COLUMNS) or any(v == "" for v in values):
-                    raise ValueError("expected ten nonempty fields")
-                row = dict(zip(COLUMNS, values))
-                for field in ("tick", "round_num", "steamid", "team", "health"):
-                    if not row[field].isascii() or not row[field].isdigit():
-                        raise ValueError(f"{field} must be a nonnegative integer")
-                if int(row["round_num"]) < 1 or int(row["steamid"]) < 1:
-                    raise ValueError("round_num and steamid must be positive")
-                if row["team"] not in ("2", "3"):
-                    raise ValueError("team must be 2 or 3")
-                if row["alive"] not in ("true", "false"):
-                    raise ValueError("alive must be true or false")
-                for field in ("x", "y", "z"):
-                    if not math.isfinite(float(row[field])):
-                        raise ValueError(f"{field} must be finite")
-                key = (int(row["round_num"]), int(row["tick"]), row["steamid"])
-                if key in rows:
-                    raise ValueError(f"duplicate key {key}")
-                rows[key] = tuple(values)
-            except ValueError as exc:
-                raise CheckError(f"{path}, line {line}: {exc}") from exc
-    if not rows:
-        raise CheckError(f"{path}: CSV has no data rows")
-    report(f"Valid CSV: {path.name} ({len(rows)} rows)")
-    return rows
+def read_match(folder: Path, match: str) -> dict:
+    """Require all 17 readable tables; empty event tables are legitimate."""
+    import polars as pl
+
+    expected = {f"{table}.parquet" for table in TABLES}
+    actual = {path.name for path in folder.glob("*.parquet")}
+    if actual != expected:
+        raise CheckError(
+            f"{folder}: unexpected table set; "
+            f"missing={sorted(expected - actual)}, extra={sorted(actual - expected)}"
+        )
+    tables = {}
+    for table in TABLES:
+        path = folder / f"{table}.parquet"
+        try:
+            frame = pl.read_parquet(path)
+        except pl.exceptions.PolarsError as exc:
+            raise CheckError(f"{path}: invalid Parquet: {exc}") from exc
+        if "match_id" not in frame.columns:
+            raise CheckError(f"{path}: missing match_id column")
+        if frame.height and frame["match_id"].unique().to_list() != [match]:
+            raise CheckError(f"{path}: match_id must be {match!r} on every row")
+        if table in {"rounds", "snapshots", "header"} and frame.is_empty():
+            raise CheckError(f"{path}: required table is empty")
+        tables[table] = frame
+    report(f"Valid match: {match} ({len(tables)} Parquet tables)")
+    return tables
 
 
-def check_env(work: Path) -> tuple[Path, dict]:
+def check_env() -> dict:
     expected = (ROOT / ".python-version").read_text(encoding="utf-8").strip()
     actual = ".".join(map(str, sys.version_info[:3]))
     if Path(sys.prefix).resolve() != (ROOT / ".venv").resolve():
@@ -96,32 +94,26 @@ def check_env(work: Path) -> tuple[Path, dict]:
             f"Python {actual} does not match .python-version ({expected}). Run uv sync."
         )
     report(f"Python {actual}: {sys.executable}")
-
     run(["uv", "pip", "check", "--python", sys.executable])
-    # Import native extensions too: installed metadata alone cannot prove usability.
-    env = dict(os.environ, MPLCONFIGDIR=str(work / "matplotlib"))
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    requirement = next(
+        dep for dep in project["project"]["dependencies"] if dep.startswith("awpy==")
+    )
+    version = importlib.metadata.version("awpy")
+    if version != requirement.removeprefix("awpy=="):
+        raise CheckError(
+            f"Installed awpy {version} does not match {requirement}. Run uv sync."
+        )
     run(
         [
             sys.executable,
             "-B",
             "-c",
-            "from awpy import Demo; import demoparser2, pandas, polars, pyarrow; "
-            "polars.DataFrame({'value': [1]}).to_pandas(); "
-            "print('Dependency imports and dataframe conversion: OK')",
-        ],
-        env=env,
+            "from awpy import Demo; import polars, pandas, pyarrow; "
+            "print('Awpy, Polars, pandas, and PyArrow imports: OK')",
+        ]
     )
-
-    if not shutil.which("go"):
-        raise CheckError(
-            "Go is missing from PATH. Install the version required by go-parser/go.mod."
-        )
-    run(["go", "version"])
-    binary = work / ("parser.exe" if os.name == "nt" else "parser")
-    run(
-        ["go", "build", "-mod=readonly", "-o", str(binary), "."], cwd=ROOT / "go-parser"
-    )
-    report("Go compilation: OK")
+    report(f"Awpy {version}: matches pyproject.toml")
 
     references = {}
     for match in MATCHES:
@@ -129,20 +121,17 @@ def check_env(work: Path) -> tuple[Path, dict]:
         with demo.open("rb") as stream:
             if stream.read(8) != b"PBDEMS2\x00" or demo.stat().st_size <= 8:
                 raise CheckError(
-                    f"{demo}: not a nonempty CS2 demo (PBDEMS2 header required)"
+                    f"{demo}: nonempty CS2 demo with PBDEMS2 header required"
                 )
         report(f"Demo present with CS2 header: {demo.name}")
-        references[match] = read_csv(
-            ROOT / "data" / "processed" / f"{match}_snapshots.csv"
-        )
-    return binary, references
+        references[match] = read_match(ROOT / "data" / "processed" / match, match)
+    return references
 
 
 def check_references() -> None:
-    # Require unchanged committed references before regression testing.
-    # Regenerating a CSV may reorder otherwise identical rows, producing a
-    # Git diff even though the subsequent CSV comparison ignores row order.
-    paths = [f"data/processed/{match}_snapshots.csv" for match in MATCHES]
+    # Require unchanged committed references even though table comparison ignores
+    # row order and Parquet encoding. Local regeneration is not a new baseline.
+    paths = [f"data/processed/{match}" for match in MATCHES]
     try:
         result = subprocess.run(
             ["git", "diff", "--quiet", "HEAD", "--", *paths],
@@ -158,26 +147,39 @@ def check_references() -> None:
         ) from exc
     if result.returncode == 1:
         raise CheckError(
-            "Reference CSVs differ from HEAD (staged or unstaged changes). "
+            "Reference match folders differ from HEAD (staged or unstaged changes). "
             "Review and commit intentional reference updates, or restore the "
             "committed references, before running smoke-test."
         )
     if result.returncode != 0:
         raise CheckError(
-            f"Could not verify reference CSVs against Git HEAD "
+            f"Could not verify reference matches against Git HEAD "
             f"(exit {result.returncode}): {result.stderr.strip()}"
         )
-    report("Reference CSVs match Git HEAD")
+    report("Reference match folders match Git HEAD")
 
 
-def smoke_test(binary: Path, references: dict, work: Path) -> None:
+def compare_tables(match: str, actual: dict, expected: dict) -> None:
+    from polars.testing import assert_frame_equal
+
+    for table in TABLES:
+        try:
+            assert_frame_equal(
+                actual[table], expected[table], check_row_order=False, check_exact=True
+            )
+        except AssertionError as exc:
+            raise CheckError(f"{match}/{table}.parquet: {exc}") from exc
+        report(f"MATCH {match}/{table}.parquet: {actual[table].height} rows")
+
+
+def smoke_test(references: dict, work: Path) -> None:
     check_references()
     checksums = json.loads(
         (ROOT / "data" / "raw_checksums.json").read_text(encoding="utf-8")
     )
     if not isinstance(checksums, dict):
         raise CheckError("data/raw_checksums.json must contain demo records")
-    # Check both inputs before running either demo through the parser.
+    # Check both inputs before extracting either demo.
     for match in MATCHES:
         demo = ROOT / "data" / "raw" / f"{match}.dem"
         entry = checksums.get(demo.name)
@@ -195,39 +197,21 @@ def smoke_test(binary: Path, references: dict, work: Path) -> None:
         report(f"SHA-256 verified: {demo.name}")
 
     for match in MATCHES:
-        generated = work / f"{match}_snapshots.csv"
         run(
             [
-                str(binary),
+                sys.executable,
+                "-B",
+                str(ROOT / "scripts" / "extract_awpy.py"),
                 "--input",
                 str(ROOT / "data" / "raw" / f"{match}.dem"),
                 "--output",
-                str(generated),
-            ],
-            cwd=ROOT / "go-parser",
+                str(work),
+                "--seconds",
+                "1",
+            ]
         )
-        actual = read_csv(generated)
-        expected = references[match]
-        missing = expected.keys() - actual.keys()
-        extra = actual.keys() - expected.keys()
-        if missing or extra:
-            raise CheckError(
-                f"{match}: CSV keys differ: "
-                f"{len(missing)} missing, {len(extra)} extra; "
-                f"first missing={min(missing) if missing else None}, "
-                f"first extra={min(extra) if extra else None}"
-            )
-        for key in sorted(expected):
-            if actual[key] != expected[key]:
-                differences = [
-                    f"{column}: expected {old!r}, got {new!r}"
-                    for column, old, new in zip(COLUMNS, expected[key], actual[key])
-                    if old != new
-                ]
-                raise CheckError(
-                    f"{match}: CSV mismatch at {key}: " + "; ".join(differences)
-                )
-        report(f"Reference comparison: {match}: all {len(actual)} rows match")
+        actual = read_match(work / match, match)
+        compare_tables(match, actual, references[match])
 
 
 def main() -> int:
@@ -235,15 +219,14 @@ def main() -> int:
     parser.add_argument("command", choices=("check-env", "smoke-test"))
     args = parser.parse_args()
     try:
-        with tempfile.TemporaryDirectory(prefix="cs2-rop-") as directory:
-            work = Path(directory).resolve()
-            binary, references = check_env(work)
-            report("Environment and datasets: OK")
-            if args.command == "smoke-test":
-                smoke_test(binary, references, work)
+        references = check_env()
+        report("Environment and baseline matches: OK")
+        if args.command == "smoke-test":
+            with tempfile.TemporaryDirectory(prefix="cs2-rop-") as directory:
+                smoke_test(references, Path(directory).resolve())
         report(f"{args.command}: PASS")
         return 0
-    except (CheckError, OSError, ValueError, csv.Error) as exc:
+    except (CheckError, OSError, ValueError, ImportError) as exc:
         print(f"{args.command}: FAIL: {exc}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
