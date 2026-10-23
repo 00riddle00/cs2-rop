@@ -118,10 +118,9 @@ parse-mirage:
 # --- Lint & format Python -----------------------------------------------------
 pylint:
 	@echo "==> Linting & formatting Python code"
-	@uv run ruff check . --fix
 	@uv run ruff check --select I --fix .
-	@uv run ruff format .
 	@uv run black --line-length=88 --preview --enable-unstable-feature=string_processing .
+	@uv run ruff check . --fix
 
 # --- Lint & format shell scripts ----------------------------------------------
 shlint:

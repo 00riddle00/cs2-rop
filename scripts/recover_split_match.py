@@ -39,14 +39,23 @@ from awpy import Demo
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from extract_awpy import (  # noqa: E402
-    SUMMARY_NAME, append_summary, build_tables, score_by_team, summary_row,
+    SUMMARY_NAME,
+    append_summary,
+    build_tables,
+    summary_row,
     write_match,
 )
 
 ROUND_SCHEMA = {
-    "round_num": pl.Int32, "start_tick": pl.Int32, "freeze_end_tick": pl.Int32,
-    "end_tick": pl.Int32, "official_end_tick": pl.Int32, "winner": pl.Int32,
-    "winner_side": pl.Utf8, "reason": pl.Int32, "reason_name": pl.Utf8,
+    "round_num": pl.Int32,
+    "start_tick": pl.Int32,
+    "freeze_end_tick": pl.Int32,
+    "end_tick": pl.Int32,
+    "official_end_tick": pl.Int32,
+    "winner": pl.Int32,
+    "winner_side": pl.Utf8,
+    "reason": pl.Int32,
+    "reason_name": pl.Utf8,
     "is_knife_round": pl.Boolean,
 }
 TEAM_PROPS = ["m_iScore", "m_szTeamname", "m_szClanTeamname"]
@@ -61,10 +70,14 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--output", type=Path, default=Path("data/processed"))
     ap.add_argument("--match-id", help="Default: p1's name without -p1")
     ap.add_argument("--seconds", type=float, default=1.0)
-    ap.add_argument("--check", action="store_true",
-                    help="Only print the recovered part-1 rounds")
-    ap.add_argument("--force", action="store_true",
-                    help="Rebuild the match even if its folder already exists")
+    ap.add_argument(
+        "--check", action="store_true", help="Only print the recovered part-1 rounds"
+    )
+    ap.add_argument(
+        "--force",
+        action="store_true",
+        help="Rebuild the match even if its folder already exists",
+    )
     return ap.parse_args()
 
 
@@ -102,20 +115,21 @@ def recover_rounds(
     missing = [c for c in TEAM_PROPS if c not in teams.columns]
     if missing:
         raise RuntimeError(f"team props missing: {missing}; columns: {teams.columns}")
-    notes.append("team names seen: "
-                 f"{teams['m_szTeamname'].drop_nulls().unique().to_list()}")
+    notes.append(
+        f"team names seen: {teams['m_szTeamname'].drop_nulls().unique().to_list()}"
+    )
 
     # Players also have m_iScore (scoreboard points); keep the two teams only.
     ends = (
         teams.filter(
             pl.col("m_iScore").is_not_null()
-            & pl.col("m_szTeamname").str.strip_chars().str.to_uppercase()
+            & pl.col("m_szTeamname")
+            .str.strip_chars()
+            .str.to_uppercase()
             .is_in(["TERRORIST", "CT", "COUNTER-TERRORIST", "COUNTERTERRORIST"])
         )
         .sort("entity_id", "entity_serial", "tick")
-        .with_columns(
-            step=pl.col("m_iScore").diff().over("entity_id", "entity_serial")
-        )
+        .with_columns(step=pl.col("m_iScore").diff().over("entity_id", "entity_serial"))
         .filter(pl.col("step") == 1)
         .sort("tick")
     )
@@ -126,44 +140,80 @@ def recover_rounds(
         end = int(e["tick"])
         side = side_of(e["m_szTeamname"])
         fe = max((f for f in freeze_ends if prev_end < f <= end), default=None)
-        changes.append({"tick": end, "team": e["m_szTeamname"],
-                        "clan": e["m_szClanTeamname"], "score_after": e["m_iScore"],
-                        "freeze_end_tick": fe, "kept": fe is not None})
+        changes.append(
+            {
+                "tick": end,
+                "team": e["m_szTeamname"],
+                "clan": e["m_szClanTeamname"],
+                "score_after": e["m_iScore"],
+                "freeze_end_tick": fe,
+                "kept": fe is not None,
+            }
+        )
         prev_end = end
         if fe is None:
             continue
         i = len(rows) + 1
-        rows.append({
-            "round_num": i, "start_tick": None, "freeze_end_tick": fe,
-            "end_tick": end, "official_end_tick": None,
-            "winner": {"terrorist": 2, "counter-terrorist": 3}.get(side),
-            "winner_side": side, "reason": None, "reason_name": None,
-            "is_knife_round": False,
-        })
-        clans.append({"round_num": i, "winner_clan": e["m_szClanTeamname"],
-                      "score_after": e["m_iScore"]})
+        rows.append(
+            {
+                "round_num": i,
+                "start_tick": None,
+                "freeze_end_tick": fe,
+                "end_tick": end,
+                "official_end_tick": None,
+                "winner": {"terrorist": 2, "counter-terrorist": 3}.get(side),
+                "winner_side": side,
+                "reason": None,
+                "reason_name": None,
+                "is_knife_round": False,
+            }
+        )
+        clans.append(
+            {
+                "round_num": i,
+                "winner_clan": e["m_szClanTeamname"],
+                "score_after": e["m_iScore"],
+            }
+        )
 
     rounds = pl.DataFrame(rows, schema=ROUND_SCHEMA)
-    clans = pl.DataFrame(clans, schema={"round_num": pl.Int32, "winner_clan": pl.Utf8,
-                                        "score_after": pl.Int64})
-    changes = pl.DataFrame(changes, schema={
-        "tick": pl.Int64, "team": pl.Utf8, "clan": pl.Utf8, "score_after": pl.Int64,
-        "freeze_end_tick": pl.Int64, "kept": pl.Boolean})
+    clans = pl.DataFrame(
+        clans,
+        schema={"round_num": pl.Int32, "winner_clan": pl.Utf8, "score_after": pl.Int64},
+    )
+    changes = pl.DataFrame(
+        changes,
+        schema={
+            "tick": pl.Int64,
+            "team": pl.Utf8,
+            "clan": pl.Utf8,
+            "score_after": pl.Int64,
+            "freeze_end_tick": pl.Int64,
+            "kept": pl.Boolean,
+        },
+    )
     if rounds["winner_side"].is_null().any():
         notes.append("WARNING: some winners have an unknown team name")
     return rounds, clans, changes, notes
 
 
 def economy_from_snapshots(rounds: pl.DataFrame, snaps: pl.DataFrame) -> pl.DataFrame:
-    freeze = rounds.select("round_num", pl.col("freeze_end_tick").cast(pl.Int64).alias("_t"))
+    freeze = rounds.select(
+        "round_num", pl.col("freeze_end_tick").cast(pl.Int64).alias("_t")
+    )
     return (
         snaps.with_columns(_t=pl.col("tick").cast(pl.Int64))
         .join(freeze, on=["round_num", "_t"])
         .group_by("round_num", "side")
-        .agg(equipment_value=pl.col("equipment_value").sum().cast(pl.Int32),
-             n_players=pl.len().cast(pl.Int32))
-        .with_columns(buy_type=pl.when(pl.col("round_num") == 1)
-                      .then(pl.lit("pistol")).otherwise(pl.lit(None, pl.Utf8)))
+        .agg(
+            equipment_value=pl.col("equipment_value").sum().cast(pl.Int32),
+            n_players=pl.len().cast(pl.Int32),
+        )
+        .with_columns(
+            buy_type=pl.when(pl.col("round_num") == 1)
+            .then(pl.lit("pistol"))
+            .otherwise(pl.lit(None, pl.Utf8))
+        )
         .select("round_num", "side", "equipment_value", "buy_type", "n_players")
         .sort("round_num", "side")
     )
@@ -175,7 +225,8 @@ def merge_parts(parts: list[dict[str, pl.DataFrame]]) -> dict[str, pl.DataFrame]
     for name in names:
         frames = [
             p[name].with_columns(pl.lit(i, pl.UInt32).alias("part"))
-            for i, p in enumerate(parts) if name in p
+            for i, p in enumerate(parts)
+            if name in p
         ]
         merged[name] = pl.concat(frames, how="diagonal_relaxed")
     return merged
@@ -200,9 +251,16 @@ def main() -> int:
         print("All score changes:")
         print(changes)
         print("Recovered rounds:")
-        print(rounds1.join(clans, on="round_num")
-              .select("round_num", "freeze_end_tick", "end_tick", "winner_side",
-                      "winner_clan", "score_after"))
+        print(
+            rounds1.join(clans, on="round_num").select(
+                "round_num",
+                "freeze_end_tick",
+                "end_tick",
+                "winner_side",
+                "winner_clan",
+                "score_after",
+            )
+        )
         print(wins)
         return 0 if rounds1.height else 1
 
@@ -211,8 +269,11 @@ def main() -> int:
         if n.startswith("WARNING"):
             print(n, file=sys.stderr)
     if rounds1.is_empty():
-        print(f"{match_id}: no rounds recovered; run with --check to see the "
-              "score changes", file=sys.stderr)
+        print(
+            f"{match_id}: no rounds recovered; run with --check to see the "
+            "score changes",
+            file=sys.stderr,
+        )
         return 1
 
     p1, header, warn1 = build_tables(demo1, args.seconds, rounds_override=rounds1)
@@ -222,8 +283,11 @@ def main() -> int:
 
     first_p2 = p2["rounds"]["round_num"].min()
     if first_p2 != rounds1.height + 1:
-        print(f"WARNING: part 1 has {rounds1.height} rounds but part 2 starts "
-              f"at round {first_p2}", file=sys.stderr)
+        print(
+            f"WARNING: part 1 has {rounds1.height} rounds but part 2 starts "
+            f"at round {first_p2}",
+            file=sys.stderr,
+        )
 
     tables = merge_parts([p1, p2])
     write_match(tables, args.output, match_id)
@@ -233,8 +297,10 @@ def main() -> int:
     append_summary(args.output / SUMMARY_NAME, row)
     recovered = ", ".join(f"{clan} {n}" for clan, n in wins.iter_rows())
     note = f" (warnings: {' | '.join(extra)})" if extra else ""
-    print(f"{match_id}: {rounds1.height} rounds recovered ({recovered}); "
-          f"{row['rounds']} rounds, {row['score']}, {row['seconds']} s{note}")
+    print(
+        f"{match_id}: {rounds1.height} rounds recovered ({recovered}); "
+        f"{row['rounds']} rounds, {row['score']}, {row['seconds']} s{note}"
+    )
     return 0
 
 

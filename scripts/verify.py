@@ -109,8 +109,10 @@ def check_env() -> dict:
             sys.executable,
             "-B",
             "-c",
-            "from awpy import Demo; import polars, pandas, pyarrow; "
-            "print('Awpy, Polars, pandas, and PyArrow imports: OK')",
+            (
+                "from awpy import Demo; import polars, pandas, pyarrow; "
+                "print('Awpy, Polars, pandas, and PyArrow imports: OK')"
+            ),
         ]
     )
     report(f"Awpy {version}: matches pyproject.toml")
@@ -153,7 +155,7 @@ def check_references() -> None:
         )
     if result.returncode != 0:
         raise CheckError(
-            f"Could not verify reference matches against Git HEAD "
+            "Could not verify reference matches against Git HEAD "
             f"(exit {result.returncode}): {result.stderr.strip()}"
         )
     report("Reference match folders match Git HEAD")

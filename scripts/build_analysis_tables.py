@@ -39,18 +39,29 @@ SIDE_PREFIX = {CT: "ct", T: "t"}
 
 # Observed clan-name variants -> one name per team.
 TEAM_ALIASES = {
-    "9z Globant": "9z", "9zGlobant": "9z", "9z": "9z",
-    "Aurora Gaming": "Aurora", "Aurora": "Aurora",
-    "FaZe Clan": "FaZe", "FaZe": "FaZe",
+    "9z Globant": "9z",
+    "9zGlobant": "9z",
+    "9z": "9z",
+    "Aurora Gaming": "Aurora",
+    "Aurora": "Aurora",
+    "FaZe Clan": "FaZe",
+    "FaZe": "FaZe",
     "FURIA": "FURIA",
-    "FUT Esports": "FUT", "FUT": "FUT",
-    "G2 Esports": "G2", "G2.Esports": "G2", "G2": "G2",
-    "LEGACY": "Legacy", "Legacy": "Legacy",
+    "FUT Esports": "FUT",
+    "FUT": "FUT",
+    "G2 Esports": "G2",
+    "G2.Esports": "G2",
+    "G2": "G2",
+    "LEGACY": "Legacy",
+    "Legacy": "Legacy",
     "MOUZ": "MOUZ",
     "Natus Vincere": "NAVI",
-    "Team Falcons": "Falcons", "Falcons": "Falcons",
-    "Team Spirit": "Spirit", "Spirit": "Spirit",
-    "Team Vitality": "Vitality", "Vitality": "Vitality",
+    "Team Falcons": "Falcons",
+    "Falcons": "Falcons",
+    "Team Spirit": "Spirit",
+    "Spirit": "Spirit",
+    "Team Vitality": "Vitality",
+    "Vitality": "Vitality",
 }
 
 RIFLES = ["ak47", "m4a1", "m4a1_silencer", "famas", "galilar", "aug", "sg556"]
@@ -102,9 +113,16 @@ def side_teams(snaps: pl.DataFrame) -> pl.DataFrame:
         .with_columns(pl.col("team").replace(TEAM_ALIASES))
     )
     return (
-        teams.filter(pl.col("side") == CT).select("part", "round_num", ct_team="team")
-        .join(teams.filter(pl.col("side") == T).select("part", "round_num", t_team="team"),
-              on=["part", "round_num"], how="full", coalesce=True)
+        teams.filter(pl.col("side") == CT)
+        .select("part", "round_num", ct_team="team")
+        .join(
+            teams.filter(pl.col("side") == T).select(
+                "part", "round_num", t_team="team"
+            ),
+            on=["part", "round_num"],
+            how="full",
+            coalesce=True,
+        )
     )
 
 
@@ -142,7 +160,8 @@ def build_rounds(match_id: str, d: Path) -> tuple[pl.DataFrame, dict]:
     for side, p in SIDE_PREFIX.items():
         econ_cols.append(
             econ.filter(pl.col("side") == side).select(
-                "part", "round_num",
+                "part",
+                "round_num",
                 pl.col("buy_type").alias(f"{p}_buy_type"),
                 pl.col("equipment_value").alias(f"{p}_equipment_freeze_end"),
             )
@@ -150,8 +169,13 @@ def build_rounds(match_id: str, d: Path) -> tuple[pl.DataFrame, dict]:
 
     out = (
         rounds.select(
-            "part", "round_num", "freeze_end_tick", "end_tick",
-            "winner_side", "reason_name", "is_overtime",
+            "part",
+            "round_num",
+            "freeze_end_tick",
+            "end_tick",
+            "winner_side",
+            "reason_name",
+            "is_overtime",
         )
         .join(side_teams(snaps), on=["part", "round_num"], how="left")
         .join(econ_cols[0], on=["part", "round_num"], how="left")
@@ -163,7 +187,8 @@ def build_rounds(match_id: str, d: Path) -> tuple[pl.DataFrame, dict]:
             match_id=pl.lit(match_id),
             map=pl.lit(settings["map"]),
             winner_team=pl.when(pl.col("winner_side") == CT)
-            .then(pl.col("ct_team")).otherwise(pl.col("t_team")),
+            .then(pl.col("ct_team"))
+            .otherwise(pl.col("t_team")),
             ct_win=pl.col("winner_side") == CT,
             is_pistol_round=pl.col("round_num").is_in(
                 [1, settings["max_rounds"] // 2 + 1]
@@ -191,14 +216,32 @@ def build_rounds(match_id: str, d: Path) -> tuple[pl.DataFrame, dict]:
     )
 
     columns = [
-        "match_id", "map", "part", "round_num", "is_overtime", "is_pistol_round",
-        "ct_team", "t_team", "ct_score_before", "t_score_before",
+        "match_id",
+        "map",
+        "part",
+        "round_num",
+        "is_overtime",
+        "is_pistol_round",
+        "ct_team",
+        "t_team",
+        "ct_score_before",
+        "t_score_before",
         "ct_won_previous_round",
-        "ct_buy_type", "t_buy_type", "ct_equipment_freeze_end",
+        "ct_buy_type",
+        "t_buy_type",
+        "ct_equipment_freeze_end",
         "t_equipment_freeze_end",
-        "bomb_planted", "plant_site", "first_death_side",
-        "freeze_end_tick", "plant_tick", "end_tick", "round_duration_s",
-        "winner_side", "winner_team", "ct_win", "reason_name",
+        "bomb_planted",
+        "plant_site",
+        "first_death_side",
+        "freeze_end_tick",
+        "plant_tick",
+        "end_tick",
+        "round_duration_s",
+        "winner_side",
+        "winner_team",
+        "ct_win",
+        "reason_name",
     ]
     return out.select(columns), settings
 
@@ -236,7 +279,9 @@ def build_states(d: Path, rounds: pl.DataFrame, settings: dict) -> pl.DataFrame:
     states = snaps.select(keys).unique()
     for side in (CT, T):
         states = states.join(side_aggregates(alive, side), on=keys, how="left")
-    count_cols = [c for c in states.columns if c not in keys and not c.endswith("has_bomb")]
+    count_cols = [
+        c for c in states.columns if c not in keys and not c.endswith("has_bomb")
+    ]
     states = states.with_columns(
         [pl.col(c).fill_null(0).cast(pl.Int32) for c in count_cols]
         + [pl.col("t_has_bomb").fill_null(False)]
@@ -246,11 +291,22 @@ def build_states(d: Path, rounds: pl.DataFrame, settings: dict) -> pl.DataFrame:
     states = (
         states.join(
             rounds.select(
-                "match_id", "map", "part", "round_num", "freeze_end_tick",
-                "plant_tick", "plant_site", "ct_team", "t_team", "ct_score_before",
-                "t_score_before", "winner_side", "ct_win",
+                "match_id",
+                "map",
+                "part",
+                "round_num",
+                "freeze_end_tick",
+                "plant_tick",
+                "plant_site",
+                "ct_team",
+                "t_team",
+                "ct_score_before",
+                "t_score_before",
+                "winner_side",
+                "ct_win",
             ),
-            on=["part", "round_num"], how="left",
+            on=["part", "round_num"],
+            how="left",
         )
         .with_columns(
             seconds=(pl.col("tick") - pl.col("freeze_end_tick")) / tick_rate,
@@ -258,8 +314,9 @@ def build_states(d: Path, rounds: pl.DataFrame, settings: dict) -> pl.DataFrame:
             & (pl.col("tick") >= pl.col("plant_tick")),
         )
         .with_columns(
-            seconds_since_plant=pl.when(pl.col("bomb_planted"))
-            .then((pl.col("tick") - pl.col("plant_tick")) / tick_rate),
+            seconds_since_plant=pl.when(pl.col("bomb_planted")).then(
+                (pl.col("tick") - pl.col("plant_tick")) / tick_rate
+            ),
             plant_site=pl.when(pl.col("bomb_planted")).then(pl.col("plant_site")),
             bomb_carried=pl.col("t_has_bomb") & ~pl.col("bomb_planted"),
         )
@@ -271,10 +328,23 @@ def build_states(d: Path, rounds: pl.DataFrame, settings: dict) -> pl.DataFrame:
         .drop("t_has_bomb", "freeze_end_tick", "plant_tick")
     )
 
-    front = ["match_id", "map", "part", "round_num", "tick", "seconds",
-             "time_remaining_s", "bomb_planted", "seconds_since_plant",
-             "plant_site", "bomb_carried", "ct_team", "t_team",
-             "ct_score_before", "t_score_before"]
+    front = [
+        "match_id",
+        "map",
+        "part",
+        "round_num",
+        "tick",
+        "seconds",
+        "time_remaining_s",
+        "bomb_planted",
+        "seconds_since_plant",
+        "plant_site",
+        "bomb_carried",
+        "ct_team",
+        "t_team",
+        "ct_score_before",
+        "t_score_before",
+    ]
     labels = ["winner_side", "ct_win"]
     middle = [c for c in states.columns if c not in front + labels]
     return states.select(front + middle + labels).sort("part", "round_num", "tick")
@@ -293,8 +363,10 @@ def main() -> int:
         states = build_states(d, rounds, settings)
         all_rounds.append(rounds)
         all_states.append(states)
-        print(f"[{i}/{len(matches)}] {d.name}: {rounds.height} rounds, "
-              f"{states.height} states")
+        print(
+            f"[{i}/{len(matches)}] {d.name}: {rounds.height} rounds, "
+            f"{states.height} states"
+        )
 
     rounds = pl.concat(all_rounds, how="diagonal_relaxed")
     states = pl.concat(all_states, how="diagonal_relaxed")
@@ -305,7 +377,9 @@ def main() -> int:
         if not args.no_csv:
             df.write_csv(args.output / f"{name}.csv")
 
-    teams = sorted(set(rounds["ct_team"].drop_nulls()) | set(rounds["t_team"].drop_nulls()))
+    teams = sorted(
+        set(rounds["ct_team"].drop_nulls()) | set(rounds["t_team"].drop_nulls())
+    )
     print(f"\nrounds: {rounds.height} rows, {rounds.width} columns")
     print(f"round_states: {states.height} rows, {states.width} columns")
     print(f"teams ({len(teams)}): {', '.join(teams)}")

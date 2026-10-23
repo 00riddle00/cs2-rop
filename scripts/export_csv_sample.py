@@ -17,14 +17,23 @@ from pathlib import Path
 
 import polars as pl
 
-ap = argparse.ArgumentParser(description=__doc__,
-                             formatter_class=argparse.RawDescriptionHelpFormatter)
+ap = argparse.ArgumentParser(
+    description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+)
 ap.add_argument("--match", required=True, help="Match folder name in --processed")
 ap.add_argument("--processed", type=Path, default=Path("data/processed"))
-ap.add_argument("--output", type=Path, default=Path("data/csv_export"),
-                help="Folder for the CSV export (default data/csv_export)")
-ap.add_argument("--max-rows", type=int, default=5000,
-                help="Rows per CSV; 0 exports all rows (default 5000)")
+ap.add_argument(
+    "--output",
+    type=Path,
+    default=Path("data/csv_export"),
+    help="Folder for the CSV export (default data/csv_export)",
+)
+ap.add_argument(
+    "--max-rows",
+    type=int,
+    default=5000,
+    help="Rows per CSV; 0 exports all rows (default 5000)",
+)
 args = ap.parse_args()
 
 src = args.processed / args.match
@@ -36,8 +45,14 @@ for f in sorted(src.glob("*.parquet")):
     df = pl.read_parquet(f)
     out = df if args.max_rows == 0 else df.head(args.max_rows)
     out.write_csv(dst / f"{f.stem}.csv")
-    overview.append({"table": f.stem, "rows": df.height, "columns": df.width,
-                     "column_names": ", ".join(df.columns)})
+    overview.append(
+        {
+            "table": f.stem,
+            "rows": df.height,
+            "columns": df.width,
+            "column_names": ", ".join(df.columns),
+        }
+    )
 
 pl.DataFrame(overview).write_csv(dst / "overview.csv")
 print(pl.DataFrame(overview).select("table", "rows", "columns"))

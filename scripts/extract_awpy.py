@@ -43,8 +43,15 @@ SPLIT_RE = re.compile(r"-p\d+$")
 
 SUMMARY_NAME = "processed_summary.csv"
 SUMMARY_FIELDS = [
-    "match_id", "map", "rounds", "overtime_rounds", "score",
-    "snapshot_rows", "seconds", "status", "warnings",
+    "match_id",
+    "map",
+    "rounds",
+    "overtime_rounds",
+    "score",
+    "snapshot_rows",
+    "seconds",
+    "status",
+    "warnings",
 ]
 
 
@@ -52,14 +59,27 @@ def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    ap.add_argument("--input", required=True, type=Path,
-                    help="A .dem file or a directory of .dem files")
-    ap.add_argument("--output", type=Path, default=Path("data/processed"),
-                    help="Match folders and the summary are written here")
-    ap.add_argument("--seconds", type=float, default=1.0,
-                    help="Snapshot interval during live play (default 1.0)")
-    ap.add_argument("--force", action="store_true",
-                    help="Re-extract demos that already have output")
+    ap.add_argument(
+        "--input",
+        required=True,
+        type=Path,
+        help="A .dem file or a directory of .dem files",
+    )
+    ap.add_argument(
+        "--output",
+        type=Path,
+        default=Path("data/processed"),
+        help="Match folders and the summary are written here",
+    )
+    ap.add_argument(
+        "--seconds",
+        type=float,
+        default=1.0,
+        help="Snapshot interval during live play (default 1.0)",
+    )
+    ap.add_argument(
+        "--force", action="store_true", help="Re-extract demos that already have output"
+    )
     return ap.parse_args()
 
 
@@ -96,7 +116,9 @@ def round_bounds(rounds: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def assign_rounds(df: pl.DataFrame, bounds: pl.DataFrame, tick_col: str) -> pl.DataFrame:
+def assign_rounds(
+    df: pl.DataFrame, bounds: pl.DataFrame, tick_col: str
+) -> pl.DataFrame:
     """Add round_num and in_play by tick. Warmup ticks get null round_num."""
     out = (
         df.with_columns(_t=pl.col(tick_col).cast(pl.Int64))
@@ -190,14 +212,17 @@ def build_tables(
     if ticks.is_empty():
         raise RuntimeError("no complete rounds found in this demo")
     snaps = demo.snapshots(ticks=ticks["tick"].to_list())
-    snaps = snaps.with_columns(_t=pl.col("tick").cast(pl.Int64)).join(
-        ticks.rename({"tick": "_t"}), on="_t", how="left"
-    ).drop("_t")
+    snaps = (
+        snaps.with_columns(_t=pl.col("tick").cast(pl.Int64))
+        .join(ticks.rename({"tick": "_t"}), on="_t", how="left")
+        .drop("_t")
+    )
     players = tables.get("players")
     if players is not None and "team_clan_name" in players.columns:
         snaps = snaps.join(
             players.select("steamid", "team_clan_name").unique("steamid"),
-            on="steamid", how="left",
+            on="steamid",
+            how="left",
         )
     tables["snapshots"] = snaps
 
@@ -238,8 +263,13 @@ def write_match(tables: dict[str, pl.DataFrame], out_root: Path, match_id: str) 
     tmp.rename(final)
 
 
-def summary_row(match_id: str, tables: dict[str, pl.DataFrame], header: dict,
-                warnings: list[str], t0: float) -> dict:
+def summary_row(
+    match_id: str,
+    tables: dict[str, pl.DataFrame],
+    header: dict,
+    warnings: list[str],
+    t0: float,
+) -> dict:
     rounds, snaps = tables["rounds"], tables["snapshots"]
     return {
         "match_id": match_id,
@@ -283,8 +313,12 @@ def main() -> int:
 
     split = [p.name for p in demos if SPLIT_RE.search(p.stem)]
     if split:
-        print("Split recordings are not supported. Remove or merge these files "
-              "before running:\n  " + "\n  ".join(split), file=sys.stderr)
+        print(
+            "Split recordings are not supported. Remove or merge these files "
+            "before running:\n  "
+            + "\n  ".join(split),
+            file=sys.stderr,
+        )
         return 1
 
     args.output.mkdir(parents=True, exist_ok=True)
@@ -299,8 +333,10 @@ def main() -> int:
         try:
             row = extract(path, args.output, args.seconds)
             note = f" (warnings: {row['warnings']})" if row["warnings"] else ""
-            print(f"{prefix}: {row['rounds']} rounds, {row['score']}, "
-                  f"{row['seconds']} s{note}")
+            print(
+                f"{prefix}: {row['rounds']} rounds, {row['score']}, "
+                f"{row['seconds']} s{note}"
+            )
         except Exception as e:
             failed += 1
             traceback.print_exc()
