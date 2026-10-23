@@ -16,6 +16,8 @@
 # Demo paths are relative to the repository root; Go dependencies use go -C.
 GO_PARSER := go-parser
 RAW_DIR := data/raw
+SPLIT_DIR := data/raw_split
+SPLIT_MATCH := falcons-vs-natus-vincere-m3-mirage
 
 DUST2_DEMO := $(RAW_DIR)/mouz-vs-spirit-m1-dust2.dem
 MIRAGE_DEMO := $(RAW_DIR)/mouz-vs-spirit-m2-mirage.dem
@@ -42,12 +44,12 @@ all: setup parse
 
 help:
 	@echo ""
-	@echo "  make all            Run setup and parse missing baseline CSVs"
+	@echo "  make all            Run setup and extract missing baseline matches"
 	@echo "  make setup          Install Python and Go dependencies"
 	@echo "  make download-demos Download and verify all manifest demos"
-	@echo "  make parse          Parse baseline demos, skipping existing CSVs"
-	@echo "  make parse-all      Parse all local demos, skipping existing CSVs"
-	@echo "                       Add FORCE=1 to replace selected CSVs"
+	@echo "  make parse          Extract baseline demos, skipping existing matches"
+	@echo "  make parse-all      Extract normal demos, then rebuild the split match"
+	@echo "                       Add FORCE=1 to re-extract existing normal matches"
 	@echo "  make parse-dust2    Parse the Dust2 demo"
 	@echo "  make parse-mirage   Parse the Mirage demo"
 	@echo "  make pylint         Lint & format Python code"
@@ -71,20 +73,22 @@ download-demos:
 	uv run --no-sync python -B scripts/download_demos.py
 
 # --- Demo parsing -------------------------------------------------------------
-# Generated CSVs are saved to data/processed/.
-# Existing output files are skipped unless FORCE=1 is explicitly supplied.
+# Match folders contain 17 Parquet tables in data/processed/.
+# Normal matches are skipped unless FORCE=1; split recovery always rewrites.
 
 parse:
-	uv run --no-sync python -B scripts/parse_demos.py "$(DUST2_DEMO)" "$(MIRAGE_DEMO)" $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py --input "$(DUST2_DEMO)" --output data/processed $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py --input "$(MIRAGE_DEMO)" --output data/processed $(PARSE_FLAGS)
 
 parse-all:
-	uv run --no-sync python -B scripts/parse_demos.py --all $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py --input "$(RAW_DIR)" --output data/processed $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/recover_split_match.py --p1 "$(SPLIT_DIR)/$(SPLIT_MATCH)-p1.dem" --p2 "$(SPLIT_DIR)/$(SPLIT_MATCH)-p2.dem" --output data/processed
 
 parse-dust2:
-	uv run --no-sync python -B scripts/parse_demos.py "$(DUST2_DEMO)" $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py --input "$(DUST2_DEMO)" --output data/processed $(PARSE_FLAGS)
 
 parse-mirage:
-	uv run --no-sync python -B scripts/parse_demos.py "$(MIRAGE_DEMO)" $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py --input "$(MIRAGE_DEMO)" --output data/processed $(PARSE_FLAGS)
 
 # --- Lint & format Python -----------------------------------------------------
 pylint:
