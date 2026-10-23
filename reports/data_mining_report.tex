@@ -47,17 +47,17 @@
 \maketitle
 
 \begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
-This paper describes the mixtures-of-trees model, a probabilistic 
-model for discrete multidimensional domains.  Mixtures-of-trees 
+This paper describes the mixtures-of-trees model, a probabilistic
+model for discrete multidimensional domains.  Mixtures-of-trees
 generalize the probabilistic trees of \citet{chow:68}
 in a different and complementary direction to that of Bayesian networks.
-We present efficient algorithms for learning mixtures-of-trees 
-models in maximum likelihood and Bayesian frameworks. 
+We present efficient algorithms for learning mixtures-of-trees
+models in maximum likelihood and Bayesian frameworks.
 We also discuss additional efficiencies that can be
-obtained when data are ``sparse,'' and we present data 
+obtained when data are ``sparse,'' and we present data
 structures and algorithms that exploit such sparseness.
-Experimental results demonstrate the performance of the 
-model for both density estimation and classification. 
+Experimental results demonstrate the performance of the
+model for both density estimation and classification.
 We also discuss the sense in which tree-based classifiers
 perform an implicit form of feature selection, and demonstrate
 a resulting insensitivity to irrelevant attributes.
@@ -70,14 +70,14 @@ a resulting insensitivity to irrelevant attributes.
 \section{Introduction}
 
 Probabilistic inference has become a core technology in AI,
-largely due to developments in graph-theoretic methods for the 
-representation and manipulation of complex probability 
-distributions~\citep{pearl:88}.  Whether in their guise as 
-directed graphs (Bayesian networks) or as undirected graphs (Markov 
-random fields), \emph{probabilistic graphical models} have a number 
-of virtues as representations of uncertainty and as inference engines.  
+largely due to developments in graph-theoretic methods for the
+representation and manipulation of complex probability
+distributions~\citep{pearl:88}.  Whether in their guise as
+directed graphs (Bayesian networks) or as undirected graphs (Markov
+random fields), \emph{probabilistic graphical models} have a number
+of virtues as representations of uncertainty and as inference engines.
 Graphical models allow a separation between qualitative, structural
-aspects of uncertain knowledge and the quantitative, parametric aspects 
+aspects of uncertain knowledge and the quantitative, parametric aspects
 of uncertainty...\\
 
 \section{Data}
@@ -89,11 +89,11 @@ of uncertainty...\\
 \begin{table}
 \label{tab:1}
 \centering
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c| }
  \hline
- cell1 & cell2 & cell3 \\ 
- cell4 & cell5 & cell6 \\ 
- cell7 & cell8 & cell9 \\ 
+ cell1 & cell2 & cell3 \\
+ cell4 & cell5 & cell6 \\
+ cell7 & cell8 & cell9 \\
  \hline
 \end{tabular}
 \caption{My table.}
@@ -105,20 +105,13 @@ of uncertainty...\\
 
 \lipsum[1-2]
 
-\begin{figure}
-\label{pic:1}
-\centering
-\includegraphics[scale=0.7]{unnamed}
-\caption{My picture. {\small Source: \cite{romero:20}}}
-\end{figure}
-
 \section{Methodology}
 
 \lipsum[1-2]
 
 \begin{algorithm}[H]
 \begin{algorithmic}[1]
-\REQUIRE 
+\REQUIRE
 $k$: the number of clusters; \\
 $D$: a data set containing n objects.
 \ENSURE A set of $k$ clusters.
@@ -128,7 +121,7 @@ $D$: a data set containing n objects.
  \STATE assign each remaining object to the cluster with the nearest representative object;
  \STATE randomly select a nonrepresentative object, $o_{random}$;
  \STATE compute the total cost $S$ of swapping representative object $o_j$ with $o_random$;
- \IF{$S < 0$} 
+ \IF{$S < 0$}
      \STATE swap $o_j$ with $o_{random}$  to form the new set of $k$ representative objects;
  \ENDIF
 \UNTIL no change;
@@ -155,7 +148,7 @@ or central objects.}
 % Manual newpage inserted to improve layout of sample file - not
 % needed in general before appendices/bibliography.
 
-\bibliography{samplebib}
+\bibliography{bibliography}
 
 \appendix
 \section*{Appendix A.}
