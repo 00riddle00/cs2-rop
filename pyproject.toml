@@ -14,13 +14,6 @@ dependencies = [
     "awpy==3.1.1",
 ]
 
-[project.scripts]
-cs2-rop = "cs2_rop:main"
-
-[build-system]
-requires = ["uv_build>=0.13.0,<0.14.0"]
-build-backend = "uv_build"
-
 [dependency-groups]
 dev = [
     "black[jupyter]>=26.10.1",
@@ -28,5 +21,9 @@ dev = [
     "ipykernel>=7.4.0",
     "jupytext>=1.19.6",
     "nbconvert>=7.17.2",
+    "pandas[parquet]>=3.0.6",
     "ruff>=0.17.0",
 ]
+
+[tool.uv]
+package = false
