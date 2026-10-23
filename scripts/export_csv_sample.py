@@ -9,7 +9,7 @@ count and columns.
 
 Usage (from the repo root):
     uv run python scripts/export_csv_sample.py --match mouz-vs-spirit-m1-dust2 \
-        --output data/awpy_parser_data --max-rows 0
+        --output data/processed_csv_sample --max-rows 0
 """
 
 import argparse
