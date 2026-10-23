@@ -37,32 +37,23 @@ import polars as pl
 CT, T = "counter-terrorist", "terrorist"
 SIDE_PREFIX = {CT: "ct", T: "t"}
 
-# Observed clan-name variants -> one name per team.
-TEAM_ALIASES = {
-    "9z Globant": "9z",
-    "9zGlobant": "9z",
-    "9z": "9z",
-    "Aurora Gaming": "Aurora",
-    "Aurora": "Aurora",
-    "FaZe Clan": "FaZe",
-    "FaZe": "FaZe",
-    "FURIA": "FURIA",
-    "FUT Esports": "FUT",
-    "FUT": "FUT",
-    "G2 Esports": "G2",
-    "G2.Esports": "G2",
-    "G2": "G2",
-    "LEGACY": "Legacy",
-    "Legacy": "Legacy",
-    "MOUZ": "MOUZ",
-    "Natus Vincere": "NAVI",
-    "Team Falcons": "Falcons",
-    "Falcons": "Falcons",
-    "Team Spirit": "Spirit",
-    "Spirit": "Spirit",
-    "Team Vitality": "Vitality",
-    "Vitality": "Vitality",
+# Observed clan-name variants of each team.
+TEAM_VARIANTS = {
+    "9z": ["9z Globant", "9zGlobant", "9z"],
+    "Aurora": ["Aurora Gaming", "Aurora"],
+    "FaZe": ["FaZe Clan", "FaZe"],
+    "FURIA": ["FURIA"],
+    "FUT": ["FUT Esports", "FUT"],
+    "G2": ["G2 Esports", "G2.Esports", "G2"],
+    "Legacy": ["LEGACY", "Legacy"],
+    "MOUZ": ["MOUZ"],
+    "NAVI": ["Natus Vincere"],
+    "Falcons": ["Team Falcons", "Falcons"],
+    "Spirit": ["Team Spirit", "Spirit"],
+    "Vitality": ["Team Vitality", "Vitality"],
 }
+# Clan name as found in the demo -> one name per team.
+TEAM_ALIASES = {v: team for team, names in TEAM_VARIANTS.items() for v in names}
 
 RIFLES = ["ak47", "m4a1", "m4a1_silencer", "famas", "galilar", "aug", "sg556"]
 SMGS = ["mac10", "mp9", "mp7", "mp5sd", "ump45", "p90", "bizon"]
