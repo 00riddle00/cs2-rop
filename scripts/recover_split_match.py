@@ -16,6 +16,8 @@ folder with a part column (0, 1); ticks are local to each part, so join on
 (part, tick). Round numbers continue across parts.
 
 Run --check first: it prints the recovered rounds and writes nothing.
+Like extract_awpy.py, the script skips a match whose folder already exists
+in --output; pass --force to rebuild it.
 
 Usage (from the repo root, with both files outside data/raw):
     uv run python scripts/recover_split_match.py --check \\
@@ -61,6 +63,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--seconds", type=float, default=1.0)
     ap.add_argument("--check", action="store_true",
                     help="Only print the recovered part-1 rounds")
+    ap.add_argument("--force", action="store_true",
+                    help="Rebuild the match even if its folder already exists")
     return ap.parse_args()
 
 
@@ -182,22 +186,34 @@ def main() -> int:
     t0 = time.perf_counter()
     match_id = args.match_id or args.p1.stem.removesuffix("-p1")
 
+    if not args.check and not args.force and (args.output / match_id).exists():
+        print(f"{match_id}: already extracted, skipping (use --force to rebuild)")
+        return 0
+
     demo1 = Demo(str(args.p1))
     rounds1, clans, changes, notes = recover_rounds(demo1)
-    for n in notes:
-        print(n)
-    print("All score changes:")
-    print(changes)
-    if rounds1.is_empty():
-        print("No rounds recovered.", file=sys.stderr)
-        return 1
-    print("Recovered rounds:")
-    print(rounds1.join(clans, on="round_num")
-          .select("round_num", "freeze_end_tick", "end_tick", "winner_side",
-                  "winner_clan", "score_after"))
-    print(clans.group_by("winner_clan").len().sort("len", descending=True))
+    wins = clans.group_by("winner_clan").len().sort("len", descending=True)
+
     if args.check:
-        return 0
+        for n in notes:
+            print(n)
+        print("All score changes:")
+        print(changes)
+        print("Recovered rounds:")
+        print(rounds1.join(clans, on="round_num")
+              .select("round_num", "freeze_end_tick", "end_tick", "winner_side",
+                      "winner_clan", "score_after"))
+        print(wins)
+        return 0 if rounds1.height else 1
+
+    # Normal run: one summary line; problems only.
+    for n in notes:
+        if n.startswith("WARNING"):
+            print(n, file=sys.stderr)
+    if rounds1.is_empty():
+        print(f"{match_id}: no rounds recovered; run with --check to see the "
+              "score changes", file=sys.stderr)
+        return 1
 
     p1, header, warn1 = build_tables(demo1, args.seconds, rounds_override=rounds1)
     if p1.get("round_economy") is None or p1["round_economy"].is_empty():
@@ -211,12 +227,14 @@ def main() -> int:
 
     tables = merge_parts([p1, p2])
     write_match(tables, args.output, match_id)
-    warnings = ["split recording, part 1 rounds recovered from team scores"]
-    warnings += [f"p1 {w}" for w in warn1] + [f"p2 {w}" for w in warn2]
+    extra = [f"p1 {w}" for w in warn1] + [f"p2 {w}" for w in warn2]
+    warnings = ["split recording, part 1 rounds recovered from team scores", *extra]
     row = summary_row(match_id, tables, header, warnings, t0)
     append_summary(args.output / SUMMARY_NAME, row)
-    print(f"{match_id}: {row['rounds']} rounds, {row['score']}, {row['seconds']} s")
-    print("warnings:", row["warnings"])
+    recovered = ", ".join(f"{clan} {n}" for clan, n in wins.iter_rows())
+    note = f" (warnings: {' | '.join(extra)})" if extra else ""
+    print(f"{match_id}: {rounds1.height} rounds recovered ({recovered}); "
+          f"{row['rounds']} rounds, {row['score']}, {row['seconds']} s{note}")
     return 0
 
 

@@ -88,15 +88,15 @@ the current workflow does not require Go or an installable Python package.
 
 The diagram shows the recommended sequence; commands do not automatically run the
 next step. Processed data is committed, so extraction is optional for inspection
-and R analysis. Verification uses two baseline demos. Normal extraction skips
-existing match folders, but split recovery always rewrites its match.
+and R analysis. Verification uses two baseline demos. Extraction and split
+recovery both skip existing match folders unless forced.
 
 ```mermaid
 flowchart TD
     A["<b>make setup</b><br/>Install the Python environment"]
     B["<b>make download-demos</b><br/>Verify 59 normal demos<br/>and two split parts"]
     C["<b>make check-env</b> and <b>make smoke-test</b><br/>Verify the environment and reproduce<br/>two baseline Parquet matches"]
-    D["<b>make parse-all</b><br/>Extract missing normal matches<br/>and rebuild the split game"]
+    D["<b>make parse-all</b><br/>Extract missing matches,<br/>including the split game"]
     E["<b>Inspect data and analyse in R</b><br/>Notebook for match inspection;<br/>R for EDA and classical ML"]
 
     A --> B --> C --> D --> E
@@ -204,8 +204,7 @@ uv run --no-sync python -B scripts/extract_awpy.py --input data/raw/mouz-vs-spir
 uv run --no-sync python -B scripts/extract_awpy.py --input data/raw/mouz-vs-spirit-m2-mirage.dem --output data/processed
 ```
 
-Add `--force` to an extraction command to regenerate an existing normal match.
-Split recovery has no force flag and always rewrites its match.
+Add `--force` to either command to regenerate a match whose folder already exists.
 
 After extraction, rebuild the analysis tables:
 
@@ -259,10 +258,11 @@ make parse-dust2 FORCE=1
 make parse-all FORCE=1
 ```
 
-**`FORCE=1` maps to `--force` and replaces selected normal match folders, including
-committed references. Split recovery always rewrites its match, even without
-`FORCE=1`.** Review regenerated data before committing it. The extractor writes its
-tables through a temporary match directory before replacing the final folder.
+**`FORCE=1` maps to `--force` for both extraction and split recovery, and replaces
+the selected match folders, including committed references.** Review regenerated
+data before committing it. Both scripts write their tables through a temporary match
+directory before replacing the final folder, and sort each table's rows before
+writing, so rerunning on the same demo produces identical files.
 
 `data/processed/processed_summary.csv` has one row per processed match, including
 map, score, rounds, snapshot rows, status, warnings, and elapsed extraction time in
@@ -479,7 +479,7 @@ Use `make help` for the full target list:
 - `make smoke-test`: Reproduce all tables for the two baseline matches in temporary
   storage and compare them with the committed references.
 - `make parse`: Extract the two baseline demos, skipping existing match folders.
-- `make parse-all`: Extract normal demos, then always rebuild the split match.
+- `make parse-all`: Extract missing normal matches, then the split match if missing.
 - `make parse-dust2` / `make parse-mirage`: Extract one baseline match.
 - `make pylint`: Run Ruff and Black, including automatic fixes and formatting.
 - `make shlint`: Run ShellCheck and shfmt; these tools are installed separately.
@@ -490,7 +490,7 @@ Use `make help` for the full target list:
 - `make clean`: Remove disposable caches and LaTeX temporary files, preserving
   environments, datasets, and the report PDF.
 
-`FORCE=1` enables normal-match regeneration on parsing targets. Linting targets also
+`FORCE=1` regenerates existing matches on parsing targets. Linting targets also
 modify files; review `git diff` afterward. Without Make, Python formatting can use
 `uv run ruff check . --fix` and `uv run black .`.
 
@@ -558,9 +558,9 @@ Git Bash alone may not include GNU Make.
 - **`uv` is not recognized or imports fail:** Ensure uv is on `PATH`, run `make setup`,
   and select `.venv` as the notebook kernel. Its interpreter is normally
   `.venv/Scripts/python.exe` on Windows or `.venv/bin/python` on Linux/macOS.
-- **An existing match is incomplete or stale:** Normal extraction checks whether the
-  folder exists and skips it. Review the folder, then use the appropriate parsing
-  target with `FORCE=1` to regenerate it. Split recovery always regenerates its match.
+- **An existing match is incomplete or stale:** Extraction and split recovery check
+  whether the folder exists and skip it. Review the folder, then use the appropriate
+  parsing target with `FORCE=1` to regenerate it.
 - **Dead-player identities are missing:** This is present in the snapshot output.
   Filter `health > 0` for living-player features and use `side` for dead-player side
   attribution; do not assume every row has a player name or Steam ID.

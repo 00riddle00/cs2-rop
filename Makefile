@@ -54,8 +54,8 @@ help:
 	@echo "  make setup              Install Python dependencies"
 	@echo "  make download-demos     Download and verify all manifest demos"
 	@echo "  make parse              Extract baseline demos, skipping existing matches"
-	@echo "  make parse-all          Extract normal demos, then rebuild the split match"
-	@echo "                           Add FORCE=1 to re-extract existing normal matches"
+	@echo "  make parse-all          Extract missing normal matches, then the split match"
+	@echo "                           Add FORCE=1 to re-extract existing matches"
 	@echo "  make parse-dust2        Parse the Dust2 demo"
 	@echo "  make parse-mirage       Parse the Mirage demo"
 	@echo "  make pylint             Lint & format Python code"
@@ -80,7 +80,7 @@ download-demos:
 
 # --- Demo parsing -------------------------------------------------------------
 # Match folders contain 17 Parquet tables in data/processed/.
-# Normal matches are skipped unless FORCE=1; split recovery always rewrites.
+# Existing matches, including the split match, are skipped unless FORCE=1.
 
 parse:
 	uv run --no-sync python -B scripts/extract_awpy.py \
@@ -100,7 +100,8 @@ parse-all:
 	uv run --no-sync python -B scripts/recover_split_match.py \
 		--p1 "$(SPLIT_DIR)/$(SPLIT_MATCH)-p1.dem" \
 		--p2 "$(SPLIT_DIR)/$(SPLIT_MATCH)-p2.dem" \
-		--output data/processed
+		--output data/processed \
+		$(PARSE_FLAGS)
 
 parse-dust2:
 	uv run --no-sync python -B scripts/extract_awpy.py \
