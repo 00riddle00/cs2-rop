@@ -1,0 +1,198 @@
+\documentclass[twoside,11pt]{article}
+
+% Any additional packages needed should be included after jmlr2e.
+% Note that jmlr2e.sty includes epsfig, amssymb, natbib and graphicx,
+% and defines many common macros, such as 'proof' and 'example'.
+%
+% It also sets the bibliographystyle to plainnat; for more information on
+% natbib citation styles, see the natbib documentation, a copy of which
+% is archived at http://www.jmlr.org/format/natbib.pdf
+
+\usepackage{jmlr2e}
+\usepackage{lipsum}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{algorithm,algorithmic}
+
+% Definitions of handy macros can go here
+
+\newcommand{\dataset}{{\cal D}}
+\newcommand{\fracpartial}[2]{\frac{\partial #1}{\partial  #2}}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+% Heading arguments are {volume}{year}{pages}{submitted}{published}{author-full-names}
+
+\jmlrheading{1}{2023}{1-10}{1/09}{12/12}{Insert your full name}
+
+% Short headings should be running head and authors last names
+
+\ShortHeadings{Insert short title of a paper}{Insert your last name}
+\firstpageno{1}
+
+\begin{document}
+
+\title{Paper title}
+
+\author{\name Your full name \email your.email@stud.mif.vu.lt \\
+\name Your full name \email your.email@stud.mif.vu.lt \\
+\name Your full name \email your.email@stud.mif.vu.lt \\
+\name Your full name \email your.email@stud.mif.vu.lt \\
+       \addr Data Science study programme\\
+       Faculty of Mathematics and Informatics}
+
+\editor{Jurgita Markevi\v{c}i\={u}t\.{e}}
+
+\maketitle
+
+\begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
+This paper describes the mixtures-of-trees model, a probabilistic 
+model for discrete multidimensional domains.  Mixtures-of-trees 
+generalize the probabilistic trees of \citet{chow:68}
+in a different and complementary direction to that of Bayesian networks.
+We present efficient algorithms for learning mixtures-of-trees 
+models in maximum likelihood and Bayesian frameworks. 
+We also discuss additional efficiencies that can be
+obtained when data are ``sparse,'' and we present data 
+structures and algorithms that exploit such sparseness.
+Experimental results demonstrate the performance of the 
+model for both density estimation and classification. 
+We also discuss the sense in which tree-based classifiers
+perform an implicit form of feature selection, and demonstrate
+a resulting insensitivity to irrelevant attributes.
+\end{abstract}
+
+\begin{keywords}
+  Bayesian Networks, Mixture Models, Chow-Liu Trees
+\end{keywords}
+
+\section{Introduction}
+
+Probabilistic inference has become a core technology in AI,
+largely due to developments in graph-theoretic methods for the 
+representation and manipulation of complex probability 
+distributions~\citep{pearl:88}.  Whether in their guise as 
+directed graphs (Bayesian networks) or as undirected graphs (Markov 
+random fields), \emph{probabilistic graphical models} have a number 
+of virtues as representations of uncertainty and as inference engines.  
+Graphical models allow a separation between qualitative, structural
+aspects of uncertain knowledge and the quantitative, parametric aspects 
+of uncertainty...\\
+
+\section{Data}
+
+\subsection{Data set}
+
+\lipsum[1-2]
+
+\begin{table}
+\label{tab:1}
+\centering
+\begin{tabular}{ |c|c|c| } 
+ \hline
+ cell1 & cell2 & cell3 \\ 
+ cell4 & cell5 & cell6 \\ 
+ cell7 & cell8 & cell9 \\ 
+ \hline
+\end{tabular}
+\caption{My table.}
+\end{table}
+
+\lipsum[1]
+
+\subsection{Exploratory data analysis}
+
+\lipsum[1-2]
+
+\begin{figure}
+\label{pic:1}
+\centering
+\includegraphics[scale=0.7]{unnamed}
+\caption{My picture. {\small Source: \cite{romero:20}}}
+\end{figure}
+
+\section{Methodology}
+
+\lipsum[1-2]
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+\REQUIRE 
+$k$: the number of clusters; \\
+$D$: a data set containing n objects.
+\ENSURE A set of $k$ clusters.
+
+\STATE arbitrarily choose $k$ objects in $D$ as the initial representative objects or seeds;
+\REPEAT
+ \STATE assign each remaining object to the cluster with the nearest representative object;
+ \STATE randomly select a nonrepresentative object, $o_{random}$;
+ \STATE compute the total cost $S$ of swapping representative object $o_j$ with $o_random$;
+ \IF{$S < 0$} 
+     \STATE swap $o_j$ with $o_{random}$  to form the new set of $k$ representative objects;
+ \ENDIF
+\UNTIL no change;
+\end{algorithmic}
+\caption{k-medoids. PAM, a k-medoids algorithm for partitioning based on medoid
+or central objects.}
+\label{alg:1}
+\end{algorithm}
+
+\section{Results}
+
+\lipsum[1-2]
+
+\section{Conclusions}
+
+\lipsum[1]
+
+
+
+% Acknowledgements should go at the end, before appendices and references
+
+\acks{We would like to thank... }
+
+% Manual newpage inserted to improve layout of sample file - not
+% needed in general before appendices/bibliography.
+
+\bibliography{samplebib}
+
+\appendix
+\section*{Appendix A.}
+\label{app:theorem}
+
+% Note: in this sample, the section number is hard-coded in. Following
+% proper LaTeX conventions, it should properly be coded as a reference:
+
+%In this appendix we prove the following theorem from
+%Section~\ref{sec:textree-generalization}:
+
+In this appendix we prove the following theorem from
+Section~6.2:
+
+\noindent
+{\bf Theorem} {\it Let $u,v,w$ be discrete variables such that $v, w$ do
+not co-occur with $u$ (i.e., $u\neq0\;\Rightarrow \;v=w=0$ in a given
+dataset $\dataset$). Let $N_{v0},N_{w0}$ be the number of data points for
+which $v=0, w=0$ respectively, and let $I_{uv},I_{uw}$ be the
+respective empirical mutual information values based on the sample
+$\dataset$. Then
+\begin{align*}
+N_{v0} \;>\; N_{w0}\;\;\Rightarrow\;\;I_{uv} \;\leq\;I_{uw}
+\end{align*}
+with equality only if $u$ is identically 0.} \hfill\BlackBox
+
+\noindent
+{\bf Proof}. We use the notation:
+\begin{align*}
+P_v(i) \;=\;\frac{N_v^i}{N},\;\;\;i \neq 0;\;\;\;
+P_{v0}\;\equiv\;P_v(0)\; = \;1 - \sum_{i\neq 0}P_v(i).
+\end{align*}
+These values represent the (empirical) probabilities of $v$
+taking value $i\neq 0$ and 0 respectively.  Entropies will be denoted
+by $H$. We aim to show that $\fracpartial{I_{uv}}{P_{v0}} < 0$....\\
+
+
+
+
+\end{document}
