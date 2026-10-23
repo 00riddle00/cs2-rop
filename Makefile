@@ -10,6 +10,7 @@
 # Optional development tools:
 #   Python:      ruff and black (installed via uv)
 #   Shell:       shellcheck and shfmt
+#   Report:      latexmk and a LaTeX distribution (including pdflatex and BibTeX)
 # =============================================================================
 
 # --- Configuration ------------------------------------------------------------
@@ -22,6 +23,11 @@ DUST2_DEMO := $(RAW_DIR)/mouz-vs-spirit-m1-dust2.dem
 MIRAGE_DEMO := $(RAW_DIR)/mouz-vs-spirit-m2-mirage.dem
 PARSE_FLAGS = $(if $(filter 1,$(FORCE)),--force,)
 
+LATEXMK := latexmk
+REPORT_DIR := reports
+REPORT_TEX := $(REPORT_DIR)/data_mining_report.tex
+REPORT_PDF := $(REPORT_DIR)/data_mining_report.pdf
+
 # Load environment variables from .env file if it exists
 ifneq (,$(wildcard .env))
     include .env
@@ -32,6 +38,7 @@ endif
 .PHONY: all help setup download-demos
 .PHONY: parse parse-all parse-dust2 parse-mirage
 .PHONY: pylint shlint lint
+.PHONY: report clean-report
 .PHONY: clean check-env smoke-test
 
 # --- Default ------------------------------------------------------------------
@@ -56,7 +63,9 @@ help:
 	@echo "  make lint           Run pylint & shlint"
 	@echo "  make check-env      Verify Python environment and baseline datasets"
 	@echo "  make smoke-test     Verify demos and compare parser output"
-	@echo "  make clean          Remove generated caches"
+	@echo "  make report         Compile the LaTeX report"
+	@echo "  make clean-report   Remove generated LaTeX files (including the PDF)"
+	@echo "  make clean          Remove generated caches and report files"
 	@echo "  make help           Show this message"
 	@echo ""
 
@@ -114,9 +123,19 @@ smoke-test:
 lint: pylint shlint
 	@echo "==> Linting and formatting complete"
 
+# --- Final report ------------------------------------------------------------
+report: $(REPORT_PDF)
+
+$(REPORT_PDF): $(REPORT_TEX) $(REPORT_DIR)/bibliography.bib $(REPORT_DIR)/jmlr2e.sty
+	$(LATEXMK) -pdf -cd -interaction=nonstopmode -halt-on-error $(REPORT_TEX)
+	@echo "==> Report compiled: $(REPORT_PDF)"
+
+clean-report:
+	$(LATEXMK) -C -cd $(REPORT_TEX)
+
 # --- Clean -------------------------------------------------------------------
-# Remove disposable caches without deleting environments or datasets.
-clean:
+# Remove disposable caches and generated report files without deleting environments or datasets.
+clean: clean-report
 	@echo "==> Cleaning generated caches"
 	@find . \( -name .git -o -name .venv \) -prune -o \
 		-type d \( \
