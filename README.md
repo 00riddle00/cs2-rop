@@ -54,8 +54,10 @@ pipeline, including its one-second sampling interval.
 - [Inspect a match](#inspect-a-match)
 - [Data organization and Parquet tables](#data-organization-and-parquet-tables)
   - [Snapshots and identifiers](#snapshots-and-identifiers)
+  - [Analysis tables](#analysis-tables)
   - [Analysis in R](#analysis-in-r)
 - [Development commands](#development-commands)
+  - [Build the report](#build-the-report)
   - [Environment and extraction verification](#environment-and-extraction-verification)
 - [Troubleshooting](#troubleshooting)
   - [Regenerated Parquet files differ from Git references](#regenerated-parquet-files-differ-from-git-references)
@@ -71,6 +73,8 @@ The current pipeline consists of:
   into 17 Parquet tables per match and updates a processing summary.
 - [`scripts/recover_split_match.py`](./scripts/recover_split_match.py): Reconstructs
   the split Falcons vs. NAVI Mirage game as one match.
+- [`scripts/build_analysis_tables.py`](./scripts/build_analysis_tables.py): Combines
+  all processed matches into two team-level tables for R analysis.
 - [`scripts/verify.py`](./scripts/verify.py): Checks the environment and reproduces
   the two baseline match folders without modifying committed data.
 - [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb): Inspects an already
@@ -166,7 +170,8 @@ required. Install R and its `arrow` package separately for downstream analysis.
 
 5. **Inspect the committed tables or start analysis in R.** Open
    [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb) to inspect a match,
-   or read its Parquet tables with R's `arrow` package. Neither needs the raw demos.
+   or start from the combined [analysis tables](#analysis-tables) in `data/analysis/`
+   with R's `arrow` package. Neither needs the raw demos.
 
 To regenerate data, follow [Extract demos with Awpy](#extract-demos-with-awpy).
 Neither `setup` nor `check-env` downloads demos automatically, and initial inspection
@@ -202,6 +207,12 @@ uv run --no-sync python -B scripts/extract_awpy.py --input data/raw/mouz-vs-spir
 Add `--force` to an extraction command to regenerate an existing normal match.
 Split recovery has no force flag and always rewrites its match.
 
+After extraction, rebuild the analysis tables:
+
+```text
+uv run --no-sync python -B scripts/build_analysis_tables.py
+```
+
 ## Repository layout
 
 ```text
@@ -211,10 +222,13 @@ cs2-rop/
 │   ├── raw_split/               # Two split parts, ignored by Git
 │   ├── raw_checksums.json       # Drive IDs and SHA-256 for all 61 recordings
 │   ├── processed/               # 60 committed match folders and processing summary
+│   ├── analysis/                # Committed round and per-second tables for R
 │   ├── processed_csv_sample/    # Committed full CSV export of one baseline match
 │   └── csv_export/              # Local CSV exports, ignored by Git
-├── scripts/                     # Download, extract, recover, verify, export
+├── scripts/                     # Download, extract, recover, analysis tables,
+│                                # verify, export
 ├── notebooks/                   # Match inspection notebook
+├── reports/                     # LaTeX report, bibliography and style file
 ├── docs/                        # Resources and literature
 ├── DESCRIPTION_PARAMETERS.md    # Research background and parameters
 ├── Makefile                     # Setup, extraction, and development commands
@@ -322,35 +336,36 @@ notebook outputs before adding them to Git.
 
 ## Data organization and Parquet tables
 
-| Directory | Contents | Tracked by Git? |
-| --- | --- | --- |
-| `data/raw/` | Normal `.dem` recordings | No, except `.gitkeep` |
-| `data/raw_split/` | The two split recordings | No, except `.gitkeep` |
-| `data/processed/` | 60 match folders and `processed_summary.csv` | Yes |
-| `data/processed_csv_sample/` | Full CSV export of one baseline match | Yes |
-| `data/csv_export/` | Local CSV inspection exports | No |
+| Directory                    | Contents                                              | Tracked by Git?       |
+| ---------------------------- | ----------------------------------------------------- | --------------------- |
+| `data/raw/`                  | Normal `.dem` recordings                              | No, except `.gitkeep` |
+| `data/raw_split/`            | The two split recordings                              | No, except `.gitkeep` |
+| `data/processed/`            | 60 match folders and `processed_summary.csv`          | Yes                   |
+| `data/analysis/`             | Round and per-second analysis tables, Parquet and CSV | Yes                   |
+| `data/processed_csv_sample/` | Full CSV export of one baseline match                 | Yes                   |
+| `data/csv_export/`           | Local CSV inspection exports                          | No                    |
 
 Each processed match has these **17 Parquet tables**:
 
-| Table | Contents |
-| --- | --- |
-| `rounds` | Round boundaries, winner, reason, and overtime flag |
-| `kills` | Kill events and attacker/victim details |
-| `damages` | Damage events |
-| `bomb` | Bomb events |
-| `grenades` | Grenade trajectories |
-| `fires` | Fire areas and timing |
-| `smokes` | Smoke areas and timing |
-| `shots` | Weapon-fire events |
-| `stats` | Whole-match player totals; not round-prediction features |
-| `players` | Player identifiers and team information |
-| `round_economy` | Round/side economy and buy information |
-| `chat` | Chat messages |
-| `blinds` | Flash-blind events |
-| `item_events` | Item-related events |
-| `header` | Demo header as key/value rows |
-| `convars` | Server configuration as key/value rows |
-| `snapshots` | Player state sampled every second during live play |
+| Table           | Contents                                                 |
+| --------------- | -------------------------------------------------------- |
+| `rounds`        | Round boundaries, winner, reason, and overtime flag      |
+| `kills`         | Kill events and attacker/victim details                  |
+| `damages`       | Damage events                                            |
+| `bomb`          | Bomb events                                              |
+| `grenades`      | Grenade trajectories                                     |
+| `fires`         | Fire areas and timing                                    |
+| `smokes`        | Smoke areas and timing                                   |
+| `shots`         | Weapon-fire events                                       |
+| `stats`         | Whole-match player totals; not round-prediction features |
+| `players`       | Player identifiers and team information                  |
+| `round_economy` | Round/side economy and buy information                   |
+| `chat`          | Chat messages                                            |
+| `blinds`        | Flash-blind events                                       |
+| `item_events`   | Item-related events                                      |
+| `header`        | Demo header as key/value rows                            |
+| `convars`       | Server configuration as key/value rows                   |
+| `snapshots`     | Player state sampled every second during live play       |
 
 Every table carries `match_id`. Tick-indexed event tables carry `round_num` and
 `in_play` to distinguish live play from freeze time, warmup, and post-round events.
@@ -374,6 +389,53 @@ Their fields cover position and velocity, view angles, health and armor, weapons
 and utilities, equipment and money, and status flags. They are sampled states, not
 full per-tick trajectories. Row order is not a reliable key for comparing tables.
 
+### Analysis tables
+
+[`scripts/build_analysis_tables.py`](./scripts/build_analysis_tables.py) combines all
+match folders in `data/processed/` into two team-level tables for EDA and modelling in
+R. Both are written to `data/analysis/` as Parquet and CSV:
+
+| Table          | Rows    | One row per          |
+| -------------- | ------- | -------------------- |
+| `rounds`       | 1,257   | Round of every match |
+| `round_states` | 116,201 | Second of live play  |
+
+`rounds` holds, per round: the team on each side, the score before the round, whether
+the CT team won the previous round, buy type and equipment value per side at freeze
+end, pistol-round and overtime flags, whether and where the bomb was planted, the side
+that lost the first player, the round duration, and the outcome.
+
+`round_states` holds, per second of live play: time since freeze end, time remaining
+(the round timer, or the bomb timer after a plant), bomb state (planted, seconds since
+plant, site, carried), and for each side's **living players only**: alive count, HP,
+armor, helmets, defusers, equipment value, money, rifles, AWPs, SMGs and grenades by
+type. Each row also carries the teams, the score before the round and the outcome.
+
+Notes:
+
+- **Labels:** `winner_side`, `winner_team`, `ct_win` and `reason_name` describe how the
+  round ended. They are prediction targets, not features.
+- **Round-level columns from later in the round:** in `rounds`, `bomb_planted`,
+  `plant_site`, `plant_tick`, `first_death_side`, `end_tick` and `round_duration_s`
+  are only known during or after the round. Do not use them as features for a
+  prediction made earlier in the round. `round_states` gives the bomb state as known at
+  each second.
+- **Teams and identifiers:** team names are normalised to one name per team (for
+  example "Team Vitality" and "Vitality" both become `Vitality`). The tables contain no
+  Steam IDs.
+- **Split game:** `part` is 0 for every match except
+  `falcons-vs-natus-vincere-m3-mirage` (0 = first half, 1 = second half). Ticks are
+  unique only within `(match_id, part)`. `reason_name` is empty for that match's
+  rounds 1-12.
+
+To regenerate both tables after changing `data/processed/`:
+
+```text
+uv run --no-sync python -B scripts/build_analysis_tables.py
+```
+
+Add `--no-csv` to write Parquet only.
+
 ### Analysis in R
 
 Read the Parquet tables directly with the R
@@ -382,6 +444,15 @@ Read the Parquet tables directly with the R
 ```r
 snapshots <- arrow::read_parquet("data/processed/mouz-vs-spirit-m1-dust2/snapshots.parquet")
 ```
+
+For most analysis, start from the combined tables in `data/analysis/`:
+
+```r
+rounds <- arrow::read_parquet("data/analysis/rounds.parquet")
+states <- arrow::read_parquet("data/analysis/round_states.parquet")
+```
+
+Without `arrow`, read the CSV copies with `readr::read_csv()`.
 
 **Preserve identifier precision:** `steamid` is a `uint64` identifier, not a numeric
 measurement. Converting it to an R double loses precision for these large IDs.
@@ -413,11 +484,38 @@ Use `make help` for the full target list:
 - `make pylint`: Run Ruff and Black, including automatic fixes and formatting.
 - `make shlint`: Run ShellCheck and shfmt; these tools are installed separately.
 - `make lint`: Run Python and shell linting/formatting.
-- `make clean`: Remove disposable caches, preserving environments and datasets.
+- `make report`: Compile the LaTeX report; see [Build the report](#build-the-report).
+- `make clean-report-aux`: Remove LaTeX temporary files, keeping the report PDF.
+- `make clean-report`: Remove all generated LaTeX files, including the report PDF.
+- `make clean`: Remove disposable caches and LaTeX temporary files, preserving
+  environments, datasets, and the report PDF.
 
 `FORCE=1` enables normal-match regeneration on parsing targets. Linting targets also
 modify files; review `git diff` afterward. Without Make, Python formatting can use
 `uv run ruff check . --fix` and `uv run black .`.
+
+### Build the report
+
+The paper lives in [`reports/`](./reports/), with
+[`data_mining_report.tex`](./reports/data_mining_report.tex), its bibliography
+`bibliography.bib`, and the `jmlr2e.sty` style file. Building it requires
+[latexmk](https://ctan.org/pkg/latexmk) and a LaTeX distribution with pdflatex and
+BibTeX, for example TeX Live or MiKTeX:
+
+```text
+make report
+```
+
+`make report` always runs latexmk, which tracks the report's sources and recompiles
+only when something changed. It stops on the first LaTeX error. The PDF is written
+to `reports/data_mining_report.pdf`.
+
+`make clean` removes LaTeX temporary files but keeps the PDF. `make clean-report`
+also removes the PDF. Without Make, run latexmk directly:
+
+```text
+latexmk -pdf -cd -interaction=nonstopmode -halt-on-error reports/data_mining_report.tex
+```
 
 ### Environment and extraction verification
 
