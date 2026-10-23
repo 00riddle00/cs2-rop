@@ -42,9 +42,11 @@ def download_demos() -> None:
                 f"Missing or invalid SHA-256 for {name} in data/raw_checksums.json"
             )
 
-    raw_dir = ROOT / "data" / "raw"
-    raw_dir.mkdir(parents=True, exist_ok=True)
     for name, entry in manifest.items():
+        # Keep split parts outside the normal extractor's input directory.
+        directory = "raw_split" if Path(name).stem.endswith(("-p1", "-p2")) else "raw"
+        raw_dir = ROOT / "data" / directory
+        raw_dir.mkdir(parents=True, exist_ok=True)
         destination = raw_dir / name
         file_id = entry["drive_id"]
         expected = entry["sha256"]
