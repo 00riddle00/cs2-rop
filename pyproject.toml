@@ -26,5 +26,7 @@ dev = [
     "black[jupyter]>=26.10.1",
     "gdown>=6.1,<7",
     "ipykernel>=7.4.0",
+    "jupytext>=1.19.6",
+    "nbconvert>=7.17.2",
     "ruff>=0.17.0",
 ]
