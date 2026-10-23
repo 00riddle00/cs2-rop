@@ -83,3 +83,6 @@ venv/
 #   Reconsider this policy if datasets become substantially larger.
 #/data/processed/*
 #!/data/processed/.gitkeep
+
+# Local CSV inspection exports; the committed sample has its own directory.
+/data/csv_export/
