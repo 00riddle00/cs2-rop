@@ -65,9 +65,7 @@ In general, many of the decisions were also driven by the fact that our approach
 
 \#METHODOLOGY:
 
-
-
-possible training models
+possible training models and methods
 
 Logistic Regression
 
@@ -82,21 +80,21 @@ LSTM
 Sci-kit learn
 
 
-https://github.com/markus-wa/demoinfocs-golang \[Go Demo-parser]
+https://github.com/markus-wa/demoinfocs-golang X\[Go Demo-parser]
 
-https://github.com/pnxenopoulos/awpy \[Python-based demo data analysis]
+https://github.com/pnxenopoulos/awpy X\[Python-based demo data analysis]
 
-https://github.com/ratulsarker/CS2\_RoundPrediction \[Deep-Learning, a good example]
+https://github.com/ratulsarker/CS2\_RoundPrediction X\[Deep-Learning, a good example]
 
-https://github.com/Gary2005/cs-net \[Transformer-based round win prediction, predicts movement]
+https://github.com/Gary2005/cs-net X\[Transformer-based round win prediction, predicts movement]
 
-https://github.com/wyn0n0/CSMapWinPredict \[Replay and prediction with a display]
+https://github.com/wyn0n0/CSMapWinPredict X \[Replay and prediction with a display]
 
-https://github.com/eigenpaul/cs2-evalbar
+https://github.com/eigenpaul/cs2-evalbar X
 
-https://github.com/kamalchah/CounterStrikeWinProb
+https://github.com/kamalchah/CounterStrikeWinProb X
 
-https://github.com/TaiZo1/cs2-win-prediction
+https://github.com/TaiZo1/cs2-win-prediction X
 
 
 
@@ -128,6 +126,8 @@ One of them is https://github.com/ratulsarker/CS2_RoundPrediction which "Predict
 
 There's a very recent (last update 18-10-2026) https://github.com/wyn0n0/CSMapWinPredict project that has a very similar scope of analyzing Demo files with an additional in-built radar-type 2D visualizer, and a target of predicting current round winner updated about once per second. One of it's key advantages is the live demo replay function itself, where one can see win-rate probability as the replay goes, which is very useful for testing. However, there are limitations. "Predictions and map settings currently focus on Mirage. Results on other maps have not been verified. Large Demos may require substantial processing time and memory." The fact that it's based on Mirage serves our research, though only partially and some reservations have to made. Slow processing time would become a liability if scaling a solution would ever be considered, and our project prefers to have that option in case we need a greater dataset.
 
+https://github.com/kamalchah/CounterStrikeWinProb is one of the other projects that are worth mentioning. While it explores CS:GO, rather than CS2, its key findings stress a similar point that is poignant in our research, namely that position improves accuracy from 64.8% to 67.5% on 200 parsed Mirage matches, and many other projects focus only on what attributes teams possess, rather than where they are. Other key findings state that positional embeddings shift feature importance towards t_alive rather than ct_alive and CT equipment value retained a higher importance than T equipment value. Both findings are well-observed tendencies in professional game coverage and reinforce this intuitive knowledge. The potential improvements stated in the project advise a finer granularity on player position, adding player state features per queried tick, and testing on less CT-sided maps, Dust 2 being a good candidate for that. All of these points will by design be had in mind, improved upon and expanded in our research.
+
 One of the more lean yet effective round outcome predictor projects is https://github.com/d-roho/CSGOPredictor, and while recent (made in 2025), it is made for an older iteration of the game - CS:GO, rather than CS2. One of it's key advantages is that it can do live round predictions. Program used Logistic Regression model, and robust, verified and prepared dataset of 700 demos for model training gathered from "high level tournament play in 2019-2020 ... warmup rounds and restarts have been filtered ... a round snapshot has been recorded every 20 seconds until the round is decided. The total number of snapshots is 122411. Snapshots are i.i.d and should be treated as individual data points, not as part of a match." Project has data analysis documentation that other sources unfortunately often lack which can be checked out here https://www.kaggle.com/datasets/christianlillelund/csgo-round-winner-classification. It is one of the more used datasets for many similar projects and comparisons of results and methods can readily be made between them.
 
-There are a few deep-learning solutions to the CS2 round prediction problem that are worth mentioning and comparing, despite the fact that DL falls outside our intended methods. https://github.com/Gary2005/cs-net is transformer-based path prediction & game-state forecasting for Counter-Strike 2 trained with Pro architecture (d_model=768, 138.7M params). What it claims to achieve is predict player's movement trajectory, along with a spatial-only downstream win-rate prediction that aligns with our own aim that uses 4 second snapshot windows, making an interesting example for comparison between DL and ML solutions. However, the detailed documentation is in Chinese, so correct reproducibility may be unreliable because of translation. Another neural network solution comes from https://github.com/eigenpaul/cs2-evalbar, a "roughly 70K-parameter GraphTemporalTransformer over a 20-second, 4 Hz state window." While claiming meaningful results by game phase (<15s, 30-60s >=90s) with accuracy of 0.6, 0.68, 0.88. Another interesting finding is that the project claims "extra capacity overfits near 95 groups, but widening can help once the dataset reaches 142 groups." One big caveat is that the application was trained on Inferno, another map, so the results will be hard to compare.
+There are a few deep-learning solutions to the CS2 round prediction problem that are worth mentioning and comparing, despite the fact that DL falls outside our intended methods. https://github.com/Gary2005/cs-net is transformer-based path prediction & game-state forecasting for Counter-Strike 2 trained with Pro architecture (d_model=768, 138.7M params). What it claims to achieve is predict player's movement trajectory, along with a spatial-only downstream win-rate prediction that aligns with our own aim that uses 4 second snapshot windows, making an interesting example for comparison between DL and ML solutions. However, the detailed documentation is in Chinese, so correct reproducibility and evaluation may be unreliable due to rough translation with the most widely-accessible tools available. Another neural network solution comes from https://github.com/eigenpaul/cs2-evalbar, a "roughly 70K-parameter GraphTemporalTransformer over a 20-second, 4 Hz state window." While claiming meaningful results by game phase (<15s, 30-60s >=90s) with accuracy of 0.6, 0.68, 0.88. Another interesting finding is that the project claims "extra capacity overfits near 95 groups, but widening can help once the dataset reaches 142 groups." One big caveat is that the application was trained on Inferno, another map, so the results will be hard to compare.
