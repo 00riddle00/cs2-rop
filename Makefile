@@ -38,7 +38,7 @@ endif
 .PHONY: all help setup download-demos
 .PHONY: parse parse-all parse-dust2 parse-mirage
 .PHONY: pylint shlint lint
-.PHONY: report clean-report
+.PHONY: report clean-report clean-report-aux
 .PHONY: clean check-env smoke-test
 
 # --- Default ------------------------------------------------------------------
@@ -50,23 +50,24 @@ all: setup parse
 
 help:
 	@echo ""
-	@echo "  make all            Run setup and extract missing baseline matches"
-	@echo "  make setup          Install Python dependencies"
-	@echo "  make download-demos Download and verify all manifest demos"
-	@echo "  make parse          Extract baseline demos, skipping existing matches"
-	@echo "  make parse-all      Extract normal demos, then rebuild the split match"
-	@echo "                       Add FORCE=1 to re-extract existing normal matches"
-	@echo "  make parse-dust2    Parse the Dust2 demo"
-	@echo "  make parse-mirage   Parse the Mirage demo"
-	@echo "  make pylint         Lint & format Python code"
-	@echo "  make shlint         Lint & format shell scripts"
-	@echo "  make lint           Run pylint & shlint"
-	@echo "  make check-env      Verify Python environment and baseline datasets"
-	@echo "  make smoke-test     Verify demos and compare parser output"
-	@echo "  make report         Compile the LaTeX report"
-	@echo "  make clean-report   Remove generated LaTeX files (including the PDF)"
-	@echo "  make clean          Remove generated caches and report files"
-	@echo "  make help           Show this message"
+	@echo "  make all                Run setup and extract missing baseline matches"
+	@echo "  make setup              Install Python dependencies"
+	@echo "  make download-demos     Download and verify all manifest demos"
+	@echo "  make parse              Extract baseline demos, skipping existing matches"
+	@echo "  make parse-all          Extract normal demos, then rebuild the split match"
+	@echo "                           Add FORCE=1 to re-extract existing normal matches"
+	@echo "  make parse-dust2        Parse the Dust2 demo"
+	@echo "  make parse-mirage       Parse the Mirage demo"
+	@echo "  make pylint             Lint & format Python code"
+	@echo "  make shlint             Lint & format shell scripts"
+	@echo "  make lint               Run pylint & shlint"
+	@echo "  make check-env          Verify Python environment and baseline datasets"
+	@echo "  make smoke-test         Verify demos and compare parser output"
+	@echo "  make report             Compile the LaTeX report"
+	@echo "  make clean-report-aux   Remove LaTeX temporary files, keeping the PDF"
+	@echo "  make clean-report       Remove all generated LaTeX files, including the PDF"
+	@echo "  make clean              Remove generated caches and LaTeX temporary files"
+	@echo "  make help               Show this message"
 	@echo ""
 
 # --- Setup -------------------------------------------------------------------
@@ -82,18 +83,36 @@ download-demos:
 # Normal matches are skipped unless FORCE=1; split recovery always rewrites.
 
 parse:
-	uv run --no-sync python -B scripts/extract_awpy.py --input "$(DUST2_DEMO)" --output data/processed $(PARSE_FLAGS)
-	uv run --no-sync python -B scripts/extract_awpy.py --input "$(MIRAGE_DEMO)" --output data/processed $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py \
+		--input "$(DUST2_DEMO)" \
+		--output data/processed \
+		$(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py \
+		--input "$(MIRAGE_DEMO)" \
+		--output data/processed \
+		$(PARSE_FLAGS)
 
 parse-all:
-	uv run --no-sync python -B scripts/extract_awpy.py --input "$(RAW_DIR)" --output data/processed $(PARSE_FLAGS)
-	uv run --no-sync python -B scripts/recover_split_match.py --p1 "$(SPLIT_DIR)/$(SPLIT_MATCH)-p1.dem" --p2 "$(SPLIT_DIR)/$(SPLIT_MATCH)-p2.dem" --output data/processed
+	uv run --no-sync python -B scripts/extract_awpy.py \
+		--input "$(RAW_DIR)" \
+		--output data/processed \
+		$(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/recover_split_match.py \
+		--p1 "$(SPLIT_DIR)/$(SPLIT_MATCH)-p1.dem" \
+		--p2 "$(SPLIT_DIR)/$(SPLIT_MATCH)-p2.dem" \
+		--output data/processed
 
 parse-dust2:
-	uv run --no-sync python -B scripts/extract_awpy.py --input "$(DUST2_DEMO)" --output data/processed $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py \
+		--input "$(DUST2_DEMO)" \
+		--output data/processed \
+		$(PARSE_FLAGS)
 
 parse-mirage:
-	uv run --no-sync python -B scripts/extract_awpy.py --input "$(MIRAGE_DEMO)" --output data/processed $(PARSE_FLAGS)
+	uv run --no-sync python -B scripts/extract_awpy.py \
+		--input "$(MIRAGE_DEMO)" \
+		--output data/processed \
+		$(PARSE_FLAGS)
 
 # --- Lint & format Python -----------------------------------------------------
 pylint:
@@ -124,18 +143,20 @@ lint: pylint shlint
 	@echo "==> Linting and formatting complete"
 
 # --- Final report ------------------------------------------------------------
-report: $(REPORT_PDF)
-
-$(REPORT_PDF): $(REPORT_TEX) $(REPORT_DIR)/bibliography.bib $(REPORT_DIR)/jmlr2e.sty
+report:
 	$(LATEXMK) -pdf -cd -interaction=nonstopmode -halt-on-error $(REPORT_TEX)
 	@echo "==> Report compiled: $(REPORT_PDF)"
+
+clean-report-aux:
+	$(LATEXMK) -c -cd $(REPORT_TEX)
 
 clean-report:
 	$(LATEXMK) -C -cd $(REPORT_TEX)
 
 # --- Clean -------------------------------------------------------------------
-# Remove disposable caches and generated report files without deleting environments or datasets.
-clean: clean-report
+# Remove disposable caches and LaTeX temporary files without deleting environments, datasets, or
+# the report PDF.
+clean: clean-report-aux
 	@echo "==> Cleaning generated caches"
 	@find . \( -name .git -o -name .venv \) -prune -o \
 		-type d \( \
