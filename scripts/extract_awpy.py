@@ -215,6 +215,16 @@ def build_tables(
     return tables, header, warnings
 
 
+def stable_order(df: pl.DataFrame) -> pl.DataFrame:
+    """Sort rows by every sortable column, so equal data gives equal files.
+
+    awpy can return rows of the same tick in a different order between runs.
+    Nested columns (lists, structs) cannot be sorted on and are skipped.
+    """
+    keys = [name for name, dtype in df.schema.items() if not dtype.is_nested()]
+    return df.sort(keys, nulls_last=True, maintain_order=True) if keys else df
+
+
 def write_match(tables: dict[str, pl.DataFrame], out_root: Path, match_id: str) -> None:
     # Write to a temp dir and rename, so a crash never leaves a half match.
     tmp = out_root / f".{match_id}.tmp"
@@ -222,9 +232,8 @@ def write_match(tables: dict[str, pl.DataFrame], out_root: Path, match_id: str) 
     shutil.rmtree(tmp, ignore_errors=True)
     tmp.mkdir(parents=True)
     for name, df in tables.items():
-        df.select(pl.lit(match_id).alias("match_id"), pl.all()).write_parquet(
-            tmp / f"{name}.parquet"
-        )
+        out = stable_order(df).select(pl.lit(match_id).alias("match_id"), pl.all())
+        out.write_parquet(tmp / f"{name}.parquet")
     shutil.rmtree(final, ignore_errors=True)
     tmp.rename(final)
 
