@@ -3,7 +3,7 @@
 # CS2-ROP -- Makefile
 #
 # Prerequisites:
-#   All platforms: uv and Go
+#   All platforms: uv
 #   Linux/macOS:   GNU Make and standard Unix utilities
 #   Windows:       GNU Make and Unix utilities via MSYS2, Git Bash, or WSL
 #
@@ -13,8 +13,7 @@
 # =============================================================================
 
 # --- Configuration ------------------------------------------------------------
-# Demo paths are relative to the repository root; Go dependencies use go -C.
-GO_PARSER := go-parser
+# Demo paths are relative to the repository root.
 RAW_DIR := data/raw
 SPLIT_DIR := data/raw_split
 SPLIT_MATCH := falcons-vs-natus-vincere-m3-mirage
@@ -32,7 +31,7 @@ endif
 # --- Phony targets --------------------------------------------------------------
 .PHONY: all help setup download-demos
 .PHONY: parse parse-all parse-dust2 parse-mirage
-.PHONY: pylint golint shlint lint
+.PHONY: pylint shlint lint
 .PHONY: clean check-env smoke-test
 
 # --- Default ------------------------------------------------------------------
@@ -45,7 +44,7 @@ all: setup parse
 help:
 	@echo ""
 	@echo "  make all            Run setup and extract missing baseline matches"
-	@echo "  make setup          Install Python and Go dependencies"
+	@echo "  make setup          Install Python dependencies"
 	@echo "  make download-demos Download and verify all manifest demos"
 	@echo "  make parse          Extract baseline demos, skipping existing matches"
 	@echo "  make parse-all      Extract normal demos, then rebuild the split match"
@@ -53,10 +52,9 @@ help:
 	@echo "  make parse-dust2    Parse the Dust2 demo"
 	@echo "  make parse-mirage   Parse the Mirage demo"
 	@echo "  make pylint         Lint & format Python code"
-	@echo "  make golint         Lint & format Go code"
 	@echo "  make shlint         Lint & format shell scripts"
-	@echo "  make lint           Run pylint & golint & shlint"
-	@echo "  make check-env      Verify environment, Go build, and datasets"
+	@echo "  make lint           Run pylint & shlint"
+	@echo "  make check-env      Verify Python environment and baseline datasets"
 	@echo "  make smoke-test     Verify demos and compare parser output"
 	@echo "  make clean          Remove generated caches"
 	@echo "  make help           Show this message"
@@ -66,8 +64,6 @@ help:
 setup:
 	@echo "==> Setting up Python environment"
 	uv sync
-	@echo "==> Downloading Go dependencies"
-	go -C $(GO_PARSER) mod download
 
 download-demos:
 	uv run --no-sync python -B scripts/download_demos.py
@@ -98,12 +94,6 @@ pylint:
 	@uv run ruff format .
 	@uv run black --line-length=88 --preview --enable-unstable-feature=string_processing .
 
-# --- Lint & format Go ---------------------------------------------------------
-golint:
-	@echo "==> Linting & formatting Go code"
-	@go -C $(GO_PARSER) fmt ./...
-	@go -C $(GO_PARSER) vet ./...
-
 # --- Lint & format shell scripts ----------------------------------------------
 shlint:
 	@echo "==> Linting & formatting shell scripts"
@@ -121,7 +111,7 @@ smoke-test:
 	uv run --no-sync python -B scripts/verify.py smoke-test
 
 # Lint and also format (!) all supported languages (modifies files).
-lint: pylint golint shlint
+lint: pylint shlint
 	@echo "==> Linting and formatting complete"
 
 # --- Clean -------------------------------------------------------------------
