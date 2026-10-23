@@ -1,8 +1,32 @@
-# macOS
+# -----------------------------------------------
+# Operating System files
+# -----------------------------------------------
+
+# macOS metadata files
 .DS_Store
 
-# Windows
+# Windows metadata files
 Thumbs.db
+Desktop.ini
+
+# -----------------------------------------------
+# IDEs and editors
+# -----------------------------------------------
+
+# JetBrains IDEs (PyCharm, IntelliJ, etc.)
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Swap and backup files
+*~
+*.swp
+*.swo
+
+# -----------------------------------------------
+# Python
+# -----------------------------------------------
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -62,18 +86,74 @@ venv/
 # Ruff stuff:
 .ruff_cache/
 
-# IDEs
-.idea/
-.vscode/
+# -----------------------------------------------
+# LaTeX
+# -----------------------------------------------
 
-# Go binaries and test artifacts
-/bin/
-*.test
+# Auxiliary files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.out
+*.toc
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
+*.fls
+*.log
+*.fdb_latexmk
+*.synctex.gz
+*.synctex.gz(busy)
+*.xdv
+
+# Bibliography
+*.run.xml
+
+# Minted (code highlighting)
+_minted*
+*.pyg
+
+# TikZ / externalization
+*.dpth
+*.md5
+*.auxlock
+
+# Beamer / presentations
+*.nav
+*.snm
+
+# Overleaf artifacts
+*.latexmain
+
+# -----------------------------------------------
+# Miscellaneous
+# -----------------------------------------------
+
+# Temporary files
+*.tmp
+*.temp
+
+# Makefile empty target files, containing a timestamp
+*.stamp
+
+# -----------------------------------------------
+# Datasets
+# -----------------------------------------------
 
 # Raw datasets
-#   Counter-Strike demos can exceed GitHub's 100 MiB file limit.
-#   Ignore raw datasets by default. Smaller files may be committed later
-#   if useful for reproducibility; update these rules accordingly.
+#   Counter-Strike demos (.dem) can exceed GitHub's 100 MiB file limit. Ignore
+#   raw datasets by default. Smaller files may be committed later if useful for
+#   reproducibility; update these rules accordingly.
 *.dem
 /data/raw/*
 !/data/raw/.gitkeep
@@ -83,6 +163,3 @@ venv/
 #   Reconsider this policy if datasets become substantially larger.
 #/data/processed/*
 #!/data/processed/.gitkeep
-
-# Local CSV inspection exports; the committed sample has its own directory.
-/data/csv_export/
