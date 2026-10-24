@@ -1,10 +1,12 @@
 ---
 title: "summary_analysis"
-format: pdf
+format:
+  pdf:
+    pdf-engine: pdflatex
 editor: visual
 ---
 
-## 
+##
 
 ```{r}
 library(arrow)
@@ -14,8 +16,8 @@ library(tidyverse)
 library(moments)
 
 # Load the two CSV files
-rounds <- read_csv("rounds.csv", show_col_types = FALSE)
-round_states <- read_csv("round_states.csv", show_col_types = FALSE)
+rounds <- read_csv("data/analysis/rounds.csv", show_col_types = FALSE)
+round_states <- read_csv("data/analysis/round_states.csv", show_col_types = FALSE)
 
 # Join keys: your files use round_num, not round_id
 join_keys <- c("match_id", "round_num")
@@ -50,21 +52,21 @@ cat("Merged snapshot rows:", nrow(round_states_enriched), "\n")
 cat("Merged columns:", ncol(round_states_enriched), "\n")
 
 # Save the merged dataset
-write_csv(round_states_enriched, "round_states_enriched.csv")
+write_csv(round_states_enriched, "data/analysis/round_states_enriched.csv")
 
 write_parquet(
   round_states_enriched,
-  "round_states_enriched.parquet"
+  "data/analysis/round_states_enriched.parquet"
 )
 ```
 
 ## Quick view of merged file
 
 ```{r}
-round_states <- read_parquet("round_states_enriched.parquet")
+round_states <- read_parquet("data/analysis/round_states_enriched.parquet")
 
-# View the data
-View(round_states)
+# View the data (only in an interactive session; fails when rendering)
+if (interactive()) View(round_states)
 
 # Inspect column names and data types
 str(round_states)
@@ -437,7 +439,7 @@ planted_bomb_outcomes <- round_states_enriched %>%
   mutate(
     outcome = case_when(
       reason_name == "bomb_defused" ~ "Bomb defused",
-      reason_name == "bomb_exploded" ~ "Bomb exploded",
+      reason_name == "target_bombed" ~ "Bomb exploded",
       is.na(reason_name) ~ "Unknown outcome",
       TRUE ~ as.character(reason_name)
     )
@@ -445,7 +447,7 @@ planted_bomb_outcomes <- round_states_enriched %>%
   group_by(outcome) %>%
   summarise(
     rounds = n(),
-    
+
     # Time from round start until bomb plant
     mean_seconds_until_plant =
       mean(seconds, na.rm = TRUE),
@@ -453,7 +455,7 @@ planted_bomb_outcomes <- round_states_enriched %>%
       median(seconds, na.rm = TRUE),
     sd_seconds_until_plant =
       sd(seconds, na.rm = TRUE),
-    
+
     # Time elapsed after bomb plant
     mean_seconds_after_plant =
       mean(seconds_since_plant, na.rm = TRUE),
@@ -461,7 +463,7 @@ planted_bomb_outcomes <- round_states_enriched %>%
       median(seconds_since_plant, na.rm = TRUE),
     sd_seconds_after_plant =
       sd(seconds_since_plant, na.rm = TRUE),
-    
+
     .groups = "drop"
   ) %>%
   collect()
@@ -481,7 +483,7 @@ planted_bomb_outcomes_seconds_since_plant <- round_states_enriched %>%
   mutate(
     outcome = case_when(
       reason_name == "bomb_defused" ~ "Bomb defused",
-      reason_name == "bomb_exploded" ~ "Bomb exploded",
+      reason_name == "target_bombed" ~ "Bomb exploded",
       is.na(reason_name) ~ "Unknown outcome",
       TRUE ~ as.character(reason_name)
     )
@@ -567,7 +569,7 @@ planted_bomb_outcomes <- plant_timing %>%
   mutate(
     outcome = case_when(
       reason_name == "bomb_defused" ~ "Bomb defused",
-      reason_name == "bomb_exploded" ~ "Bomb exploded",
+      reason_name == "target_bombed" ~ "Bomb exploded",
       is.na(reason_name) ~ "Unknown outcome",
       TRUE ~ as.character(reason_name)
     )
@@ -575,18 +577,18 @@ planted_bomb_outcomes <- plant_timing %>%
   group_by(map, outcome) %>%
   summarise(
     rounds = n(),
-    
+
     mean_seconds_until_plant = mean(seconds, na.rm = TRUE),
     median_seconds_until_plant = median(seconds, na.rm = TRUE),
     sd_seconds_until_plant = sd(seconds, na.rm = TRUE),
-    
+
     mean_seconds_after_plant =
       mean(seconds_since_plant, na.rm = TRUE),
     median_seconds_after_plant =
       median(seconds_since_plant, na.rm = TRUE),
     sd_seconds_after_plant =
       sd(seconds_since_plant, na.rm = TRUE),
-    
+
     .groups = "drop"
   ) %>%
   collect()
@@ -595,6 +597,26 @@ planted_bomb_outcomes
 ```
 
 ```{r}
+# Median times until and after the plant, in long format for faceting.
+plot_data <- planted_bomb_outcomes %>%
+  select(
+    map, outcome,
+    until_plant = median_seconds_until_plant,
+    after_plant = median_seconds_after_plant
+  ) %>%
+  pivot_longer(
+    c(until_plant, after_plant),
+    names_to = "timing",
+    values_to = "median_seconds"
+  ) %>%
+  mutate(
+    timing = recode(
+      timing,
+      until_plant = "Until plant",
+      after_plant = "After plant"
+    )
+  )
+
 ggplot(
   plot_data,
   aes(x = outcome, y = median_seconds, fill = outcome)

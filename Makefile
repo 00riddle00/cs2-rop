@@ -134,6 +134,7 @@ analysis:
 eda:
 	$(RSCRIPT) R/winstreaks.R
 	$(RSCRIPT) R/eda_figures.R
+	quarto render R/round_states_qmd_1.qmd --execute-dir .
 
 # --- Lint & format Python -----------------------------------------------------
 pylint:
