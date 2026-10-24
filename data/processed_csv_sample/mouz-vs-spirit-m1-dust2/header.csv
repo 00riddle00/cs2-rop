@@ -1,0 +1,10 @@
+match_id,key,value
+mouz-vs-spirit-m1-dust2,map_name,de_dust2
+mouz-vs-spirit-m1-dust2,server_name,ESL Match Server #1
+mouz-vs-spirit-m1-dust2,client_name,SourceTV Demo
+mouz-vs-spirit-m1-dust2,build_num,10924
+mouz-vs-spirit-m1-dust2,demo_version_name,valve_demo_2
+mouz-vs-spirit-m1-dust2,game_directory,/opt/cs2server/instance1/game/csgo
+mouz-vs-spirit-m1-dust2,playback_ticks,192223
+mouz-vs-spirit-m1-dust2,playback_frames,192223
+mouz-vs-spirit-m1-dust2,playback_time,3003.484375

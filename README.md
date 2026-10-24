@@ -5,32 +5,39 @@
 
 **Study programs:** MSc Bioinformatics, MSc Data Science
 
-**Project:** Counter-Strike 2 demo parsing and analysis
+**Project:** Counter-Strike 2 round outcome prediction
 
-**_cs2-rop_** is a university Data Mining project exploring data extracted from
-**Counter-Strike 2 (CS2) match demos**. This repository brings together a Go-based
-snapshot exporter, Python analysis using [Awpy](https://github.com/pnxenopoulos/awpy),
-and a Jupyter notebook for examining parser output.
+**_cs2-rop_** is a four-person university Data Mining project predicting CS2 round
+winners from professional match demos. Python and
+[Awpy](https://github.com/pnxenopoulos/awpy) **3.1.1** extract the data into Parquet
+tables. The team uses **R for downstream EDA, feature engineering, and classical
+machine learning**. A Jupyter notebook provides a quick way to inspect a match.
 
-**Current status:** The repository provides a working parsing and inspection workflow
-for two MOUZ vs. Spirit matches (Dust2 and Mirage). It is a starting point for the
-team's data-mining work, not yet a finished analysis or predictive model.
+**Current status:** The repository contains processed data for **60 games: 30 on
+Dust2 and 30 on Mirage**, extracted from 61 recordings. One game was recorded in
+two parts. Positions and health matched the earlier Go extraction exactly on
+MOUZ vs. Spirit Dust2 and MOUZ vs. FURIA Mirage. All 60 games passed score consistency
+checks (valid final scores and round totals). Three games were also compared with
+official results: MOUZ vs. Spirit Dust2, MOUZ vs. FURIA Mirage, and Falcons vs. NAVI
+Mirage. Feature engineering and modelling build on these extracted tables.
 
 **Parameters and description:**
 
-- Timeframe: 01.08.2026 - 11.10.2026
-- Teams: TOP 10 Between each other [HLTV]
-- Games: LAN
-- Maps: Dust2, Mirage
-- Snapshots: Every 5 seconds, (320 ticks)
-- Variables:
-- [In-Game] Side, Coordinates, Health, Round time, Win condition, Economy, Weapons, Utilities, Alive/Dead, X vs. X, C4 Position
-- [Meta] Teams, Players, Player ranking, Team ranking, History
-- Goal: Round outcome prediction based on position & other variables
-- H0: Round outcomes are random and independent on position & other in-game variables
-- H1: Round outcomes are predictable and dependent on position & other in-game variables
+- Timeframe: 01.08.2026–11.10.2026.
+- Teams and games: Top 10 teams playing each other in professional LAN matches.
+- Maps: Dust2 and Mirage.
+- Snapshots: All players every **1 second of live play**, from freeze end to round end.
+- Extracted state: Position, side, health, armor, weapons, utilities, money, equipment
+  value, and player status; event tables include kills, damage, bomb and round outcomes.
+- External metadata such as historical player/team rankings is separate from extraction.
+- Goal: Predict round winners from position and other in-game variables using
+  classical ML in R.
+- H0: Round outcomes are random and independent of position and other in-game variables.
+- H1: Round outcomes are predictable from position and other in-game variables.
 
-Check for more detail in PAR_DESC.txt.
+See [DESCRIPTION_PARAMETERS.md](./DESCRIPTION_PARAMETERS.md) for the research
+background and literature review. The extraction details below describe the current
+pipeline, including its one-second sampling interval.
 
 ## Table of contents
 
@@ -41,45 +48,57 @@ Check for more detail in PAR_DESC.txt.
 - [Resources and literature](#resources-and-literature)
 - [Quick start](#quick-start)
   - [Without GNU Make](#without-gnu-make)
+  - [Windows](#windows)
 - [Repository layout](#repository-layout)
-- [Parse demos with Go](#parse-demos-with-go)
-- [Explore the data in Jupyter](#explore-the-data-in-jupyter)
-- [Data organization and CSV columns](#data-organization-and-csv-columns)
+- [Extract demos with Awpy](#extract-demos-with-awpy)
+  - [Split recording](#split-recording)
+- [Inspect a match](#inspect-a-match)
+- [Data organization and Parquet tables](#data-organization-and-parquet-tables)
+  - [Snapshots and identifiers](#snapshots-and-identifiers)
+  - [Analysis tables](#analysis-tables)
+  - [Analysis in R](#analysis-in-r)
 - [Development commands](#development-commands)
-  - [Environment and parser verification](#environment-and-parser-verification)
+  - [Build the report](#build-the-report)
+  - [Environment and extraction verification](#environment-and-extraction-verification)
 - [Troubleshooting](#troubleshooting)
-  - [Regenerated CSVs differ from Git references](#regenerated-csvs-differ-from-git-references)
+  - [Regenerated Parquet files differ from Git references](#regenerated-parquet-files-differ-from-git-references)
 <!--toc:end-->
 
 ## Overview
 
-The project currently consists of:
+The current pipeline consists of:
 
-- [`go-parser/`](./go-parser/) (Go, using
-  [demoinfocs-golang](https://github.com/markus-wa/demoinfocs-golang)): exports player
-  snapshots from `.dem` files to CSV.
-- [Awpy](https://github.com/pnxenopoulos/awpy) (Python): parses demos for exploration
-  and analysis.
-- [`parser_check.ipynb`](./notebooks/parser_check.ipynb) (Jupyter): inspects Awpy data
-  and the Go-exported CSVs.
+- [`scripts/download_demos.py`](./scripts/download_demos.py): Downloads the recordings
+  listed in the checksum manifest, routing split parts to `data/raw_split/`.
+- [`scripts/extract_awpy.py`](./scripts/extract_awpy.py): Extracts normal recordings
+  into 17 Parquet tables per match and updates a processing summary.
+- [`scripts/recover_split_match.py`](./scripts/recover_split_match.py): Reconstructs
+  the split Falcons vs. NAVI Mirage game as one match.
+- [`scripts/build_analysis_tables.py`](./scripts/build_analysis_tables.py): Combines
+  all processed matches into two team-level tables for R analysis.
+- [`scripts/verify.py`](./scripts/verify.py): Checks the environment and reproduces
+  the two baseline match folders without modifying committed data.
+- [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb): Inspects an already
+  processed match. It reads Parquet files only and needs no demos.
 
-The Go exporter provides compact positional snapshots, while Awpy offers detailed event
-data such as kills, damage, and grenades. Their outputs have different schemas.
+Earlier extraction used a Go parser based on demoinfocs before switching to Awpy.
+That implementation and its five-second snapshot CSVs are available in Git history;
+the current workflow does not require Go or an installable Python package.
 
 ## Workflow
 
-The diagram shows the recommended workflow; commands do not automatically run the
-next step. Verification uses the two baseline demos, while `make parse-all` processes
-all local demos and skips existing CSVs. The notebook can also inspect the committed
-reference CSVs without running bulk processing first.
+The diagram shows the recommended sequence; commands do not automatically run the
+next step. Processed data is committed, so extraction is optional for inspection
+and R analysis. Verification uses two baseline demos. Extraction and split
+recovery both skip existing match folders unless forced.
 
 ```mermaid
 flowchart TD
-    A["<b>make setup</b><br/>Install Python and Go dependencies"]
-    B["<b>make download-demos</b><br/>Download and verify all 61 demos"]
-    C["<b>make check-env</b> and <b>make smoke-test</b><br/>Verify the environment and reproduce<br/>the two reference CSVs"]
-    D["<b>make parse-all</b><br/>Generate CSVs for all local demos,<br/>skipping existing outputs"]
-    E["<b>Open Jupyter notebook manually</b><br/>Explore the resulting data<br/>and develop analysis"]
+    A["<b>make setup</b><br/>Install the Python environment"]
+    B["<b>make download-demos</b><br/>Verify 59 normal demos<br/>and two split parts"]
+    C["<b>make check-env</b> and <b>make smoke-test</b><br/>Verify the environment and reproduce<br/>two baseline Parquet matches"]
+    D["<b>make parse-all</b><br/>Extract missing matches,<br/>including the split game"]
+    E["<b>Inspect data and analyse in R</b><br/>Notebook for match inspection;<br/>R for EDA and classical ML"]
 
     A --> B --> C --> D --> E
 ```
@@ -88,381 +107,511 @@ flowchart TD
 
 - [Project resources](./docs/resources.md): Taiga, HLTV statistics, demo-parsing
   libraries, and related CS2 research projects.
-- [Research papers](./docs/papers/): Academic literature,
-  references, and available PDFs.
+- [Research papers](./docs/papers/): Academic literature, references, and available PDFs.
 
 ## Quick start
 
-You need Git, [uv](https://docs.astral.sh/uv/getting-started/installation/), and
-[Go](https://go.dev/doc/install) (Go 1.27.2+). uv manages Python:
-[`.python-version`](./.python-version) pins **3.13.16**, so you do not need to install
-Python manually.
+You need Git and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+[`.python-version`](./.python-version) pins **Python 3.13.16**; uv downloads it if
+needed. The primary workflow uses GNU Make with uv on `PATH`; on Windows, see
+[Windows](#windows) for the recommended setup. Without GNU Make, use the
+[direct workflow below](#without-gnu-make). Install R and its `arrow` package
+separately for downstream analysis.
 
-The primary workflow uses GNU Make with uv and Go on `PATH`. It works on Linux,
-macOS, and native Windows with GNU Make installed;
-[WSL](https://learn.microsoft.com/en-us/windows/wsl/install) is not required.
-For native Windows PowerShell without GNU Make, use the
-[alternative workflow below](#without-gnu-make). Windows users can obtain Git from
-[Git for Windows](https://git-scm.com/downloads/win).
+1. **Clone the repository.** Copy its HTTPS or SSH URL from GitHub, then run:
 
-1. **Clone the repository.** On its GitHub page, select **Code**, copy the HTTPS or SSH
-   clone URL, and run:
-
-   ```bash
+   ```text
    git clone <repository-url>
    cd cs2-rop
    ```
 
-   Run all subsequent commands from the repository root.
+   Run subsequent commands from the repository root.
 
-2. **Install dependencies:**
+2. **Install Python dependencies:**
 
    ```text
    make setup
    ```
 
-   This installs Python and Go dependencies. uv creates a local `.venv/` and downloads
-   the pinned Python version if necessary; activating the environment is not required.
+   uv creates `.venv/` with Awpy 3.1.1 and the development tools. This is a Python
+   environment, not an installable project package; activation is not required.
 
-3. **Download and verify the full dataset** from the shared [Google Drive
-   demos](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989):
+3. **Download and verify the recordings** from the shared
+   [Google Drive folder](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989):
 
    ```text
    make download-demos
    ```
 
-   This downloads all **61 demos (approximately 21.4 GB)** listed in
-   [`data/raw_checksums.json`](./data/raw_checksums.json) into [`data/raw/`](./data/raw/).
-   That manifest defines the dataset using each filename's `drive_id` and `sha256`.
-   It includes the two baseline demos used by the parser smoke test:
+   The **61 demos total approximately 21.4 GB**. The single manifest,
+   [`data/raw_checksums.json`](./data/raw_checksums.json), records each filename,
+   Drive ID, and SHA-256. Normal demos go to `data/raw/`; names ending in `-p1.dem`
+   or `-p2.dem` go to `data/raw_split/`.
 
-   ```text
-   data/raw/mouz-vs-spirit-m1-dust2.dem
-   data/raw/mouz-vs-spirit-m2-mirage.dem
-   ```
+   Valid local files are stream-hashed and skipped without contacting Drive. Missing
+   or invalid files are downloaded into temporary storage and verified before
+   replacing the destination. Failed or interrupted downloads clean up temporary
+   files and preserve any previous destination. Rerunning skips completed files,
+   but still reads them to verify their hashes. Unlisted local files are untouched.
 
-   Files with valid SHA-256 checksums are skipped without contacting Drive. Missing
-   or invalid files are downloaded and verified against `data/raw_checksums.json`
-   before being placed at their final paths. An invalid existing file is replaced
-   only after a verified download succeeds. Temporary downloads are cleaned up on
-   failure or interruption; retrying starts a fresh download. You can also download
-   the files manually from Drive and place them in `data/raw/` with the manifest filenames.
-   Local files not listed in the manifest are left untouched. Repeated runs still
-   read all listed files to calculate streaming SHA-256 hashes, but valid files are
-   not downloaded again. Future additions to the Drive folder are not automatically
-   included: add a manifest record with the filename, Drive ID, and SHA-256 to expand
-   the project dataset without editing the downloader.
+   Future Drive additions are not included automatically: add their records to the
+   manifest. Manual downloads must use the same filenames and directory placement.
+   Do not commit `.dem` files; `.gitignore` excludes them.
 
-   Do not commit `.dem` files: they may exceed GitHub's 100 MiB file limit.
-   [`.gitignore`](./.gitignore) excludes them, and
-   [`data/raw/.gitkeep`](./data/raw/.gitkeep) preserves the directory in Git.
-
-4. **Verify the environment and parser:**
+4. **Verify the environment and extraction:**
 
    ```text
    make check-env
    make smoke-test
    ```
 
-   These checks require only the two baseline demos. The smoke test parses them into
-   temporary CSVs and compares them against the committed references without
-   overwriting them. See the
-   [verification details](#environment-and-parser-verification).
+   These commands require only the two MOUZ vs. Spirit baseline demos in `data/raw/`
+   and their reference folders in `data/processed/`. The smoke test extracts into
+   temporary storage and compares all 17 tables per match. It does not overwrite
+   the committed matches. See [verification details](#environment-and-extraction-verification).
 
-5. **Explore the results** in
-   [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb); see [Explore the
-   data in Jupyter](#explore-the-data-in-jupyter).
+5. **Inspect the committed tables or start analysis in R.** Open
+   [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb) to inspect a match,
+   or start from the combined [analysis tables](#analysis-tables) in `data/analysis/`
+   with R's `arrow` package. Neither needs the raw demos.
 
-The small CSVs in [`data/processed/`](./data/processed/) and
-[`data/samples/`](./data/samples/) are committed to Git and can be inspected without raw
-demos. Parsing with Go or Awpy requires the corresponding `.dem` files.
-
-Parsing is optional during initialization because reference CSVs are already committed.
-Use [`make parse-all`](#parse-demos-with-go) to process other local demos. Normal parsing
-skips existing CSVs; intentional regeneration requires `FORCE=1`.
+To regenerate data, follow [Extract demos with Awpy](#extract-demos-with-awpy).
+Neither `setup` nor `check-env` downloads demos automatically, and initial inspection
+does not require re-extracting the 60 committed games.
 
 ### Without GNU Make
 
-After cloning, run these equivalent commands from the repository root in native
-Windows PowerShell, Linux, or macOS:
+Use these equivalent commands in native Windows PowerShell, Linux, or macOS:
 
 ```text
 uv sync
-go -C go-parser mod download
 uv run --no-sync python -B scripts/download_demos.py
 uv run --no-sync python -B scripts/verify.py check-env
 uv run --no-sync python -B scripts/verify.py smoke-test
 ```
 
-To process all discovered demos, use the equivalent of `make parse-all`:
+To reproduce `make parse-all`, run normal extraction first, then split recovery only
+after it succeeds:
 
 ```text
-uv run --no-sync python -B scripts/parse_demos.py --all
+uv run --no-sync python -B scripts/extract_awpy.py --input data/raw --output data/processed
+uv run --no-sync python -B scripts/recover_split_match.py --p1 data/raw_split/falcons-vs-natus-vincere-m3-mirage-p1.dem --p2 data/raw_split/falcons-vs-natus-vincere-m3-mirage-p2.dem --output data/processed
 ```
 
-For a selected demo, pass its path to the same script. Add `--force` only when
-intentionally replacing its output, including a tracked reference CSV:
+For the baseline matches, use these equivalents of `make parse-dust2` and
+`make parse-mirage`; running both reproduces `make parse`:
 
 ```text
-uv run --no-sync python -B scripts/parse_demos.py data/raw/mouz-vs-spirit-m1-dust2.dem
-uv run --no-sync python -B scripts/parse_demos.py data/raw/mouz-vs-spirit-m1-dust2.dem --force
+uv run --no-sync python -B scripts/extract_awpy.py --input data/raw/mouz-vs-spirit-m1-dust2.dem --output data/processed
+uv run --no-sync python -B scripts/extract_awpy.py --input data/raw/mouz-vs-spirit-m2-mirage.dem --output data/processed
 ```
 
-Pass both baseline paths to the script to reproduce the selection of `make parse`.
+Add `--force` to either command to regenerate a match whose folder already exists.
+
+### Windows
+
+The Python scripts and the R analysis work on Windows as on Linux and macOS. For the
+Make targets, the recommended setup is:
+
+1. Install [Git for Windows](https://git-scm.com/downloads/win). It includes the
+   **Git Bash** terminal with the Unix tools the Makefile uses (`find`, `rm`).
+2. Install GNU Make, for example with [Scoop](https://scoop.sh/) (`scoop install make`)
+   or [Chocolatey](https://chocolatey.org/) (`choco install make`).
+3. Install [uv](https://docs.astral.sh/uv/getting-started/installation/), and R with
+   the `arrow` package (`install.packages("arrow")` in R).
+4. **Run all `make` commands from Git Bash**, not from PowerShell or `cmd`. Windows has
+   its own unrelated `find.exe`, which `make clean` would pick up there, and the
+   parsing recipes are split over several lines in a way `cmd` does not understand.
+
+The direct commands under [Without GNU Make](#without-gnu-make) also work in
+PowerShell, without Git Bash or Make.
+
+To build the report, TeX Live for Windows already includes the Perl that latexmk
+needs. With MiKTeX, also install Perl, for example
+[Strawberry Perl](https://strawberryperl.com/).
+
+[WSL](https://learn.microsoft.com/en-us/windows/wsl/install) also works, since it is
+a full Linux environment, but it is not needed. If you use it, clone the repository
+inside the Linux file system rather than on a Windows drive, which is much slower.
+
+The Windows setup has not been tested end to end. Tell the team if something does
+not work.
+
+After extraction, rebuild the analysis tables:
+
+```text
+uv run --no-sync python -B scripts/build_analysis_tables.py
+```
 
 ## Repository layout
 
 ```text
 cs2-rop/
-├── data/                        # Datasets (see below)
-├── go-parser/                   # Go module and parser (main.go)
-├── notebooks/                   # Jupyter notebooks
-├── src/cs2_rop/                 # Python package
-├── Makefile                     # Setup and development commands
-├── .gitignore                   # Git ignore rules
-├── cspell.json                  # Spell-checker configuration
-├── pyproject.toml               # Python dependencies and configuration
-├── uv.lock                      # Locked Python dependencies
-└── .python-version              # Pinned Python interpreter
+├── data/
+│   ├── raw/                     # 59 normal demos, ignored by Git
+│   ├── raw_split/               # Two split parts, ignored by Git
+│   ├── raw_checksums.json       # Drive IDs and SHA-256 for all 61 recordings
+│   ├── processed/               # 60 committed match folders and processing summary
+│   ├── analysis/                # Committed round and per-second tables for R
+│   ├── processed_csv_sample/    # Committed full CSV export of one baseline match
+│   └── csv_export/              # Local CSV exports, ignored by Git
+├── scripts/                     # Download, extract, recover, analysis tables,
+│                                # verify, export
+├── notebooks/                   # Match inspection notebook
+├── reports/                     # LaTeX report, bibliography and style file
+├── docs/                        # Resources and literature
+├── DESCRIPTION_PARAMETERS.md    # Research background and parameters
+├── Makefile                     # Setup, extraction, and development commands
+├── .gitignore
+├── pyproject.toml               # Python dependencies; uv package = false
+├── uv.lock                      # Locked Python environment
+└── .python-version              # Pinned interpreter
 ```
 
-The Go parser is a separate module under [`go-parser/`](./go-parser/), with its own
-[`go.mod`](./go-parser/go.mod) and [`go.sum`](./go-parser/go.sum). No repository-level
-`go.work` file is needed.
-
-## Parse demos with Go
-
-To process all `.dem` files directly inside `data/raw/`, run:
+## Extract demos with Awpy
 
 ```text
 make parse-all
 ```
 
-The Python helper discovers demos in sorted order, independently of the download
-manifest, and invokes the existing Go parser sequentially. Each output is named
-`data/processed/<demo-name>_snapshots.csv`. New local demos are included automatically.
-Existing outputs are skipped, so rerunning the command processes only missing CSVs.
-An empty discovery is an error. No Go build is needed if every output is skipped;
-otherwise the parser is compiled once into a temporary directory for the batch.
+This runs `extract_awpy.py` on `data/raw/`, then `recover_split_match.py` on the two
+files in `data/raw_split/`. The normal extractor discovers `.dem` files in sorted
+order, independently of the download manifest. Each match is written to
+`data/processed/<match_id>/`, where `match_id` is the demo filename without `.dem`.
+The split parts become one combined match folder.
 
-`make parse` selects the two baseline demos; `make parse-dust2` and `make parse-mirage`
-select one each. All use the same skip-existing behavior. `make all` runs setup followed
-by baseline parsing, preserving existing CSVs by default. None of these commands
-downloads demos. See [Without GNU Make](#without-gnu-make) for direct equivalents.
-
-To intentionally regenerate outputs, use:
+Normal extraction skips any existing match folder unless forced. `make parse` selects
+the two baseline matches; `make parse-dust2` and `make parse-mirage` select one each.
+`make all` runs setup and baseline extraction. None of these targets downloads demos.
 
 ```text
 make parse-dust2 FORCE=1
 make parse-all FORCE=1
 ```
 
-**`FORCE=1` permits replacing every selected output, including tracked reference CSVs.**
-With `parse-all`, this includes both baseline references. Review reference changes
-before committing them; `smoke-test` rejects staged or unstaged reference changes
-relative to `HEAD` until they are reviewed and committed or restored.
+**`FORCE=1` maps to `--force` for both extraction and split recovery, and replaces
+the selected match folders, including committed references.** Review regenerated
+data before committing it. Both scripts write their tables through a temporary match
+directory before replacing the final folder, and sort each table's rows before
+writing, so rerunning on the same demo produces identical files.
 
-CSV output is generated in temporary storage on the destination filesystem and
-published only after the parser succeeds and validation passes. Validation reuses
-`scripts/verify.py`: it requires the expected ten columns, at least one data row,
-valid field types, and unique `(round_num, tick, steamid)` keys. Failed parsing or
-validation preserves any existing destination and removes temporary output. The batch
-continues after individual failures, reports processed/skipped/failed totals, and exits
-nonzero if any demo fails. Publishing without force requires filesystem hard-link
-support (available on native Linux filesystems and Windows NTFS); unsupported filesystems
-fail without replacing an existing output.
+`data/processed/processed_summary.csv` has one row per processed match, including
+map, score, rounds, snapshot rows, status, warnings, and elapsed extraction time in
+`seconds`. Processing a match replaces its previous summary row; skipped folders
+are not re-summarized. Failed normal extractions are reported in the summary and
+cause a nonzero exit. The Makefile does not start split recovery after a failed
+normal extraction command.
 
-New generated CSVs are not ignored by Git under the current tracking policy. Review
-their sizes and usefulness before deliberately adding them; bulk parsing does not
-stage or commit them. The Go parser and its low-level `--input`/`--output` interface
-are unchanged; direct invocation bypasses the helper's overwrite protection.
+### Split recording
 
-## Explore the data in Jupyter
+`falcons-vs-natus-vincere-m3-mirage` has two recordings. Keep them in `data/raw_split/`:
 
-Open the [parser inspection notebook](./notebooks/parser_check.ipynb) in a
-Jupyter-capable editor, such as VS Code with its Python and
-[Jupyter](https://code.visualstudio.com/docs/datascience/jupyter-notebooks) extensions.
-The project's `ipykernel` dependency is installed by `make setup`. Select the `.venv`
-Python environment as the kernel, then run cells in order.
+```text
+falcons-vs-natus-vincere-m3-mirage-p1.dem
+falcons-vs-natus-vincere-m3-mirage-p2.dem
+```
 
-In the notebook's configuration cell, select the full match identifier:
+The normal extractor stops before extracting anything if its input contains a name
+ending in `-p1`, `-p2`, or another numbered part. The downloader's directory rule
+keeps the two known parts out of that input on a fresh clone.
+
+Part 1 has no usable round events. Recovery reconstructs round ends and winners
+from team score changes, using freeze-end events to separate played rounds from
+warmup. Recovered reason fields and unavailable boundary ticks remain null;
+part-1 economy is rebuilt from freeze-end snapshots, with unknown buy types left
+null except the opening pistol round. Part 2 is extracted normally.
+
+The combined tables have `part` **0 or 1**. Ticks remain local to each part, so
+include `part` when joining tick-indexed tables: `(match_id, part, tick)`. Round
+numbers continue across parts. For a read-only diagnosis of part 1, run:
+
+```text
+uv run --no-sync python -B scripts/recover_split_match.py --check --p1 data/raw_split/falcons-vs-natus-vincere-m3-mirage-p1.dem --p2 data/raw_split/falcons-vs-natus-vincere-m3-mirage-p2.dem
+```
+
+## Inspect a match
+
+Open [`notebooks/parser_check.ipynb`](./notebooks/parser_check.ipynb) in a
+Jupyter-capable editor, select the project's `.venv` kernel, and run cells in order.
+Set `match_name` to any folder in `data/processed/`, for example:
 
 ```python
 match_name = "mouz-vs-spirit-m1-dust2"
-# match_name = "mouz-vs-spirit-m2-mirage"
 ```
 
-Dust2 is match **1** (`m1`); Mirage is match **2** (`m2`). You can start the notebook
-from either the repository root or `notebooks/`. The Awpy section needs the
-corresponding `.dem` file; the CSV inspection section works with committed data.
+The notebook reads committed Parquet tables only. It needs no demos, performs no
+extraction, and can start from the repository root or `notebooks/`. It shows table
+sizes, rounds, snapshots, living-player team state, and kills. Python supports
+extraction and this inspection tool; downstream EDA and modelling take place in R.
 
-Notebook execution may save large outputs, execution counts, or local paths. Review `git
-diff` before committing notebook changes.
+For a CSV view, run:
 
-## Data organization and CSV columns
+```text
+uv run --no-sync python -B scripts/export_csv_sample.py --match mouz-vs-spirit-m1-dust2
+```
 
-| Directory                              | Contents                   | Tracked by Git?       |
-| -------------------------------------- | -------------------------- | --------------------- |
-| [`data/raw/`](./data/raw/)             | Original `.dem` recordings | No, except `.gitkeep` |
-| [`data/processed/`](./data/processed/) | Snapshot CSVs              | Yes, while small      |
-| [`data/samples/`](./data/samples/)     | Example CSVs               | Yes                   |
+The default destination is `data/csv_export/<match_id>/`, with up to 5,000 rows per
+table and an `overview.csv` containing full row counts and column names. Add
+`--max-rows 0` for a full export. `data/processed_csv_sample/mouz-vs-spirit-m1-dust2/`
+already contains a committed full export of all 17 tables plus the overview.
 
-**Sampling:** During active rounds, the Go exporter records player states every **320
-demo ticks** (approximately **5 seconds** at 64 ticks per second). Each snapshot has one
-row per player, including dead players. For a normal 5v5 match, this typically means ten
-rows per sampled tick. These are not full per-tick trajectories or event logs; account
-for the sampling interval when computing time-dependent features.
+The development environment includes nbconvert and Jupytext for notebook conversion:
 
-The current Go snapshot CSVs contain:
+```text
+uv run jupyter nbconvert --to markdown notebooks/parser_check.ipynb
+uv run jupytext --to py:percent notebooks/parser_check.ipynb
+```
 
-| Column        | Meaning                                                           |
-| ------------- | ----------------------------------------------------------------- |
-| `tick`        | Demo tick associated with the snapshot.                           |
-| `round_num`   | Round number.                                                     |
-| `steamid`     | Steam identifier (not a numeric measurement).                     |
-| `name`        | Player name.                                                      |
-| `team`        | Numeric side/team value, not a permanent organization identifier. |
-| `alive`       | Whether the player is alive.                                      |
-| `health`      | Player health.                                                    |
-| `x`, `y`, `z` | Position in CS2 game-world coordinates.                           |
+These commands convert without executing the notebook. Review exported files and
+notebook outputs before adding them to Git.
 
-Row order is not a reliable key for comparing data: use match, round, tick, and player
-identifiers.
+## Data organization and Parquet tables
+
+| Directory                    | Contents                                              | Tracked by Git?       |
+| ---------------------------- | ----------------------------------------------------- | --------------------- |
+| `data/raw/`                  | Normal `.dem` recordings                              | No, except `.gitkeep` |
+| `data/raw_split/`            | The two split recordings                              | No, except `.gitkeep` |
+| `data/processed/`            | 60 match folders and `processed_summary.csv`          | Yes                   |
+| `data/analysis/`             | Round and per-second analysis tables, Parquet and CSV | Yes                   |
+| `data/processed_csv_sample/` | Full CSV export of one baseline match                 | Yes                   |
+| `data/csv_export/`           | Local CSV inspection exports                          | No                    |
+
+Each processed match has these **17 Parquet tables**:
+
+| Table           | Contents                                                 |
+| --------------- | -------------------------------------------------------- |
+| `rounds`        | Round boundaries, winner, reason, and overtime flag      |
+| `kills`         | Kill events and attacker/victim details                  |
+| `damages`       | Damage events                                            |
+| `bomb`          | Bomb events                                              |
+| `grenades`      | Grenade trajectories                                     |
+| `fires`         | Fire areas and timing                                    |
+| `smokes`        | Smoke areas and timing                                   |
+| `shots`         | Weapon-fire events                                       |
+| `stats`         | Whole-match player totals; not round-prediction features |
+| `players`       | Player identifiers and team information                  |
+| `round_economy` | Round/side economy and buy information                   |
+| `chat`          | Chat messages                                            |
+| `blinds`        | Flash-blind events                                       |
+| `item_events`   | Item-related events                                      |
+| `header`        | Demo header as key/value rows                            |
+| `convars`       | Server configuration as key/value rows                   |
+| `snapshots`     | Player state sampled every second during live play       |
+
+Every table carries `match_id`. Tick-indexed event tables carry `round_num` and
+`in_play` to distinguish live play from freeze time, warmup, and post-round events.
+The `rounds` table has `is_overtime`. The combined split match additionally carries
+`part` on every table. Empty event tables are valid when that event did not occur.
+
+### Snapshots and identifiers
+
+The default interval is **1 second**, starting at each round's `freeze_end_tick`
+and stopping before `end_tick`. The extractor calculates the tick stride from the
+demo's tick rate; `--seconds` can select another interval for exploratory extraction.
+The committed tables and smoke test use one second.
+
+Snapshots contain **all players, including dead players**. Use **`health > 0`** to
+select alive players. Dead players have health 0, and most of their rows have no
+`steamid`, `name`, or `team_clan_name`; only `side` is reliable for attributing those
+rows to a side. Do not count non-null identifiers as a proxy for all snapshot rows.
+
+Snapshots have **no `in_play` column** because every row is already from live play.
+Their fields cover position and velocity, view angles, health and armor, weapons
+and utilities, equipment and money, and status flags. They are sampled states, not
+full per-tick trajectories. Row order is not a reliable key for comparing tables.
+
+### Analysis tables
+
+[`scripts/build_analysis_tables.py`](./scripts/build_analysis_tables.py) combines all
+match folders in `data/processed/` into two team-level tables for EDA and modelling in
+R. Both are written to `data/analysis/` as Parquet and CSV:
+
+| Table          | Rows    | One row per          |
+| -------------- | ------- | -------------------- |
+| `rounds`       | 1,257   | Round of every match |
+| `round_states` | 116,201 | Second of live play  |
+
+`rounds` holds, per round: the team on each side, the score before the round, whether
+the CT team won the previous round, buy type and equipment value per side at freeze
+end, pistol-round and overtime flags, whether and where the bomb was planted, the side
+that lost the first player, the round duration, and the outcome.
+
+`round_states` holds, per second of live play: time since freeze end, time remaining
+(the round timer, or the bomb timer after a plant), bomb state (planted, seconds since
+plant, site, carried), and for each side's **living players only**: alive count, HP,
+armor, helmets, defusers, equipment value, money, rifles, AWPs, SMGs and grenades by
+type. Each row also carries the teams, the score before the round and the outcome.
+
+Notes:
+
+- **Labels:** `winner_side`, `winner_team`, `ct_win` and `reason_name` describe how the
+  round ended. They are prediction targets, not features.
+- **Round-level columns from later in the round:** in `rounds`, `bomb_planted`,
+  `plant_site`, `plant_tick`, `first_death_side`, `end_tick` and `round_duration_s`
+  are only known during or after the round. Do not use them as features for a
+  prediction made earlier in the round. `round_states` gives the bomb state as known at
+  each second.
+- **Teams and identifiers:** team names are normalised to one name per team (for
+  example "Team Vitality" and "Vitality" both become `Vitality`). The tables contain no
+  Steam IDs.
+- **Split game:** `part` is 0 for every match except
+  `falcons-vs-natus-vincere-m3-mirage` (0 = first half, 1 = second half). Ticks are
+  unique only within `(match_id, part)`. `reason_name` is empty for that match's
+  rounds 1-12.
+
+To regenerate both tables after changing `data/processed/`:
+
+```text
+uv run --no-sync python -B scripts/build_analysis_tables.py
+```
+
+Add `--no-csv` to write Parquet only.
+
+### Analysis in R
+
+Read the Parquet tables directly with the R
+[`arrow` package](https://arrow.apache.org/docs/r/reference/read_parquet.html):
+
+```r
+snapshots <- arrow::read_parquet("data/processed/mouz-vs-spirit-m1-dust2/snapshots.parquet")
+```
+
+For most analysis, start from the combined tables in `data/analysis/`:
+
+```r
+rounds <- arrow::read_parquet("data/analysis/rounds.parquet")
+states <- arrow::read_parquet("data/analysis/round_states.parquet")
+```
+
+Without `arrow`, read the CSV copies with `readr::read_csv()`.
+
+**Preserve identifier precision:** `steamid` is a `uint64` identifier, not a numeric
+measurement. Converting it to an R double loses precision for these large IDs.
+Use `name` for player labels, or convert `steamid` to text while it is still an
+exact integer in Arrow. Converting an already rounded double to text cannot recover
+the original ID. Account for the missing identities of dead players described above.
+
+**Avoid target leakage:** `stats` contains whole-match player totals, including
+information from rounds that have not happened at the prediction time. Do not use
+that table as features for predicting a round. Build features from information
+available at the chosen prediction time instead.
+
+The team develops EDA, features, and classical ML models in R. The extraction tools
+do not train models or automatically enrich the data with historical rankings.
 
 ## Development commands
 
-The [`Makefile`](./Makefile) lists its targets with `make help`. Useful shortcuts:
+Use `make help` for the full target list:
 
-- `make pylint`: Ruff and Black for Python.
-- `make golint`: `go fmt` and `go vet` for Go.
-- `make shlint`: [ShellCheck](https://github.com/koalaman/shellcheck) and
-  [shfmt](https://github.com/mvdan/sh) for shell scripts (install separately).
-- `make lint`: Run all three lint/format targets.
-- `make setup`: Install Python and Go dependencies.
-- `make download-demos`: Download all 61 manifest demos, verifying checksums and skipping
-  valid local files.
-- `make check-env`: Verify the Python environment, dependencies, Go compilation, and
-  required datasets.
-- `make smoke-test`: Run environment checks, verify the two baseline demo checksums,
-  parse those demos, and compare every output row against the tracked references.
-- `make parse`: Parse the two baseline demos, skipping existing outputs.
-- `make parse-all`: Parse all discovered local demos, skipping existing outputs.
-  Add `FORCE=1` to a parsing target to intentionally replace selected outputs.
-- `make clean`: Remove disposable caches, preserving environments and datasets.
+- `make setup`: Install the Python environment with `uv sync`.
+- `make download-demos`: Verify and download all manifest recordings into the two
+  raw directories.
+- `make check-env`: Verify Python, imports, demo headers, and baseline tables.
+- `make smoke-test`: Reproduce all tables for the two baseline matches in temporary
+  storage and compare them with the committed references.
+- `make parse`: Extract the two baseline demos, skipping existing match folders.
+- `make parse-all`: Extract missing normal matches, then the split match if missing.
+- `make parse-dust2` / `make parse-mirage`: Extract one baseline match.
+- `make pylint`: Run Ruff and Black, including automatic fixes and formatting.
+- `make shlint`: Run ShellCheck and shfmt; these tools are installed separately.
+- `make lint`: Run Python and shell linting/formatting.
+- `make report`: Compile the LaTeX report; see [Build the report](#build-the-report).
+- `make clean-report-aux`: Remove LaTeX temporary files, keeping the report PDF.
+- `make clean-report`: Remove all generated LaTeX files, including the report PDF.
+- `make clean`: Remove disposable caches and LaTeX temporary files, preserving
+  environments, datasets, and the report PDF.
 
-To lint and format without Make (including in native Windows PowerShell), run from the
-repository root:
+`FORCE=1` regenerates existing matches on parsing targets. Linting targets also
+modify files; review `git diff` afterward. Without Make, Python formatting can use
+`uv run ruff check . --fix` and `uv run black .`.
 
-```bash
-go -C go-parser fmt ./...
-go -C go-parser vet ./...
-uv run ruff check . --fix
-uv run black .
+### Build the report
+
+The paper lives in [`reports/`](./reports/), with
+[`data_mining_report.tex`](./reports/data_mining_report.tex), its bibliography
+`bibliography.bib`, and the `jmlr2e.sty` style file. Building it requires
+[latexmk](https://ctan.org/pkg/latexmk) and a LaTeX distribution with pdflatex and
+BibTeX, for example TeX Live or MiKTeX. On Windows, see [Windows](#windows) for the
+Perl that latexmk needs:
+
+```text
+make report
 ```
 
-**Linting targets also modify files** through automatic fixes and formatting. Inspect
-`git diff` afterwards.
+`make report` always runs latexmk, which tracks the report's sources and recompiles
+only when something changed. It stops on the first LaTeX error. The PDF is written
+to `reports/data_mining_report.pdf`.
 
-### Environment and parser verification
+`make clean` removes LaTeX temporary files but keeps the PDF. `make clean-report`
+also removes the PDF. Without Make, run latexmk directly:
 
-Follow [Quick start](#quick-start) for the Makefile workflow or
-[Without GNU Make](#without-gnu-make) for equivalent direct commands.
+```text
+latexmk -pdf -cd -interaction=nonstopmode -halt-on-error reports/data_mining_report.tex
+```
 
-Downloads use [gdown](https://github.com/wkentaro/gdown), installed by `make setup`.
-Neither `setup` nor `check-env` downloads demo datasets automatically.
-`download-demos` covers the full manifest; `check-env` and `smoke-test` require only
-the original MOUZ vs. Spirit Dust2 and Mirage demos and their two reference CSVs.
-The other 59 demos are not parsed or required by those verification commands.
+### Environment and extraction verification
 
-Verification requires uv, Go 1.27.2+ (as specified by `go-parser/go.mod`), and the
-project `.venv` using the exact interpreter pinned in `.python-version`. It checks
-dependency compatibility with `uv pip check`, imports runtime packages, exercises
-dataframe conversion, and compiles Go with `-mod=readonly`. It does not check exact
-dependency versions against the lockfile or install or synchronize Python dependencies;
-rerun `make setup` to synchronize the environment. Go may populate its normal
-dependency/build caches or download a required toolchain.
+Follow [Quick start](#quick-start) for setup and the
+[direct alternative](#without-gnu-make) for native Windows without GNU Make.
 
-Both baseline raw demos and both `data/processed/` reference CSVs are required. `check-env`
-checks demo headers and validates CSV schemas, field types, and unique player keys.
-`smoke-test` also requires Git on `PATH` and rejects staged or unstaged changes to
-either reference CSV relative to `HEAD`. Review and commit intentional reference updates
-before testing against the new baseline; unrelated file changes are allowed. This checks
-regression against the current commit, not the baseline's scientific validity.
-`smoke-test` additionally checks both raw SHA-256 values before parsing either demo. The
-expected values come from the `sha256` fields in
-[`data/raw_checksums.json`](./data/raw_checksums.json), the single manifest for all
-61 demos. Hashes were calculated from the locally downloaded files. Actual Drive
-downloads have confirmed the two original baseline hashes and the hash for
-`9z-vs-g2-m1-dust2.dem`; the full remote collection has not been independently
-downloaded again for verification.
+`check-env` requires the project `.venv`, the pinned interpreter, and Awpy matching
+the version in `pyproject.toml`. It runs `uv pip check`, imports Awpy, Polars, pandas,
+and PyArrow, checks the two baseline CS2 demo headers, and reads all 17 tables in
+each reference folder. It accepts empty event tables but requires nonempty rounds,
+snapshots, and header tables. Every table must carry the expected `match_id`.
 
-The compiled binary and generated CSVs use a temporary directory that is removed on
-completion or failure. Tracked datasets are never overwritten. CSV comparisons ignore
-row order and line endings but require exact field values, including the parser's
-three-decimal coordinates. Failures print diagnostics and return a nonzero exit code.
-The notebook is neither executed nor modified by these commands.
+`smoke-test` then requires those two reference folders to match Git `HEAD`, verifies
+both demo SHA-256 values against the manifest, and runs the extractor at one-second
+sampling into temporary storage. It compares all **34 tables**, requiring identical
+schemas, values, nulls, and duplicate-record counts while ignoring row order and
+Parquet encoding. `processed_summary.csv` is not compared because it includes elapsed
+runtime. Temporary output is removed after success or failure, and failures return
+a nonzero exit code. Neither command modifies committed datasets or the notebook.
 
-The download and verification Makefile targets require no Bash or Unix utilities and
-can run with a native Windows GNU Make installation. Existing lint and cleanup targets
-still require the Unix utilities described below.
+When changing Python dependencies, commit `uv.lock` with `pyproject.toml`. Re-run
+`make setup` to synchronize the environment; verification does not install packages.
+The two baseline matches have 20 Dust2 rounds and 18 Mirage rounds. The smoke test
+checks reproducibility of these baselines, not the scientific correctness of a model.
 
-When changing dependencies, commit [`uv.lock`](./uv.lock) alongside
-[`pyproject.toml`](./pyproject.toml), or [`go.sum`](./go-parser/go.sum) alongside
-[`go.mod`](./go-parser/go.mod), as applicable.
-
-GNU Make is optional: see [Without GNU Make](#without-gnu-make) for the direct workflow.
-For the existing lint and cleanup targets on Windows, run Make in an environment such as
-[MSYS2](https://www.msys2.org/) or WSL, with [GNU
-Make](https://www.gnu.org/software/make/) and Unix utilities installed. Git Bash alone
-may not include Make.
+On Windows, run the Make targets from Git Bash, as described under
+[Windows](#windows). The direct commands under [Without GNU Make](#without-gnu-make)
+also work in PowerShell.
 
 ## Troubleshooting
 
-- **Demo download fails:** Check your connection and open the shared Drive folder in
-  a browser. All 61 files listed in `data/raw_checksums.json` must permit public
-  downloads. Google Drive quotas may require retrying later. Checksum mismatches
-  discard the temporary download and
-  preserve any previous file; retry, then contact the team if mismatches persist.
-- **`uv` or `go` is not recognized:** Check `uv --version` or `go version`, and ensure
-  the tool is installed and on `PATH`.
-- **The notebook cannot import a package:** Confirm `make setup` completed (or its
-  direct equivalent), check the selected Python interpreter, and restart the kernel.
-  The interpreter is usually
+- **Demo download fails:** Check your connection and the shared Drive folder. All 61
+  manifest files must permit public downloads. Drive quotas may require retrying
+  later. A checksum mismatch discards the download and preserves any previous file;
+  persistent mismatches should be checked with the team.
+- **Split recordings stop normal extraction:** Put `-p1` and `-p2` files in
+  `data/raw_split/`, not `data/raw/`. The downloader now routes them correctly.
+  `make parse-all` runs the dedicated recovery after normal extraction succeeds.
+- **`uv` is not recognized or imports fail:** Ensure uv is on `PATH`, run `make setup`,
+  and select `.venv` as the notebook kernel. Its interpreter is normally
   `.venv/Scripts/python.exe` on Windows or `.venv/bin/python` on Linux/macOS.
+- **An existing match is incomplete or stale:** Extraction and split recovery check
+  whether the folder exists and skip it. Review the folder, then use the appropriate
+  parsing target with `FORCE=1` to regenerate it.
+- **Dead-player identities are missing:** This is present in the snapshot output.
+  Filter `health > 0` for living-player features and use `side` for dead-player side
+  attribution; do not assume every row has a player name or Steam ID.
 
-### Regenerated CSVs differ from Git references
+### Regenerated Parquet files differ from Git references
 
-The Go parser may produce CSV rows in a different order from the committed references.
-Regenerating the two baseline CSVs can therefore produce large Git diffs even when
-the actual records are identical. This was observed for both baseline matches:
+Regenerated tables may differ in file encoding or row order from the committed
+references. That alone does not establish different records. The smoke test compares
+tables independently of row order, but its Git guard first requires the two reference
+folders to be unchanged, including staged and unstaged edits.
 
-| Match  | Rows  | Comparison ignoring row order |
-| ------ | ----- | ----------------------------- |
-| Dust2  | 5,820 | Identical                     |
-| Mirage | 4,750 | Identical                     |
-
-The smoke test compares generated CSV records independently of row order. However,
-it first requires the tracked reference CSVs to match `HEAD` exactly, including
-staged and unstaged changes. Harmless row reordering in a reference CSV therefore
-causes `make smoke-test` to fail before the regression comparison begins. This is
-intentional: the committed CSVs serve as fixed regression baselines.
-
-If the references were regenerated unintentionally, restore them from `HEAD`.
-**The following commands discard both staged and unstaged changes to these two
-files. Review intentional changes before restoring them.**
+For unintentional regeneration, restore those folders from `HEAD`. **These commands
+discard staged and unstaged changes to the two baseline folders. Review intentional
+changes before restoring them.**
 
 ```text
-git restore --source=HEAD --staged --worktree -- data/processed/mouz-vs-spirit-m1-dust2_snapshots.csv
-git restore --source=HEAD --staged --worktree -- data/processed/mouz-vs-spirit-m2-mirage_snapshots.csv
-```
-
-Then rerun:
-
-```text
+git restore --source=HEAD --staged --worktree -- data/processed/mouz-vs-spirit-m1-dust2
+git restore --source=HEAD --staged --worktree -- data/processed/mouz-vs-spirit-m2-mirage
 make smoke-test
 ```
 
-Different row ordering alone does not indicate incorrect parser output. Genuine
-differences in row contents, missing records, or additional records must be
-investigated before updating the committed references. The cause of the varying
-row order has not been confirmed.
+Real value, schema, or record-count differences must be investigated before changing
+the committed baselines. Other matches are outside this two-match regression check.
