@@ -65,7 +65,9 @@ In general, many of the decisions were also driven by the fact that our approach
 
 \#METHODOLOGY:
 
-possible training models and methods
+
+
+possible training models
 
 Logistic Regression
 
@@ -80,21 +82,21 @@ LSTM
 Sci-kit learn
 
 
-https://github.com/markus-wa/demoinfocs-golang X\[Go Demo-parser]
+https://github.com/markus-wa/demoinfocs-golang \[Go Demo-parser]
 
-https://github.com/pnxenopoulos/awpy X\[Python-based demo data analysis]
+https://github.com/pnxenopoulos/awpy \[Python-based demo data analysis]
 
-https://github.com/ratulsarker/CS2\_RoundPrediction X\[Deep-Learning, a good example]
+https://github.com/ratulsarker/CS2\_RoundPrediction \[Deep-Learning, a good example]
 
-https://github.com/Gary2005/cs-net X\[Transformer-based round win prediction, predicts movement]
+https://github.com/Gary2005/cs-net \[Transformer-based round win prediction, predicts movement]
 
-https://github.com/wyn0n0/CSMapWinPredict X \[Replay and prediction with a display]
+https://github.com/wyn0n0/CSMapWinPredict \[Replay and prediction with a display]
 
-https://github.com/eigenpaul/cs2-evalbar X
+https://github.com/eigenpaul/cs2-evalbar
 
-https://github.com/kamalchah/CounterStrikeWinProb X
+https://github.com/kamalchah/CounterStrikeWinProb
 
-https://github.com/TaiZo1/cs2-win-prediction X
+https://github.com/TaiZo1/cs2-win-prediction
 
 
 
@@ -122,8 +124,6 @@ The question of "Why these two? Why not one or the other?"
 
 11.  S. Jing, M. M. Awang, W. A. M. W. Pa, P. Pan, D. Memmert, and Z. Zhang, “Interpretable machine learning with SHAP for esports performance analysis of professional counter-strike players from 2012 to 2025,” International Journal of Sports Science & Coaching, vol. 21, no. 5, pp. 3298–3314, Oct. 2025, doi: 10.1177/17479541251388864.
 
-12.  Y. Eshrah and Y. M. I. Hassan, "CS2AnalyticsAPP: A Multi-Player Shooter Game Analytics Framework," 2025 35th International Conference on Computer Theory and Applications (ICCTA), Alexandria, Egypt, 2025, pp. 119-124, doi: 10.1109/ICCTA68914.2025.11519898.
-
 LITERATURE REVIEW:
 
 One of the key challenges to initialize a relevant database was to parse the Demo files that store the entire information about the game tick-by-tick. Tickrate is the rate of recorded instances per second. Actual matches have 128 tickrate, Demo files have 16 tickrate to save space. While this may incure some loss of information, 16 instances per second is considered enough to account for all of the important events, except micromovements or minuscule information about crosshair placement or accurate hitbox hit instances. We primarily used demoparser2 Demo parser https://github.com/markus-wa/demoinfocs-golang to deal with the challenge of translating raw files into usable data. It is one of the most widely used tools in the scene for these exact application. Its features include tracking game events (kills, shots, round starts/ends, footsteps), game state (players, teams, grenades, ConVars), grenade projectiles/trajectories, and various other functions which are less important for our research. One of the stated top priorities of demoparser2 developers are performance and concurrency, making it a great option if scaling our project should ever be considered. Another tool that we used by way of functionality extension rather than substitution of demoparser2 was Awpy https://github.com/pnxenopoulos/awpy, which was programmed on Rust and built on top of the original demoparser2 and is a port to Python programming language to which our group members have a greater affinity. Another reason why Awpy was relevant is that while, at least on the surface, it gives less-control, it may provide a more clearer and ready-made functionality which is convenient for quick review of a given Demo file. Awpy doesn't require writing a custom code for it, making it a fast inspection tool. However, one has to keep in mind that these tools are not that different and choosing one over the other comes down to preference.
@@ -139,3 +139,11 @@ https://github.com/kamalchah/CounterStrikeWinProb is one of the other projects t
 One of the more lean yet effective round outcome predictor projects is https://github.com/d-roho/CSGOPredictor, and while recent (made in 2025), it is made for an older iteration of the game - CS:GO, rather than CS2. One of it's key advantages is that it can do live round predictions. Program used Logistic Regression model, and robust, verified and prepared dataset of 700 demos for model training gathered from "high level tournament play in 2019-2020 ... warmup rounds and restarts have been filtered ... a round snapshot has been recorded every 20 seconds until the round is decided. The total number of snapshots is 122411. Snapshots are i.i.d and should be treated as individual data points, not as part of a match." Project has data analysis documentation that other sources unfortunately often lack which can be checked out here https://www.kaggle.com/datasets/christianlillelund/csgo-round-winner-classification. It is one of the more used datasets for many similar projects and comparisons of results and methods can readily be made between them.
 
 There are a few deep-learning solutions to the CS2 round prediction problem that are worth mentioning and comparing, despite the fact that DL falls outside our intended methods. https://github.com/Gary2005/cs-net is transformer-based path prediction & game-state forecasting for Counter-Strike 2 trained with Pro architecture (d_model=768, 138.7M params). What it claims to achieve is predict player's movement trajectory, along with a spatial-only downstream win-rate prediction that aligns with our own aim that uses 4 second snapshot windows, making an interesting example for comparison between DL and ML solutions. However, the detailed documentation is in Chinese, so correct reproducibility may be unreliable because of translation. Another neural network solution comes from https://github.com/eigenpaul/cs2-evalbar, a "roughly 70K-parameter GraphTemporalTransformer over a 20-second, 4 Hz state window." While claiming meaningful results by game phase (<15s, 30-60s >=90s) with accuracy of 0.6, 0.68, 0.88. Another interesting finding is that the project claims "extra capacity overfits near 95 groups, but widening can help once the dataset reaches 142 groups." One big caveat is that the application was trained on Inferno, another map, so the results will be hard to compare.
+
+Xia et al. [9] focused on round win and match win predictions using XGBoost, Logistic regression and Decision tree ML methods. While the data was limited to CS:GO professional matches from 2022 and only the matches happening in the Dust2 map, the results showed that both XGBoost and Logistic regression could be used to effectively predict match wins with approx. 86% accuracy, and player death in a given time window with approx. 66% accuracy. Key predictors included economic factors, spatial positioning and team coordination. Additionally, awpy was used to parse match demo files for feature extraction.
+
+While not directly relevant to our goal, Björklund et al. [10] used a neural network approach to predict CS:GO match outcomes. The interesting part of the work is that rather than using player data for direct prediction, instead the data was clustered into groups which were intended to represent unique play styles. These groups would then be used to evaluate the composition of opposing teams and that evaluation used to predict the match outcome. While the accuracy of the model was modest, being around 61 – 65%, conceptually this work is of interest because it demonstrates that team composition based on its players’ play-style can be used as a metric for match outcome prediction.
+
+Jing et al. [11] have used machine learning methods (primarily XGBoost) along with SHAP for intrepretation to distinguish key performance metrics in CSGO and CS2 professional players that correlate with a higher HLTV player rating. While this study is very valuable in determining said performance characteristics, it is limited by the fact that the features used were highly correlated and that the response variable is a HLTV rating which has been turned into a binary value representing “good” and “okay” players. Furthermore, the rating formula in the CSGO era prioritizes fragging while the CS2 era formula is unknown, providing a high level of uncertainty as to whether the chosen features truly correlate with performance, e.g. with higher probability of winning a round or a match. Other metrics such as player past performance or role are also not accounted for. This is merely to say that there is room for improvement with regards to our set goals.
+
+****
