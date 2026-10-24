@@ -7,13 +7,32 @@
 
 [Taiga project](https://tree.taiga.io/project/saturnabitsick-cs2-rop-data-mining-project/)
 
+## GitHub repo
+
+[CS2-ROP](https://github.com/00riddle00/cs2-rop)
+
+## Report
+
+- [Overleaf project](https://www.overleaf.com/project/6ad8d577211f5926ff3e2d46): the
+  team's shared LaTeX report. Access by invitation; ask a team member for the share
+  link.
+
+## Data
+
+- [Google Drive folder with the demo
+  recordings](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989):
+  the 61 `.dem` files listed in `data/raw_checksums.json`. `make download-demos`
+  downloads them by file ID and verifies their checksums.
+
+## Tool documentation
+
+- [Awpy datasets](https://awpy.readthedocs.io/en/latest/datasets.html): reference for
+  every table Awpy extracts (rounds, kills, snapshots, bomb, grenades, and others), with
+  column descriptions. The tables in `data/processed/` follow this schema.
+
 ## HLTV Stats
 
 [Counter-Strike Statistics database | HLTV.org](https://www.hltv.org/stats?csVersion=CS2)
-
-## Github repo
-
-[CS2-ROP](https://github.com/00riddle00/cs2-rop)
 
 ## Sources (potential literature)
 

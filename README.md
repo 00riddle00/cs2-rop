@@ -376,36 +376,36 @@ notebook outputs before adding them to Git.
 
 ## Data organization and Parquet tables
 
-| Directory | Contents | Tracked by Git? |
-| --- | --- | --- |
-| `data/raw/` | Normal `.dem` recordings | No, except `.gitkeep` |
-| `data/raw_split/` | The two split recordings | No, except `.gitkeep` |
-| `data/processed/` | 60 match folders and `processed_summary.csv` | Yes |
-| `data/analysis/` | Round and per-second analysis tables, Parquet and CSV | Yes |
-| `data/processed_csv_sample/` | Full CSV export of one baseline match | Yes |
-| `data/csv_export/` | Local CSV inspection exports | No |
+| Directory                    | Contents                                                                                                                                  | Tracked by Git?       |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `data/raw/`                  | Normal `.dem` recordings, from the [shared Google Drive folder](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989) | No, except `.gitkeep` |
+| `data/raw_split/`            | The two split recordings                                                                                                                  | No, except `.gitkeep` |
+| `data/processed/`            | 60 match folders and `processed_summary.csv`                                                                                              | Yes                   |
+| `data/analysis/`             | Round and per-second analysis tables, Parquet and CSV                                                                                     | Yes                   |
+| `data/processed_csv_sample/` | Full CSV export of one baseline match                                                                                                     | Yes                   |
+| `data/csv_export/`           | Local CSV inspection exports                                                                                                              | No                    |
 
 Each processed match has these **17 Parquet tables**:
 
-| Table | Contents |
-| --- | --- |
-| `rounds` | Round boundaries, winner, reason, and overtime flag |
-| `kills` | Kill events and attacker/victim details |
-| `damages` | Damage events |
-| `bomb` | Bomb events |
-| `grenades` | Grenade trajectories |
-| `fires` | Fire areas and timing |
-| `smokes` | Smoke areas and timing |
-| `shots` | Weapon-fire events |
-| `stats` | Whole-match player totals; not round-prediction features |
-| `players` | Player identifiers and team information |
-| `round_economy` | Round/side economy and buy information |
-| `chat` | Chat messages |
-| `blinds` | Flash-blind events |
-| `item_events` | Item-related events |
-| `header` | Demo header as key/value rows |
-| `convars` | Server configuration as key/value rows |
-| `snapshots` | Player state sampled every second during live play |
+| Table           | Contents                                                 |
+| --------------- | -------------------------------------------------------- |
+| `rounds`        | Round boundaries, winner, reason, and overtime flag      |
+| `kills`         | Kill events and attacker/victim details                  |
+| `damages`       | Damage events                                            |
+| `bomb`          | Bomb events                                              |
+| `grenades`      | Grenade trajectories                                     |
+| `fires`         | Fire areas and timing                                    |
+| `smokes`        | Smoke areas and timing                                   |
+| `shots`         | Weapon-fire events                                       |
+| `stats`         | Whole-match player totals; not round-prediction features |
+| `players`       | Player identifiers and team information                  |
+| `round_economy` | Round/side economy and buy information                   |
+| `chat`          | Chat messages                                            |
+| `blinds`        | Flash-blind events                                       |
+| `item_events`   | Item-related events                                      |
+| `header`        | Demo header as key/value rows                            |
+| `convars`       | Server configuration as key/value rows                   |
+| `snapshots`     | Player state sampled every second during live play       |
 
 Every table carries `match_id`. Tick-indexed event tables carry `round_num` and
 `in_play` to distinguish live play from freeze time, warmup, and post-round events.
@@ -435,10 +435,10 @@ full per-tick trajectories. Row order is not a reliable key for comparing tables
 match folders in `data/processed/` into two team-level tables for EDA and modelling in
 R. Both are written to `data/analysis/` as Parquet and CSV:
 
-| Table | Rows | One row per |
-| --- | --- | --- |
-| `rounds` | 1,257 | Round of every match |
-| `round_states` | 116,201 | Second of live play |
+| Table          | Rows    | One row per          |
+| -------------- | ------- | -------------------- |
+| `rounds`       | 1,257   | Round of every match |
+| `round_states` | 116,201 | Second of live play  |
 
 `rounds` holds, per round: the team on each side, the score before the round, whether
 the CT team won the previous round, buy type and equipment value per side at freeze
@@ -603,12 +603,19 @@ modify files; review `git diff` afterward. Without Make, Python formatting can u
 
 ### Build the report
 
+The report is written on
+[Overleaf](https://www.overleaf.com/project/6ad8d577211f5926ff3e2d46) (invitation only).
+At each submission, its source and PDF are copied to `reports/` and committed. Figures
+from `make eda` must be uploaded to Overleaf by hand.
+
 The paper lives in [`reports/`](./reports/), with
 [`data_mining_report.tex`](./reports/data_mining_report.tex), its bibliography
 `bibliography.bib`, and the `jmlr2e.sty` style file. Building it requires
 [latexmk](https://ctan.org/pkg/latexmk) and a LaTeX distribution with pdflatex and
-BibTeX, for example TeX Live or MiKTeX. On Windows, see [Windows](#windows) for the
-Perl that latexmk needs:
+BibTeX, for example TeX Live or MiKTeX. On Windows, see [Windows](#windows) for the Perl
+that latexmk needs.
+
+To compile the committed copy:
 
 ```text
 make report
