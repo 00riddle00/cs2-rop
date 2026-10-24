@@ -1,6 +1,6 @@
 library(arrow)
 library(tidyverse)
-test_round <- read_parquet("/data/analysis/rounds.parquet")
+test_round <- read_parquet("./data/analysis/rounds.parquet")
 offset <- 0
 test_round <-  test_round %>% mutate(t_start_streak = 0, ct_start_streak = 0)
 for (x in unique(test_round$match_id)){
@@ -37,4 +37,4 @@ for (x in unique(test_round$match_id)){
   offset <- offset + nrow(temp)
 }
 winstreaks <- test_round %>% select(match_id, round_num, ct_team, t_team, t_start_streak, ct_start_streak)
-write_csv(winstreaks, "/data/analysis/winstreaks.csv")
+write_csv(winstreaks, "./data/analysis/winstreaks.csv")

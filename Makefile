@@ -132,6 +132,7 @@ analysis:
 	uv run --no-sync python -B scripts/build_analysis_tables.py
 
 eda:
+	$(RSCRIPT) R/winstreaks.R
 	$(RSCRIPT) R/eda_figures.R
 
 # --- Lint & format Python -----------------------------------------------------
