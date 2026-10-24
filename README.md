@@ -48,6 +48,7 @@ pipeline, including its one-second sampling interval.
 - [Resources and literature](#resources-and-literature)
 - [Quick start](#quick-start)
   - [Without GNU Make](#without-gnu-make)
+  - [Windows](#windows)
 - [Repository layout](#repository-layout)
 - [Extract demos with Awpy](#extract-demos-with-awpy)
   - [Split recording](#split-recording)
@@ -112,9 +113,10 @@ flowchart TD
 
 You need Git and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 [`.python-version`](./.python-version) pins **Python 3.13.16**; uv downloads it if
-needed. The primary workflow uses GNU Make with uv on `PATH`. Native Windows users
-without GNU Make can use the [direct workflow below](#without-gnu-make); WSL is not
-required. Install R and its `arrow` package separately for downstream analysis.
+needed. The primary workflow uses GNU Make with uv on `PATH`; on Windows, see
+[Windows](#windows) for the recommended setup. Without GNU Make, use the
+[direct workflow below](#without-gnu-make). Install R and its `arrow` package
+separately for downstream analysis.
 
 1. **Clone the repository.** Copy its HTTPS or SSH URL from GitHub, then run:
 
@@ -205,6 +207,35 @@ uv run --no-sync python -B scripts/extract_awpy.py --input data/raw/mouz-vs-spir
 ```
 
 Add `--force` to either command to regenerate a match whose folder already exists.
+
+### Windows
+
+The Python scripts and the R analysis work on Windows as on Linux and macOS. For the
+Make targets, the recommended setup is:
+
+1. Install [Git for Windows](https://git-scm.com/downloads/win). It includes the
+   **Git Bash** terminal with the Unix tools the Makefile uses (`find`, `rm`).
+2. Install GNU Make, for example with [Scoop](https://scoop.sh/) (`scoop install make`)
+   or [Chocolatey](https://chocolatey.org/) (`choco install make`).
+3. Install [uv](https://docs.astral.sh/uv/getting-started/installation/), and R with
+   the `arrow` package (`install.packages("arrow")` in R).
+4. **Run all `make` commands from Git Bash**, not from PowerShell or `cmd`. Windows has
+   its own unrelated `find.exe`, which `make clean` would pick up there, and the
+   parsing recipes are split over several lines in a way `cmd` does not understand.
+
+The direct commands under [Without GNU Make](#without-gnu-make) also work in
+PowerShell, without Git Bash or Make.
+
+To build the report, TeX Live for Windows already includes the Perl that latexmk
+needs. With MiKTeX, also install Perl, for example
+[Strawberry Perl](https://strawberryperl.com/).
+
+[WSL](https://learn.microsoft.com/en-us/windows/wsl/install) also works, since it is
+a full Linux environment, but it is not needed. If you use it, clone the repository
+inside the Linux file system rather than on a Windows drive, which is much slower.
+
+The Windows setup has not been tested end to end. Tell the team if something does
+not work.
 
 After extraction, rebuild the analysis tables:
 
@@ -500,7 +531,8 @@ The paper lives in [`reports/`](./reports/), with
 [`data_mining_report.tex`](./reports/data_mining_report.tex), its bibliography
 `bibliography.bib`, and the `jmlr2e.sty` style file. Building it requires
 [latexmk](https://ctan.org/pkg/latexmk) and a LaTeX distribution with pdflatex and
-BibTeX, for example TeX Live or MiKTeX:
+BibTeX, for example TeX Live or MiKTeX. On Windows, see [Windows](#windows) for the
+Perl that latexmk needs:
 
 ```text
 make report
@@ -541,10 +573,9 @@ When changing Python dependencies, commit `uv.lock` with `pyproject.toml`. Re-ru
 The two baseline matches have 20 Dust2 rounds and 18 Mirage rounds. The smoke test
 checks reproducibility of these baselines, not the scientific correctness of a model.
 
-Download, parsing, and verification targets use Python commands and need no Bash or
-Unix utilities. Native Windows GNU Make can run them. Existing shell lint and cleanup
-targets require Unix utilities, available through environments such as MSYS2 or WSL.
-Git Bash alone may not include GNU Make.
+On Windows, run the Make targets from Git Bash, as described under
+[Windows](#windows). The direct commands under [Without GNU Make](#without-gnu-make)
+also work in PowerShell.
 
 ## Troubleshooting
 
