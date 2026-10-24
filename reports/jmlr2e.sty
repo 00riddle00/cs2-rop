@@ -1,11 +1,12 @@
-%
+% vim: set ft=tex tw=100 nu ai et ts=2 sts=2 sw=2:
+
 % File:    Macros for Journal of Machine Learning Research
-%      Very minor modification of macros for Journal of Artificial 
-%      Intelligence Research (jair.sty) 
+%      Very minor modification of macros for Journal of Artificial
+%      Intelligence Research (jair.sty)
 %   Last edited October 9, 2000 by Leslie Pack Kaelbling
 %   Last edited January 23, 2001 by Alex J. Smola (we should set up RCS or CVS)
 %   Last edited March 29, 2004 Erik G. Learned-Miller
-%   Last edited January 17, 2016 Charles Sutton 
+%   Last edited January 17, 2016 Charles Sutton
 %    (We have now set up GIT, good thing that we waited for it to
 %     be invented.)
 %
@@ -14,7 +15,8 @@
 
 %          Copied and edited from similar file for Machine Learning Journal.
 % Original Author:  Jeff Schlimmer
-% Edited by: Kevin Thompson, Martha Del Alto, Helen Stewart, Steve Minton \& Pandu Nayak.
+% Edited by: Kevin Thompson, Martha Del Alto, Helen Stewart, Steve Minton \&
+% Pandu Nayak.
 % Last edited: Mon  May  3 20:40:00 1993 by kthompso (Kevin Thompson) on muir
 
 \typeout{Document Style `jmlr' -- January 2016.}
@@ -49,11 +51,11 @@
 \fi
 
 \bibpunct{(}{)}{;}{a}{,}{,}
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                             P A G E   S I Z E
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- 
+
 % Change the overall width of the page.  If these parameters are
 %       changed, they will require corresponding changes in the
 %       maketitle section.
@@ -113,10 +115,10 @@
      \@xsect{#5}}
 
 \def\@sect#1#2#3#4#5#6[#7]#8{\ifnum #2>\c@secnumdepth
-     \def\@svsec{}\else 
+     \def\@svsec{}\else
      \refstepcounter{#1}\edef\@svsec{\csname the#1\endcsname\hskip 0.5em }\fi
      \@tempskipa #5\relax
-      \ifdim \@tempskipa>\z@ 
+      \ifdim \@tempskipa>\z@
         \begingroup #6\relax
           \@hangfrom{\hskip #3\relax\@svsec}{\interlinepenalty \@M #8\par}
         \endgroup
@@ -144,7 +146,6 @@
 \def\subparagraph{\@startsiction{subparagraph}{5}{\z@}{1.5ex plus
   0.5ex minus .2ex}{-1em}{\normalsize\bf}}
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                              F O O T N O T E S
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -153,7 +154,7 @@
 %
 % \renewcommand{\footnoterule}{\vspace{10pt}\hrule width 0mm}
 
-\long\def\@makefntext#1{\@setpar{\@@par\@tempdima \hsize 
+\long\def\@makefntext#1{\@setpar{\@@par\@tempdima \hsize
              \advance\@tempdima-15pt\parshape \@ne 15pt \@tempdima}\par
              \parindent 2em\noindent \hbox to \z@{\hss{\@thefnmark}. \hfil}#1}
 
@@ -265,7 +266,6 @@
 \def\@evenfoot{\hfill \small\rm \thepage \hfill}}%
 \pagestyle{jmlrps}}
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                               MISCELLANY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -290,7 +290,7 @@
 %  Allow ``hanging indents'' in long captions
 %
 \long\def\@makecaption#1#2{
-   \vskip 10pt 
+   \vskip 10pt
    \setbox\@tempboxa\hbox{#1: #2}
    \ifdim \wd\@tempboxa >\hsize               % IF longer than one line:
        \begin{list}{#1:}{
@@ -299,9 +299,8 @@
        \addtolength{\leftmargin}{\labelsep}
         }\item #2 \end{list}\par   % Output in quote mode
      \else                                    %   ELSE  center.
-       \hbox to\hsize{\hfil\box\@tempboxa\hfil}  
+       \hbox to\hsize{\hfil\box\@tempboxa\hfil}
    \fi}
-
 
 % Define strut macros for skipping spaces above and below text in a
 % tabular environment.
@@ -330,14 +329,12 @@
 
 \newcommand{\BlackBox}{\rule{1.5ex}{1.5ex}}  % end of proof
 \newenvironment{proof}{\par\noindent{\bf Proof\ }}{\hfill\BlackBox\\[2mm]}
-\newtheorem{example}{Example} 
+\newtheorem{example}{Example}
 \newtheorem{theorem}{Theorem}
-\newtheorem{lemma}[theorem]{Lemma} 
-\newtheorem{proposition}[theorem]{Proposition} 
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{corollary}[theorem]{Corollary}
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem{conjecture}[theorem]{Conjecture}
 \newtheorem{axiom}[theorem]{Axiom}
-
-
