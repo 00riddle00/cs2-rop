@@ -132,8 +132,9 @@ analysis:
 	uv run --no-sync python -B scripts/build_analysis_tables.py
 
 eda:
-	$(RSCRIPT) R/eda_figures.R
 	$(RSCRIPT) R/winstreaks.R
+	$(RSCRIPT) R/eda_figures.R
+	$(RSCRIPT) R/pro_team_map_side_descriptive_analysis.R
 # --- Quarto report (run from repo root; PDF moved to reports/eda/) ---
 	quarto render R/round_states_qmd_1.qmd --execute-dir .
 	mkdir -p reports/eda

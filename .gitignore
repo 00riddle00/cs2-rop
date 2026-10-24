@@ -98,6 +98,9 @@ venv/
 .RData
 .RDataTmp
 
+# Default plot file written by Rscript when a plot is displayed but not saved
+Rplots.pdf
+
 # User-specific files
 .Ruserdata
 

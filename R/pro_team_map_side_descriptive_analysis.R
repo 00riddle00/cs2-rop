@@ -6,7 +6,7 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 
-rounds <- read_csv("../data/analysis/rounds.csv", show_col_types = FALSE)
+rounds <- read_csv("data/analysis/rounds.csv", show_col_types = FALSE)
 
 # Basic cleaning: keep reason_name missing as NA; do not recode it.
 rounds_clean <- rounds %>%
@@ -115,11 +115,11 @@ print(win_condition_summary)
 print(team_round_outcomes)
 
 # Save outputs for later analysis
-write_csv(map_summary, "descriptive_map_summary.csv")
-write_csv(team_map_side_summary, "../data/analysis/descriptive_team_map_side_summary.csv")
-write_csv(side_outcome_summary, "../data/analysis/descriptive_side_outcomes.csv")
-write_csv(win_condition_summary, "../data/analysis/descriptive_win_conditions.csv")
-write_csv(team_round_outcomes, "../data/analysis/descriptive_team_round_outcomes.csv")
+write_csv(map_summary, "data/analysis/descriptive_map_summary.csv")
+write_csv(team_map_side_summary, "data/analysis/descriptive_team_map_side_summary.csv")
+write_csv(side_outcome_summary, "data/analysis/descriptive_side_outcomes.csv")
+write_csv(win_condition_summary, "data/analysis/descriptive_win_conditions.csv")
+write_csv(team_round_outcomes, "data/analysis/descriptive_team_round_outcomes.csv")
 
 # ============================================================
 # DESCRIPTIVE STATISTICS: VISUALISATIONS AND PDF EXPORT
@@ -129,14 +129,14 @@ library(tidyverse)
 library(scales)
 
 # Load descriptive statistics CSV files
-map_summary <- read_csv("descriptive_map_summary.csv", show_col_types = FALSE)
-team_map_side_summary <- read_csv("../data/analysis/descriptive_team_map_side_summary.csv",
+map_summary <- read_csv("data/analysis/descriptive_map_summary.csv", show_col_types = FALSE)
+team_map_side_summary <- read_csv("data/analysis/descriptive_team_map_side_summary.csv",
                                   show_col_types = FALSE)
-side_outcome_summary <- read_csv("../data/analysis/descriptive_side_outcomes.csv",
+side_outcome_summary <- read_csv("data/analysis/descriptive_side_outcomes.csv",
                                  show_col_types = FALSE)
-win_condition_summary <- read_csv("../data/analysis/descriptive_win_conditions.csv",
+win_condition_summary <- read_csv("data/analysis/descriptive_win_conditions.csv",
                                   show_col_types = FALSE)
-team_round_outcomes <- read_csv("../data/analysis/descriptive_team_round_outcomes.csv",
+team_round_outcomes <- read_csv("data/analysis/descriptive_team_round_outcomes.csv",
                                 show_col_types = FALSE)
 
 # 1. Round wins by map and side
@@ -252,17 +252,17 @@ print(p4)
 print(p5)
 
 # Export each distinct plot to its own PDF
-ggsave("../reports/figures/01_map_round_wins.pdf", plot = p1,
+ggsave("reports/figures/01_map_round_wins.pdf", plot = p1,
        device = "pdf", width = 11, height = 8.5)
 
-ggsave("../reports/figures/02_team_performance.pdf", plot = p2,
+ggsave("reports/figures/02_team_performance.pdf", plot = p2,
        device = "pdf", width = 14, height = 10)
 
-ggsave("../reports/figures/03_side_outcomes.pdf", plot = p3,
+ggsave("reports/figures/03_side_outcomes.pdf", plot = p3,
        device = "pdf", width = 11, height = 8.5)
 
-ggsave("../reports/figures/04_win_conditions.pdf", plot = p4,
+ggsave("reports/figures/04_win_conditions.pdf", plot = p4,
        device = "pdf", width = 14, height = 8.5)
 
-ggsave("../reports/figures/05_team_round_wins.pdf", plot = p5,
+ggsave("reports/figures/05_team_round_wins.pdf", plot = p5,
        device = "pdf", width = 14, height = 10)
