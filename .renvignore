@@ -1,0 +1,17 @@
+# Ignore git internals (can be huge and irrelevant)
+.git/
+**/.git/
+
+# Ignore compressed data archives
+*.zip
+
+# Ignore Jupyter temporary files
+**/.ipynb_checkpoints/
+
+# Folders renv does not scan for R package dependencies
+data/
+.venv/
+notebooks/
+scripts/
+reports/
+docs/

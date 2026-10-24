@@ -56,6 +56,7 @@ pipeline, including its one-second sampling interval.
 - [Data organization and Parquet tables](#data-organization-and-parquet-tables)
   - [Snapshots and identifiers](#snapshots-and-identifiers)
   - [Analysis tables](#analysis-tables)
+  - [R setup with renv](#r-setup-with-renv)
   - [Analysis in R](#analysis-in-r)
 - [Development commands](#development-commands)
   - [Build the report](#build-the-report)
@@ -115,8 +116,8 @@ You need Git and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 [`.python-version`](./.python-version) pins **Python 3.13.16**; uv downloads it if
 needed. The primary workflow uses GNU Make with uv on `PATH`; on Windows, see
 [Windows](#windows) for the recommended setup. Without GNU Make, use the
-[direct workflow below](#without-gnu-make). Install R and its `arrow` package
-separately for downstream analysis.
+[direct workflow below](#without-gnu-make). For the analysis in R, install
+**R 4.6.1** and see [R setup with renv](#r-setup-with-renv).
 
 1. **Clone the repository.** Copy its HTTPS or SSH URL from GitHub, then run:
 
@@ -217,8 +218,10 @@ Make targets, the recommended setup is:
    **Git Bash** terminal with the Unix tools the Makefile uses (`find`, `rm`).
 2. Install GNU Make, for example with [Scoop](https://scoop.sh/) (`scoop install make`)
    or [Chocolatey](https://chocolatey.org/) (`choco install make`).
-3. Install [uv](https://docs.astral.sh/uv/getting-started/installation/), and R with
-   the `arrow` package (`install.packages("arrow")` in R).
+3. Install [uv](https://docs.astral.sh/uv/getting-started/installation/), and
+   [R 4.6.1 for Windows](https://cran.r-project.org/bin/windows/base/). CRAN provides
+   prebuilt packages for Windows, so [Rtools](https://cran.r-project.org/bin/windows/Rtools/)
+   is only needed if a package has to be compiled from source.
 4. **Run all `make` commands from Git Bash**, not from PowerShell or `cmd`. Windows has
    its own unrelated `find.exe`, which `make clean` would pick up there, and the
    parsing recipes are split over several lines in a way `cmd` does not understand.
@@ -257,15 +260,21 @@ cs2-rop/
 │   └── csv_export/              # Local CSV exports, ignored by Git
 ├── scripts/                     # Download, extract, recover, analysis tables,
 │                                # verify, export
+├── R/                           # R analysis scripts (EDA figures)
 ├── notebooks/                   # Match inspection notebook
 ├── reports/                     # LaTeX report, bibliography and style file
+│   └── figures/                 # Figures from the R scripts, used by the report
 ├── docs/                        # Resources and literature
 ├── DESCRIPTION_PARAMETERS.md    # Research background and parameters
 ├── Makefile                     # Setup, extraction, and development commands
 ├── .gitignore
 ├── pyproject.toml               # Python dependencies; uv package = false
 ├── uv.lock                      # Locked Python environment
-└── .python-version              # Pinned interpreter
+├── .python-version              # Pinned interpreter
+├── renv.lock                    # Locked R package versions
+├── renv/                        # renv activation script; library/ ignored by Git
+├── .Rprofile                    # Activates renv when R starts in the repository
+└── .renvignore                  # Folders renv does not scan for R dependencies
 ```
 
 ## Extract demos with Awpy
@@ -367,36 +376,36 @@ notebook outputs before adding them to Git.
 
 ## Data organization and Parquet tables
 
-| Directory                    | Contents                                              | Tracked by Git?       |
-| ---------------------------- | ----------------------------------------------------- | --------------------- |
-| `data/raw/`                  | Normal `.dem` recordings                              | No, except `.gitkeep` |
-| `data/raw_split/`            | The two split recordings                              | No, except `.gitkeep` |
-| `data/processed/`            | 60 match folders and `processed_summary.csv`          | Yes                   |
-| `data/analysis/`             | Round and per-second analysis tables, Parquet and CSV | Yes                   |
-| `data/processed_csv_sample/` | Full CSV export of one baseline match                 | Yes                   |
-| `data/csv_export/`           | Local CSV inspection exports                          | No                    |
+| Directory | Contents | Tracked by Git? |
+| --- | --- | --- |
+| `data/raw/` | Normal `.dem` recordings | No, except `.gitkeep` |
+| `data/raw_split/` | The two split recordings | No, except `.gitkeep` |
+| `data/processed/` | 60 match folders and `processed_summary.csv` | Yes |
+| `data/analysis/` | Round and per-second analysis tables, Parquet and CSV | Yes |
+| `data/processed_csv_sample/` | Full CSV export of one baseline match | Yes |
+| `data/csv_export/` | Local CSV inspection exports | No |
 
 Each processed match has these **17 Parquet tables**:
 
-| Table           | Contents                                                 |
-| --------------- | -------------------------------------------------------- |
-| `rounds`        | Round boundaries, winner, reason, and overtime flag      |
-| `kills`         | Kill events and attacker/victim details                  |
-| `damages`       | Damage events                                            |
-| `bomb`          | Bomb events                                              |
-| `grenades`      | Grenade trajectories                                     |
-| `fires`         | Fire areas and timing                                    |
-| `smokes`        | Smoke areas and timing                                   |
-| `shots`         | Weapon-fire events                                       |
-| `stats`         | Whole-match player totals; not round-prediction features |
-| `players`       | Player identifiers and team information                  |
-| `round_economy` | Round/side economy and buy information                   |
-| `chat`          | Chat messages                                            |
-| `blinds`        | Flash-blind events                                       |
-| `item_events`   | Item-related events                                      |
-| `header`        | Demo header as key/value rows                            |
-| `convars`       | Server configuration as key/value rows                   |
-| `snapshots`     | Player state sampled every second during live play       |
+| Table | Contents |
+| --- | --- |
+| `rounds` | Round boundaries, winner, reason, and overtime flag |
+| `kills` | Kill events and attacker/victim details |
+| `damages` | Damage events |
+| `bomb` | Bomb events |
+| `grenades` | Grenade trajectories |
+| `fires` | Fire areas and timing |
+| `smokes` | Smoke areas and timing |
+| `shots` | Weapon-fire events |
+| `stats` | Whole-match player totals; not round-prediction features |
+| `players` | Player identifiers and team information |
+| `round_economy` | Round/side economy and buy information |
+| `chat` | Chat messages |
+| `blinds` | Flash-blind events |
+| `item_events` | Item-related events |
+| `header` | Demo header as key/value rows |
+| `convars` | Server configuration as key/value rows |
+| `snapshots` | Player state sampled every second during live play |
 
 Every table carries `match_id`. Tick-indexed event tables carry `round_num` and
 `in_play` to distinguish live play from freeze time, warmup, and post-round events.
@@ -426,10 +435,10 @@ full per-tick trajectories. Row order is not a reliable key for comparing tables
 match folders in `data/processed/` into two team-level tables for EDA and modelling in
 R. Both are written to `data/analysis/` as Parquet and CSV:
 
-| Table          | Rows    | One row per          |
-| -------------- | ------- | -------------------- |
-| `rounds`       | 1,257   | Round of every match |
-| `round_states` | 116,201 | Second of live play  |
+| Table | Rows | One row per |
+| --- | --- | --- |
+| `rounds` | 1,257 | Round of every match |
+| `round_states` | 116,201 | Second of live play |
 
 `rounds` holds, per round: the team on each side, the score before the round, whether
 the CT team won the previous round, buy type and equipment value per side at freeze
@@ -467,6 +476,57 @@ uv run --no-sync python -B scripts/build_analysis_tables.py
 
 Add `--no-csv` to write Parquet only.
 
+### R setup with renv
+
+The analysis uses **R 4.6.1**. R packages are managed per project with
+[renv](https://rstudio.github.io/renv/): `renv.lock` records the exact package
+versions, and each clone installs them into its own project library in
+`renv/library/`, ignored by Git and separate from other R projects on the same
+machine. renv manages packages, not R itself, so install R 4.6.1 separately:
+
+- **Linux:** from your distribution's packages or
+  [CRAN](https://cran.r-project.org/bin/linux/)
+- **macOS:** [CRAN](https://cran.r-project.org/bin/macosx/)
+- **Windows:** [CRAN](https://cran.r-project.org/bin/windows/base/); see
+  [Windows](#windows)
+
+Then restore the packages from the repository root:
+
+```text
+make setup-r
+```
+
+Without Make, start R in the repository root and run `renv::restore()`. Starting R
+there activates the project library automatically through `.Rprofile`, and renv
+installs itself on the first start if it is missing. To check that the installed
+packages match the lockfile:
+
+```text
+Rscript -e "renv::status()"
+```
+
+On Linux, packages are compiled from source and some need system libraries first. On
+Debian or Ubuntu, for example:
+
+```text
+sudo apt install libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev \
+  libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff-dev libjpeg-dev
+```
+
+Compiling `arrow` from source takes a while. On Windows and macOS, CRAN provides
+prebuilt packages.
+
+To add a package, install it from an R session started in the repository root
+(`install.packages("name")`), use it in a script, then record it and commit the
+updated lockfile:
+
+```r
+renv::snapshot()
+```
+
+`.renvignore` keeps renv from scanning `data/`, `.venv/`, `notebooks/` and other
+non-R folders when it looks for packages used by the project.
+
 ### Analysis in R
 
 Read the Parquet tables directly with the R
@@ -484,6 +544,19 @@ states <- arrow::read_parquet("data/analysis/round_states.parquet")
 ```
 
 Without `arrow`, read the CSV copies with `readr::read_csv()`.
+
+[`R/eda_figures.R`](./R/eda_figures.R) produces the initial data analysis for the
+report: it prints a dataset summary per map and writes four figures as PDF to
+`reports/figures/` (win rate by side and map, CT win rate by players alive, CT win rate
+by buy types, and T win rate with and without a bomb plant). Run it from the
+repository root:
+
+```text
+make eda
+```
+
+or `Rscript R/eda_figures.R` without Make. After changing `data/processed/`, rebuild
+the analysis tables first with `make analysis`.
 
 **Preserve identifier precision:** `steamid` is a `uint64` identifier, not a numeric
 measurement. Converting it to an R double loses precision for these large IDs.
@@ -504,6 +577,7 @@ do not train models or automatically enrich the data with historical rankings.
 Use `make help` for the full target list:
 
 - `make setup`: Install the Python environment with `uv sync`.
+- `make setup-r`: Install the R packages from `renv.lock` with `renv::restore()`.
 - `make download-demos`: Verify and download all manifest recordings into the two
   raw directories.
 - `make check-env`: Verify Python, imports, demo headers, and baseline tables.
@@ -512,6 +586,8 @@ Use `make help` for the full target list:
 - `make parse`: Extract the two baseline demos, skipping existing match folders.
 - `make parse-all`: Extract missing normal matches, then the split match if missing.
 - `make parse-dust2` / `make parse-mirage`: Extract one baseline match.
+- `make analysis`: Rebuild the two analysis tables in `data/analysis/`.
+- `make eda`: Run the R script that writes the EDA figures to `reports/figures/`.
 - `make pylint`: Run Ruff and Black, including automatic fixes and formatting.
 - `make shlint`: Run ShellCheck and shfmt; these tools are installed separately.
 - `make lint`: Run Python and shell linting/formatting.

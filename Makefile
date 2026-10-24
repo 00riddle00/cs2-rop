@@ -11,6 +11,7 @@
 #   Python:      ruff and black (installed via uv)
 #   Shell:       shellcheck and shfmt
 #   Report:      latexmk and a LaTeX distribution (including pdflatex and BibTeX)
+#   Analysis:    R 4.6.1 (packages via renv)
 # =============================================================================
 
 # --- Configuration ------------------------------------------------------------
@@ -23,6 +24,7 @@ DUST2_DEMO := $(RAW_DIR)/mouz-vs-spirit-m1-dust2.dem
 MIRAGE_DEMO := $(RAW_DIR)/mouz-vs-spirit-m2-mirage.dem
 PARSE_FLAGS = $(if $(filter 1,$(FORCE)),--force,)
 
+RSCRIPT := Rscript
 LATEXMK := latexmk
 REPORT_DIR := reports
 REPORT_TEX := $(REPORT_DIR)/data_mining_report.tex
@@ -35,7 +37,8 @@ ifneq (,$(wildcard .env))
 endif
 
 # --- Phony targets --------------------------------------------------------------
-.PHONY: all help setup download-demos
+.PHONY: all help setup setup-r download-demos
+.PHONY: analysis eda
 .PHONY: parse parse-all parse-dust2 parse-mirage
 .PHONY: pylint shlint lint
 .PHONY: report clean-report clean-report-aux
@@ -52,12 +55,15 @@ help:
 	@echo ""
 	@echo "  make all                Run setup and extract missing baseline matches"
 	@echo "  make setup              Install Python dependencies"
+	@echo "  make setup-r            Install R packages from renv.lock"
 	@echo "  make download-demos     Download and verify all manifest demos"
 	@echo "  make parse              Extract baseline demos, skipping existing matches"
 	@echo "  make parse-all          Extract missing normal matches, then the split match"
 	@echo "                           Add FORCE=1 to re-extract existing matches"
 	@echo "  make parse-dust2        Parse the Dust2 demo"
 	@echo "  make parse-mirage       Parse the Mirage demo"
+	@echo "  make analysis           Rebuild the analysis tables in data/analysis/"
+	@echo "  make eda                Write the EDA figures to reports/figures/"
 	@echo "  make pylint             Lint & format Python code"
 	@echo "  make shlint             Lint & format shell scripts"
 	@echo "  make lint               Run pylint & shlint"
@@ -74,6 +80,10 @@ help:
 setup:
 	@echo "==> Setting up Python environment"
 	uv sync
+
+setup-r:
+	@echo "==> Restoring R packages with renv"
+	$(RSCRIPT) -e "renv::restore(prompt = FALSE)"
 
 download-demos:
 	uv run --no-sync python -B scripts/download_demos.py
@@ -114,6 +124,15 @@ parse-mirage:
 		--input "$(MIRAGE_DEMO)" \
 		--output data/processed \
 		$(PARSE_FLAGS)
+
+# --- Analysis -------------------------------------------------------------------
+# Analysis tables are built in Python from data/processed/; EDA figures in R.
+
+analysis:
+	uv run --no-sync python -B scripts/build_analysis_tables.py
+
+eda:
+	$(RSCRIPT) R/eda_figures.R
 
 # --- Lint & format Python -----------------------------------------------------
 pylint:
