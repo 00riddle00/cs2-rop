@@ -3,6 +3,9 @@ title: "summary_analysis"
 format:
   pdf:
     pdf-engine: pdflatex
+execute:
+  message: false
+  warning: false
 editor: visual
 ---
 
