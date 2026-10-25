@@ -13,8 +13,6 @@ editor: visual
 
 ```{r}
 library(arrow)
-library(dplyr)
-library(readr)
 library(tidyverse)
 library(moments)
 
