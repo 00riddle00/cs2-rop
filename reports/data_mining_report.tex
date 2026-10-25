@@ -10,13 +10,16 @@
 % natbib citation styles, see the natbib documentation, a copy of which is
 % archived at http://www.jmlr.org/format/natbib.pdf
 
+\usepackage{jmlr2e}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{algorithm,algorithmic}
 \usepackage{float}
 \usepackage{lipsum}
 \usepackage{lastpage}
-\usepackage{jmlr2e}
+\usepackage{graphicx}
+\usepackage{blindtext}
+\usepackage{longtable}
 
 % Definitions of handy macros can go here
 
@@ -39,15 +42,16 @@
 
 \begin{document}
 
-\title{CS2 Round Outcome Prediction}
+\title{Counter-Strike 2 Round Outcome Prediction}
 
-\author{
-  \name Augustas Markevičius \email augustas.markevicius@mif.stud.vu.lt \\
-  \name Petras Radžiūnas \email petras.radziunas@mif.stud.vu.lt \\
-  \name Titas Burinskas \email titas.burinskas@mif.stud.vu.lt \\
-  \name Tomas Giedraitis \email tomas.giedraitis@mif.stud.vu.lt \\
-  \addr Data Science and Bioinformatics study programmes \\
-  Faculty of Mathematics and Informatics, Life Sciences Center
+\author{\noindent
+  \name Augustas Markevičius\textsuperscript{1} \email augustas.markevicius@mif.vu.lt \\
+  \name Petras Radžiūnas\textsuperscript{2} \email petras.radziunas@mif.stud.vu.lt \\
+  \name Titas Burinskas\textsuperscript{2} \email titas.burinskas@mif.stud.vu.lt \\
+  \name Tomas Giedraitis\textsuperscript{1} \email tomas.giedraitis@mif.stud.vu.lt \\
+  \addr Data Science\textsuperscript{1} and Bioinformatics\textsuperscript{2} study programmes \\
+  Faculty of Mathematics and Informatics\textsuperscript{1}, Life Sciences Center\textsuperscript{2} \\
+  All authors contributed equally
 }
 
 \editor{Jurgita Markevičiūtė}
@@ -55,401 +59,429 @@
 \maketitle
 
 \begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
-Abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract
-abstract. Abstract abstract abstract abstract abstract abstract abstract. Abstract~\citet{chow:68}
-abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract
-abstract abstract abstract abstract abstract abstract abstract.
+The Counter Strike 2 Round Outcome Prediction (CS2-ROP) project aims to predict the outcome of rounds played in the video game Counter Strike 2 using in-game metrics, with a primary focus on player location data in the game map. Machine learning models are used that take the selected in-game metrics at snapshot time frames during a round as input, and produce a quasi real time prediction of which team is more probable to win the round.
+
 \end{abstract}
 
 \begin{keywords}
-  A Keyword, Another Keyword, Third Keyword, Last Keyword
+  Outcome prediction, Counter-Strike, Machine Learning
 \end{keywords}
 
 \section{Introduction}
 
-Introduction introduction introduction introduction introduction, introduction introduction
-introduction introduction introduction introduction introduction introduction. Introduction
-introduction introduction introduction~\citep{pearl:88}. Introduction introduction introduction
-introduction (introduction introduction) introduction introduction introduction introduction.
-Introduction introduction introduction, \emph{introduction} introduction introduction.
+\textit{Note: This introduction is unfinished and unpolished. It is included only to help the reader understand the subject matter.}
 
-\subsection{Parameters [DRY]}
+Our data mining research investigates the game of Counter-Strike 2 (CS2) by trying to predict the outcome of the round based on a player's position on the map and other factors like side, health, weapons, team economy, etc. In a CS2 game, a single map is played until one of the teams wins 13 rounds out of 24. In the case of a tie, 12-12, teams play 6 tie-breaker rounds until one team wins 4 rounds. There are two sides in each match, Counter-Terrorists (CT) and Terrorists (T). Each map is played differently due to different geometry that produces unique game situations, timings, and optimal positions for each side. Due to the unique nature of each map, in order to predict a round-win outcome, all factors must be taken into consideration on a map-to-map basis.
 
-Timeframe: 01.08.2026 - 11.10.2026
+The core premise of why researching CS2 is particularly interesting is because the players in the game operate on limited knowledge under certain fog-of-war and intrinsically perform probabilistic estimations about the intentions and the positions of the enemy side. While dueling is a completely mechanical skill, and may take a second to end, estimations about enemy positions and optimal ways to counter them are purely informational and take up the majority of the game. So probabilistic models might shine light not only about some extrinsic qualities of the game, like what factors determine win outcomes the most, but also give insights into how the game is played in itself. Other games also have similar qualities like fog-of-war or prediction of the opposing side's intentions, however, CS2 is unique in the fact that due to it's digital nature, every event and facet of the game is stored as information and can be extracted as data and reproduced near-verbatim, making it a desirable medium for data mining.
 
-Teams: TOP 10 Between each other [HLTV]
+Round win conditions for each side are different. For Ts it is either:
 
-Games: LAN
+\begin{enumerate}
+    \item Planting the bomb at Bombsites and successfully running out the timer (40 s) of the bomb
+    \item Eliminating all CTs.
+\end{enumerate}
 
-Maps: Dust2, Mirage
+For CTs it's:
 
-Snapshots: Every 5 seconds, (320 ticks)
+\begin{enumerate}
+\item Defusing the planted bomb,
+\item Eliminating all Ts,
+\item Running out the round timer (115 s), as long as a bomb is not planted.
+\end{enumerate}
+Due to this dynamic, Ts are considered the attacking side, and CTs the defending side. Round win-rates are fairly even for both sides on most maps played at the professional level, though with a slight skew towards the CT side. Still, some maps retain equal side win-distribution, such as the quintessential "well balanced" map Dust2.
 
-Variables:
+The reason why the above mentioned parameters were chosen \textbf{[What parameters?]}is because all of them are expected produce a greater consistency in data, while also removing uninformative randomness. The null hypothesis of this research is that round outcomes are random and don't depend on player positions and other in-game factors, therefore it is required to remove out-of-game random factors as much as possible in order not to conflict the two. As with all games, there is an element of randomness, which must be controlled for in order for a game to be considered competitive (i.e. skill-based) and predictable. It is a somewhat desirable quality for a game or a sport to be predictable "on-paper", where quantitative features inform the outcome of the game, and statistics are often used for this reason.
 
-[In-Game] Side, Coordinates, Health, Round time, Win condition, Economy, Weapons, Utilities,
-Alive/Dead, X vs. X, C4 Position
+In CS2, professional player performance is generally more consistent than that of casual players, because of the regularity of the team roster, effective team communication, knowledge of the optimal strategy in different scenarios and high individual skill. The teams also have greater parity with each other and consistently outperform teams outside of top 10. The teams, no matter the period, are a benchmark of 'how the game should be played' at the highest skill-level.
 
-[Meta] Teams, Players, Player ranking, Team ranking, History
+The same can be said for matches played in LAN tournaments as opposed to On-Line games, where match outcomes are more predictable due to better connectivity quality, uniformity of environment (that is, all players play in one area, rather than in separate locations) and other factors which in on-line games are harder to define quantitatively.
 
-Goal: Round outcome prediction based on position \& other variables
+For our research, we chose to investigate professional games of the top 10 teams playing each other based on hltv.org CS Rating 3.0 (teams) which is, if not one of the most robust rating systems for CS2 player performance ranking, at least the most widely accepted and used. The hltv.org database evaluates whether the teams at the time of their match were in the top 10 and filters out only these results. Of all types of matches, only LAN (Local Area Network) tournament matches were selected. The time frame chosen spanned from 2026-08-01 to 2026-10-11, totaling 72 days, during which 60 overall matches were played, of which the majority of them were BO3 (Best of 3), with BO5 occuring rarely, and BO1 only once. During these matches, 150 games overall were played. We've used convenient in-built data filtering options in hltv.org/stats for queries and slicing.
 
-H0: Round outcomes are random and independent on position \& other in-game variables
+We chose two of the most played maps, Dust2 and Mirage, which, out of 7 maps in the official map pool, were played by the teams 30 times each during the selected period, which is 40\% of the time. Out of all 60 matches, one of these two maps were played 33 times, both of these maps 14, and 13 matches where neither of them were played. Altogether, out of 60 matches, 47 times at least one of the maps were played, which is 78.33\%.
 
-H1: Round outcomes are predictable and dependent on position \& other in-game variables
+Other than their popularity, there were other reasons that these two maps were picked. For the map Dust2, the CT/T round win-rate distribution is 49.7\%/50.3\% respectively, almost an ideal 50-50 "coin-toss", so to say. Mirage has greater variance, with 55.8\%/44.2\% distribution. We find this difference an interesting point of investigation, by trying to see how our model will fare for maps which have side-oriented and side-independent round outcomes. These two maps are well-known in pro-play and have been played for decades, so win-rate distribution isn't a sort of recency-bias, but a well set-in "quality" about the map itself. While analyzing all maps would have been ideal, only two maps were picked to reduce both the amount of data produced and the computational requirements to analyze the data. We assume that this leaner approach will be enough to investigate the differences between the two maps.
 
-\section{Description}
+The short time frame of 72 days was chosen due to the ever-changing nature of online competitive video games, where updates can alter the game drastically. Nevertheless, some changes within the game, team rosters, tactics, etc. do occur over time and cannot be avoided completely. All of these decisions can be backed more robustly with various separate analyses, but this falls outside the scope of our work due to time constraints.
 
-Our data mining research investigates a game of Counter-Strike 2 (CS2 onwards) by trying to predict
-the outcome of the round based on player's position on the map and other important factors like
-side, health, weapons, team economy, etc. A single map is played until one of the teams win 13
-rounds out of 24, or in case of a tie, 12-12, they play additional tie-breaker rounds. There are two
-sides (also called teams) in each match, CT and T. Each map is played differently due to different
-geometry that produces unique game situations, timings and optimal positions for each side, so in
-order to predict a round-win outcome all of this must be taken into consideration and can't
-translate from map to map and must be evaluated for each map separately.
+In general, many of the decisions were also driven by the fact that our approach will require machine learning model training. In an initial data test, a single match played on one map produced 1,600,000 rows of unfiltered tabular info. It is assumed that the amount of possible interactions between variables will be extremely high, thus narrowing will make it more manageable for the intended scope of our research.
 
-The core premise of why researching CS2 is particularly intresting is because the players in the
-game itself operate on limited knowledge under certain fog-of-war and intrisically perform
-probabilistic estimations about the intentions and the positions of the enemy team. While dueling is
-a completely mechanical skill, and may take a second to end, estimations about enemy positions and
-optimal ways to counter them are purely informational and take up the majority of the game. So
-probabilistic models might shine light not only about some extrinsic qualities of the game, like
-what factors determine win outcomes the most, but also give insights into how the game is played in
-itself. Other games also have similar qualities like fog-of-war or prediction of the opposing team's
-intentions, however, CS2 is unique in the fact that due to it's digital nature, every event and
-facet of the game is stored as information and can be extracted as data and reproduced
-near-verbatim, making it a desirable medium for data mining.
-
-In the game there are two distinct sides, CT (Counter-Terrorists) and T (Terrorists). Round win
-conditions for each side are different. For Ts it's 1. Planting the bomb at Bombsites and
-successfully running out the timer of the bomb, 2. Eliminating all CTs. For CTs it's 1. Defusing the
-planted bomb, 2. Eliminating all Ts, 3. Running out the round timer. Due to this dynamic, Ts are
-considered and attacking team, and CTs the defending team. Round win-rates are usually more skewed
-towards CT side on most maps, while some retain equal side win-distribution [optional: add statistic
-here].
-
-For our research, we chose to investigate professional games of the Top 10 teams playing each other
-based on hltv.org CS Rating 3.0 which is, if not one of the most robust rating systems, at least the
-most widely accepted and used. Hltv.org database evaluates whether the teams at the time of their
-match were in Top 10 and filters out only these results. Of all types of matches, only LAN (Local
-Area Network) tournament matches were selected. The timeframe ranges from 2026.08.01 to 2026.10.11,
-during which 60 overall matches were played, of which great majority of them were BO3 (Best of 3),
-BO5 rarely, and BO1 once. During these matches, 150 maps overall were played. We've used convenient
-in-built data filtering options in hltv.org/stats for queries and slicing.
-
-We chose two of the most played maps, Dust2 and Mirage, which, out of 7 maps in the map pool, were
-played by Top 10 teams 30 times each during set period, which is 40\% of the time. Out of all 60
-matches, one of these two maps were played 33 times, both of these maps 14, and 13 matches where
-neither of them were played. Altogether, out of 60 matches, 47 times at least one of the maps were
-played, which is 78.33\%. Other than the popularity, there were other reasons that these two maps
-were picked that we will go down into below.
-
-Dust2 CT/T round win-rate distribution is 49.7\%/50.3\% respectively, almost an ideal 50-50
-"coin-toss", so to say, and Mirage has greater variance, with 55.8\%/44.2\% distribution. We find
-this difference an interesting point of investigation, by trying to see how our model will fare for
-maps which have side-oriented and side-independent round outcomes. These two maps are well-known in
-pro-play and have been played for decades, so win-rate distribution isn't a sort of recency-bias,
-but a well set-in "quality" about the map itself. While analyzing all maps would've been ideal, only
-two maps were picked because of the sheer amount of data it might've produced and the requirements
-to handle it all properly, we assumed a more leaner approach that might still investigate the
-differences between maps.
-
-The reason why above mentioned parameters were chosen is because all of them are expected produce a
-greater consistency in data, while also removing uninformative randomness. The zero hypothesis of
-this research is that round outcomes are random and don't depend on positions and other in-game
-factors, therefore it is required to remove out-of-game random factors as much as possible in order
-not to conflict the two. As with all games, there's an element of randomness, which must be
-controlled in order for a game to be considered competetive (i.e. skill-based) and predictable. It
-is a somewhat desirable quality for a game or a sport to be predictable "on-paper", where
-quantitative features inform the outcome of the game, and statistics are often used for this reason.
-
-In CS2, the professional play in general terms is more consistent by nature than public games
-because of regular team roster, high individual skill, etc. Top 10 teams have greater parity with
-each other and consistently outperform teams outside Top10. Top 10, no matter the period, are a
-benchmark of of 'how the game should be played' at the highest skill-level. Same goes for matches
-played in LAN tournaments as opposed to On-Line games, where match outcomes are less predictable due
-to poorer connectivity quality and other factors which are harder to define quantitavely, like
-motivation (due to lesser stakes). A short timeframe of 72 days was chosen due to the ever-changing
-nature of competetive video games, where some updates might alter the game more drastically. This
-timeframe also coincides with a recent update to the map-pool, where Cache was added and Overpass
-was removed, the games start right after a summer player break that followed a Major tournament (IEM
-Cologne 2026). The recency of the data was chosen more for relevance reasons rather than unique set
-of quality within the data itself, as in, the findings might be of more importance in the field
-rather than the findings from data gathered from a few years ago. It should be taken into account
-that despite all this, some changes within the game, team rosters, tactics, etc. do occur over time
-and cannot be avoided completely. All of these decisions can be backed more robustly with various
-separate analyses, but it falls outside the scope due to the constraints of this research and should
-be considered as expert curation that comes from many years in the field. This doesn't not mean that
-it shouldn't be questioned or that it is immune to critique.
-
-In general, many of the decisions were also driven by the fact that our approach will require ML
-training so we had to narrow it all down before we do that step, so as to not get overwhelmed by
-sheer amount of data that it might produce, as we assume it might be quite a lot (for instance, in
-an initial data test, a single map produced 1,600,000 rows of unfiltered tabular info). It is
-assumed that the amount of possible interactions between variables will be extremely high, and
-making a dataset more narrow will make it more manageable for the intended scope of our research.
+One of the key challenges in initializing a relevant database is parsing the Demo files that store the entire information about a game tick-by-tick. Tick rate is the rate of recorded instances per second. Actual matches have 128 tickrate, CS2 Demo files have 64 tickrate to save space. While this may incur some loss of information, 64 instances per second is considered enough to account for all of the important events, except micromovements or minuscule information about crosshair placement or accurate hitbox hit instances.
 
 \section{Literature Review}
 
-One of the key challenges to initialize a relevant database was to parse the Demo files that store
-the entire information about the game tick-by-tick. Tickrate is the rate of recorded instances per
-second. Actual matches have 128 tickrate, Demo files have 16 tickrate to save space. While this may
-incure some loss of information, 16 instances per second is considered enough to account for all of
-the important events, except micromovements or minuscule information about crosshair placement or
-accurate hitbox hit instances. We primarily used demoparser2 Demo parser
-\url{https://github.com/markus-wa/demoinfocs-golang} to deal with the challenge of translating raw
-files into usable data. It is one of the most widely used tools in the scene for these exact
-application. Its features include tracking game events (kills, shots, round starts/ends, footsteps),
-game state (players, teams, grenades, ConVars), grenade projectiles/trajectories, and various other
-functions which are less important for our research. One of the stated top priorities of demoparser2
-developers are performance and concurrency, making it a great option if scaling our project should
-ever be considered. Another tool that we used by way of functionality extension rather than
-substitution of demoparser2 was Awpy \url{https://github.com/pnxenopoulos/awpy,} which was
-programmed on Rust and built on top of the original demoparser2 and is a port to Python programming
-language to which our group members have a greater affinity. Another reason why Awpy was relevant is
-that while, at least on the surface, it gives less-control, it may provide a more clearer and
-ready-made functionality which is convenient for quick review of a given Demo file. Awpy doesn't
-require writing a custom code for it, making it a fast inspection tool. However, one has to keep in
-mind that these tools are not that different and choosing one over the other comes down to
-preference.
+Machine learning methods have been applied for sports outcome prediction, for example football (\cite{moya-2025football}, \cite{berrar-2024football}, \cite{mills-2024football}), basketball (\cite{chen2021nba}, \cite{ouyang2024nba}, \cite{alves-2025nba}), and esports (\cite{stanlly2022dota}, \cite{makarov-2017dota}, \cite{shen2022lol}). However, the niche of research concerning CS2 (and by extension Counter Strike: Global Offensive, the game version before CS2) is very narrow, especially with regards to match or round outcome prediction. For that reason, this literature review mainly seeks to highlight the studies which have the most relevance to our established goal, that is round outcome prediction using in-game metrics, as well as reviewing publicly available tools that have sought to achieve similar goals.
 
-As for the CS2 round prediction models, there are many varying kinds, hence evaluating them is
-critical, and some might be deemed a good baseline to kick off our research. One of the most similar
-in goals and structure is \url{https://github.com/TaiZo1/cs2-win-prediction,} a data pipeline,
-exploratory analysis and classical modeling project which uses demoparser2 and Awpy, scrapes and
-compares team statistics of Top 5, Top 10, Top 20, Top 30 and Top 50 teams (according to HLTV.org)
-across Mirage, Inferno, Dust2, Nuke, Ancient, Train, Anubis, Overpass, or global (all-maps
-aggregate). Snapshots were taken at freeze\_end + 2s (after all buys, before any duel). Its model
-trained three logistic regressions, split into pistol, post-pistol and normal rounds as distinct
-regimes of the game, "with a temporal train/test split grouped by match (the most recent 20 \% of
-maps form the test set: 302 maps from November 2025 onwards, i.e. 599 pistol, 601 post-pistol and
-5,376 normal rounds). Four nested feature configurations are compared (A = round-state only, B =
-+HLTV, C = +map, D = + quasi-target features for control)." Three key takeaways that have potential
-for testing with our own research are that "1. The round type is the strongest predictor of
-predictability, pistol rounds stay barely above chance; post-pistol rounds are almost deterministic.
-2. The immediate round state is the dominant signal. Adding HLTV stats or map identity gains at most
-+0.01 AUC over the round-state baseline on normal and post-pistol rounds and 3. PCA does not yield a
-useful dimensionality reduction. 12 components (out of 28 to 43 input features) are needed to
-capture 80 \% of inertia in every regime."
+Of primary interest was the work done by \cite{xia2025_cs} To the best of our knowledge, it is the only study focused on round win and match win prediction using spatial positioning as one of the key predictors. XGBoost, Logistic regression and Decision tree ML methods were implemented. While the data was limited to CS:GO professional matches in 2022 and only the Dust2 map, the results showed that both XGBoost and Logistic regression could be used to effectively predict match wins with approx. 86\% accuracy, and player death in a given time window with approx. 66\% accuracy, with key predictors being economic factors, spatial positioning and team coordination.
 
-One of them is \url{https://github.com/ratulsarker/CS2_RoundPrediction} which "Predicts which team
-(CT or T) will win a given round in CS2 using deep learning on mid-round game state snapshots." At
-the time of writing, since there is not stated license, and we didn't get confirmation if we can
-reuse the project's material for our purposes, we may only use claimed results as a benchmark and
-infer the efficiency of methods that were used. Their research has shown that MLP Tuned (Optuna, 50
-trials) has shown best results [Test accuracy - 95.75\%, AUC-ROC 0.9945] with MLP Standard (86
-features) coming second [93.86\%, 0.989] and KNN (k=3) coming in third [93.79\%, 0.978], with Random
-Forest (500 Trees), XGBoost (86 features), Logistic Regression and LSTM (round-start, 15 features)
-as runners-up in that particular order. Research claims that top predictive features are 1. player
-count differential man\_advantage (29.8\%), 2. equipment\_advantage (8.4\%), 3. health\_advantage
-(4.7\%), 4. and t\_allive, kills\_this\_round\_t, armor/helmet\_counts (percentage not declared).
-Their analysis involved 530 matches, 9,746 rounds and 161,271 snapshots, with 86 features extractedd
-from mid-round game state, and class balance of 48.9\% CT wins / 51.1\% T wins.
+Less relevant, but still noteworthy are two studies by Jing et al. In \cite{jing2025_cs}, the authors used machine learning methods (primarily XGBoost), along with SHAP for intrepretation, to distinguish key performance metrics in CSGO and CS2 professional players that correlate with a higher HLTV player rating. While this study is very valuable in determining performance characteristics that could possibly be used as features for predictions, it is also limited by the fact that the features used were highly correlated, and that the response variable is a HLTV rating which has been turned into a binary value representing "good" and "okay" players. In \cite{jing2026network_cs}, the authors continued their work in identifying key performance metrics by conducting network analysis of how different metrics associate with each other. While the strongest associations found were rather obvious, e.g. the metric "Kills per round" being highly associated with "Rounds with kills", an interesting finding was that the dominant network nodes shifted from an aggression focused play-style in CS:GO, to a more balanced play-style prioritizing a mixture of defense and offense in CS2. This could mean that features selected for CS:GO match or round prediction may not be suitable for CS2, and vice versa.
 
-There's a very recent (last update 18-10-2026) \url{https://github.com/wyn0n0/CSMapWinPredict}
-project that has a very similar scope of analyzing Demo files with an additional in-built radar-type
-2D visualizer, and a target of predicting current round winner updated about once per second. One of
-it's key advantages is the live demo replay function itself, where one can see win-rate probability
-as the replay goes, which is very useful for testing. However, there are limitations. "Predictions
-and map settings currently focus on Mirage. Results on other maps have not been verified. Large
-Demos may require substantial processing time and memory." The fact that it's based on Mirage serves
-our research, though only partially and some reservations have to made. Slow processing time would
-become a liability if scaling a solution would ever be considered, and our project prefers to have
-that option in case we need a greater dataset.
+\cite{eshrah2025cs2analyticsapp_cs} investigated a machine learning approach to real time round outcome prediction, taking into account side, round number, economy management, equipment, win streak and player performance metrics. The methods used were XGBoost, Long short-term memory neural network and Random Forest. The models they trained showed very impressive prediction accuracies of around 95\%. However, a few glaring issues are noted, such as no mention of whether data used was of professional or casual play, whether the current round was predicted using only previous round data or together with real time current round data, and no mention of tests for model overfitting. Still, the work is of interest because it specifically targets CS2 and takes into account win streak data, under the assumption that this could reflect psychological stressors, for example a loss streak leading to players under-performing due to added stress.
 
-One of the more lean yet effective round outcome predictor projects is
-\url{https://github.com/d-roho/CSGOPredictor,} and while recent (made in 2025), it is made for an
-older iteration of the game - CS:GO, rather than CS2. One of it's key advantages is that it can do
-live round predictions. Program used Logistic Regression model, and robust, verified and prepared
-dataset of 700 demos for model training gathered from "high level tournament play in 2019-2020 ...
-warmup rounds and restarts have been filtered ... a round snapshot has been recorded every 20
-seconds until the round is decided. The total number of snapshots is 122411. Snapshots are i.i.d and
-should be treated as individual data points, not as part of a match." Project has data analysis
-documentation that other sources unfortunately often lack which can be checked out here
-\url{https://www.kaggle.com/datasets/christianlillelund/csgo-round-winner-classification}. It is one
-of the more used datasets for many similar projects and comparisons of results and methods can
-readily be made between them.
+Finally, while not directly relevant to our goal, \cite{bjorklund2018_cs} used a neural network approach to predict CS:GO match outcomes. The interesting part of the work is that rather than using player data for direct prediction, instead the data was clustered into groups which were intended to represent unique play styles. These groups would then be used to evaluate the composition of opposing teams and that evaluation used to predict the match outcome. While the accuracy of the model was modest, being around 61 - 65\%, conceptually this work is of interest because it demonstrates that team composition based on play-style can be used as a metric for match outcome prediction.
 
-There are a few deep-learning solutions to the CS2 round prediction problem that are worth
-mentioning and comparing, despite the fact that DL falls outside our intended methods.
-\url{https://github.com/Gary2005/cs-net} is transformer-based path prediction \& game-state
-forecasting for Counter-Strike 2 trained with Pro architecture (d\_model=768, 138.7M params). What
-it claims to achieve is predict player's movement trajectory, along with a spatial-only downstream
-win-rate prediction that aligns with our own aim that uses 4 second snapshot windows, making an
-interesting example for comparison between DL and ML solutions. However, the detailed documentation
-is in Chinese, so correct reproducibility may be unreliable because of translation. Another neural
-network solution comes from \url{https://github.com/eigenpaul/cs2-evalbar,} a "roughly 70K-parameter
-GraphTemporalTransformer over a 20-second, 4 Hz state window." While claiming meaningful results by
-game phase (<15s, 30-60s >=90s) with accuracy of 0.6, 0.68, 0.88. Another interesting finding is
-that the project claims "extra capacity overfits near 95 groups, but widening can help once the
-dataset reaches 142 groups." One big caveat is that the application was trained on Inferno, another
-map, so the results will be hard to compare.
+Moving on to the publicly available tools. One of the most similar in goals and structure is the tool cs2-win-prediction (\cite{cs2winprediction}), a data pipeline, exploratory analysis and classical modeling project which compares team statistics of top teams (based on hltv.org statistics) across multiple maps. Snapshots are taken at freeze\_end + 2s (after players purchase equipment, but before any duel). Round outcome prediction is based on three logistic regression models, one each for pistol rounds, post-pistol rounds and normal rounds. Three takeaways are noted by the authors, that have potential for testing with our own research: "1. The round type is the strongest predictor of predictability, pistol rounds stay barely above chance; post-pistol rounds are almost deterministic; 2. The immediate round state is the dominant signal. Adding HLTV stats or map identity gains at most +0.01 AUC over the round-state baseline on normal and post-pistol rounds; 3. PCA does not yield a useful dimensionality reduction. 12 components (out of 28 to 43 input features) are needed to capture 80 \% of inertia in every regime."
 
-Xia et al. [9] focused on round win and match win predictions using XGBoost, Logistic regression and
-Decision tree ML methods. While the data was limited to CS:GO professional matches from 2022 and
-only the matches happening in the Dust2 map, the results showed that both XGBoost and Logistic
-regression could be used to effectively predict match wins with approx. 86\% accuracy, and player
-death in a given time window with approx. 66\% accuracy. Key predictors included economic factors,
-spatial positioning and team coordination. Additionally, awpy was used to parse match demo files for
-feature extraction.
+A recently updated project csmapwinpredict (\cite{csmapwinpredict}) has a very similar scope of analyzing Demo file for predicting the current round winner of CS2 matches in real time (updated approximately once per second). One of its key advantages is the live demo replay function, where one can see win-rate probability as the replay goes, a potentially useful feature for testing. While not stated explicitly, a look at the round win probability evaluation code shows the use of sklearn's DummyClassifier, ColumnTransformer, SimpleImputer and LogisticRegression modules, indicating the project to be based on machine and deep learning methods. However, there are limitations, as stated by the project authors: "Predictions and map settings currently focus on Mirage. Results on other maps have not been verified. Large Demos may require substantial processing time and memory." The fact that the tool is based on Mirage serves our research, though only partially and some reservations have to made. Additionally, the slow processing time of large demos could become a liability if scaling a solution would ever be considered, and our project prefers to have that option in case we need a greater dataset.
 
-While not directly relevant to our goal, Björklund et al. [10] used a neural network approach to
-predict CS:GO match outcomes. The interesting part of the work is that rather than using player data
-for direct prediction, instead the data was clustered into groups which were intended to represent
-unique play styles. These groups would then be used to evaluate the composition of opposing teams
-and that evaluation used to predict the match outcome. While the accuracy of the model was modest,
-being around 61 – 65\%, conceptually this work is of interest because it demonstrates that team
-composition based on its players’ play-style can be used as a metric for match outcome prediction.
+Another CS2 prediction tool is CS2\_RoundPrediction (\cite{cs2roundprediction}) which "Predicts which team (CT or T) will win a given round in CS2 using deep learning on mid-round game state snapshots." The MLP Tuned (Optuna, 50 trials) model showed the best results, MLP Standard (86 features) coming second and KNN (k=3) coming in third. Other methods used were Logistic regression, Random Forest, LSTM and XGBoost. Top predictive features were 1. man\_advantage (player count differential, 29.8\%), 2. equipment\_advantage (8.4\%), 3. health\_advantage (4.7\%), 4. and t\_allive, kills\_this\_round\_t, armor/helmet\_counts (presumably < 4.7 \%). Their analysis involved 530 matches, 9,746 rounds and 161,271 snapshots, with 86 features extracted from mid-round game state, and a class balance of 48.9\% CT wins / 51.1\% T wins.
 
-Jing et al. [11] have used machine learning methods (primarily XGBoost) along with SHAP for
-intrepretation to distinguish key performance metrics in CSGO and CS2 professional players that
-correlate with a higher HLTV player rating. While this study is very valuable in determining said
-performance characteristics, it is limited by the fact that the features used were highly correlated
-and that the response variable is a HLTV rating which has been turned into a binary value
-representing “good” and “okay” players. Furthermore, the rating formula in the CSGO era prioritizes
-fragging while the CS2 era formula is unknown, providing a high level of uncertainty as to whether
-the chosen features truly correlate with performance, e.g. with higher probability of winning a
-round or a match. Other metrics such as player past performance or role are also not accounted for.
-This is merely to say that there is room for improvement with regards to our set goals.
+Another lean but effective round outcome predictor project is CSGOPredictor (\cite{csgopredictor}). This tool used Logistic Regression with a robust, verified and prepared dataset of 700 demos for model training to predict CS:GO round outcomes. The total number of snapshots in the dataset were 122411, with the snapshots being i.i.d, treated as individual data points. The project also provides data analysis documentation, which other sources lack. It is one of the more used datasets for many similar projects and comparisons of results and methods can readily be made between them.
+
+Two deep learning based tools for CS2 are worth mentioning here, despite deep learning falling outside of the scope of our work. cs2-evalbar (\cite{cs2evalbar}) is a neural network based tool, using a "roughly 70K-parameter GraphTemporalTransformer over a 20-second, 4 Hz state window." It claims meaningful results by game phase (<15s, 30-60s >=90s) with accuracies of 0.60, 0.68, 0.88 respectively. Another interesting finding is that the project claims "extra capacity overfits near 95 groups, but widening can help once the dataset reaches 142 groups." One big caveat is that the application was trained on Inferno, a map which we will not use in our work, so the results could be difficult to compare.
+
+cs-net (\cite{csnet}) is a transformer-based path prediction \& game-state forecasting tool for Counter-Strike 2 trained with Pro architecture (d\_model=768, 138.7M params). While the intended use is for player movement, per-player win rate, survival probability and future kill probablity prediction, it is still an interesting example for comparison between DL and ML solutions. However, the detailed documentation is in Chinese, so correct reproducibility may be unreliable because of translation.
 
 \section{Data}
 
 \subsection{Data set}
 
-The data set used is ...
+From the hltv.org database (hltv), the top 10 teams by hltv ranking were chosen and 60 matches were downloaded as demo files for the maps Dust2 and Mirage in which these teams were playing. Awpy was used to parse the data in the demo files. A total of 1257 rounds were parsed, generating various categories of parsed data, such as economy, kill and death, round state data, etc.
+
+The names of the top 10 teams selected were: 9z, Aurora, FURIA, FUT, FaZe, Falcons, G2, Legacy, MOUZ, NAVI (also referred to as Natus Vincere), Spirit, Vitality
+
+For exploratory data analysis purposes, round state data (round\_states) was created by aggregating round, bomb, equipment, economy and health data team-wide for each 1 s snapshot during a round. This was combined with non-snapshot round data (rounds) to produce an enriched round state dataset (round\_states\_enriched). Information about these three datasets is presented in Table 1. The variables contained within the enriched round data dataset are presented in Appendix A.
 
 \begin{table}[H]
-\label{tab:1}
-\centering
-\begin{tabular}{ |c|c|c| }
- \hline
- cell1 & cell2 & cell3 \\
- cell4 & cell5 & cell6 \\
- cell7 & cell8 & cell9 \\
- \hline
-\end{tabular}
-\caption{Example table.}
+    \centering
+\caption{Information about the round, round state and enriched round state datasets}
+\label{tab:placeholder}
+    \begin{tabular}{|c|c|c|c|c|c|}\hline
+Dataset&	Rows& Columns&	Missing values&	Matches&	Rounds\\
+\hline
+rounds &	1257 &	26 &	1288 &	60 &	1257 \\
+\hline
+round\_states &	116201 &	45 &	195710 &	60 &	1257 \\
+\hline
+round\_states\_enriched &	116201 &	59 &	250917 &	60 &	1257 \\
+\hline
+    \end{tabular}
 \end{table}
-
-Some more text...
 
 \subsection{Exploratory data analysis}
 
-Exploratory data analysis was performed ...
+Using the data in the enriched round states dataset, exploratory data analysis was performed. First we present some information about the dataset itself.
 
+Table 2 lists the missing values in the enriched round dataset. seconds\_since\_plant, plant\_site and plant\_tick have many missing values because they are computed only if a bomb plant occurs during a round. ct\_won\_previous\_round can only be computed from the second round onwards, thus values are missing for the first round. The remaining missing values belong to the match Falcons vs Natus Vincere on the Mirage map, due to an error during demo file parsing. Data imputation was not attempted. If imputation for this match will prove to be impossible, then it will be removed from the dataset.
+
+\begin{table}[H]
+    \centering
+\caption{Missing variables in the enriched round data dataset}
+\label{tab:placeholder}
+    \begin{tabular}{|c|c|c|}\hline
+Variable&	Missing values&	\% Missing \\\hline
+seconds\_since\_plant &	97855 &	84.2\\\hline
+plant\_site&	97855&	84.2\\\hline
+plant\_tick&	47215&	40.6\\\hline
+ct\_won\_previous\_round&	4116&	3.5\\\hline
+reason\_name&	1263&	1.1\\\hline
+ct\_buy\_type&	1198&	1.0\\\hline
+t\_buy\_type&	1198&	1.0\\\hline
+first\_death\_side&	217&	0.2\\ \hline
+    \end{tabular}
+\end{table}
+
+Table 3 lists the number of matches and rounds played for each map.
+
+\begin{table}[H]
+    \centering
+\caption{Number of rounds and matches played by map}
+\label{tab:placeholder}
+    \begin{tabular}{|c|c|c|}\hline
+Map name&	Matches played&	\% Rounds played \\\hline
+Dust2 &	30 &	628\\\hline
+Mirage&	30&	629\\\hline
+    \end{tabular}
+\end{table}
+
+\newpage
+Next, we provide some data related to in-game metrics. Figure 1 provides information about round duration by map. The distribution looks approximately normal, with both the Dust2 and Mirage maximum appearing at about 115 seconds, which is how much time a single round can take without a bomb plant occuring.
 \begin{figure}[H]
-\label{pic:1}
-\centering
-\includegraphics[scale=0.7]{example}
-\caption{Example image. {\small Source: \cite{romero:20}}}
+    \centering
+    \includegraphics[width=1.0\linewidth]{Figs/01_round_duration_distribution.pdf}
+    \caption{Round duration distribution by map type}
+    \label{fig:placeholder}
 \end{figure}
 
-\subsection{Methodology}
+\newpage
+Figure 2 provides information about round-win share by map and side. Dust2 seems to have a very balanced win share for both sides, while Mirage favors the CT side.
 
-possible training models
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{Figs/02_side_win_share_by_map.pdf}
+    \caption{Side win share by map}
+    \label{fig:placeholder}
+\end{figure}
 
-Logistic Regression
+\newpage
+Table 4 and Figure 3 shows the win types by map. The missing values the Mirage map are from the previously mentioned match with error in data parsing. ct\_win and terrorist\_win types are achieved by one side killing all players from the other side without a bomb being planted. target\_bombed is a T side victory by bomb plant with the CT side not being able to defuse it in time, and bomb\_defused is the CT victory type where they manage to defuse the bomb in time. target\_saved is a CT side win by running out the timer, that is the T side is unable to plant the bomb in time.
 
-KNN
+\begin{table}[H]
+    \centering
+\caption{Win types by map}
+\label{tab:placeholder}
+    \begin{tabular}{|c|c|c|c|}\hline
+Map&	Win type&	Rounds with this win type & \% Rounds\\\hline
+Dust2&	bomb\_defused&	79&	12.6\\\hline
+Dust2&	ct\_win&	210&	33.4\\\hline
+Dust2&	target\_bombed&	129&	20.5\\\hline
+Dust2&	target\_saved&	23&	3.7\\\hline
+Dust2&	terrorists\_win&	187&	29.8\\\hline
+Mirage&	bomb\_defused&	75&	11.9\\\hline
+Mirage&	ct\_win&	225&	35.8\\\hline
+Mirage&	target\_bombed&	105&	16.7\\\hline
+Mirage&	target\_saved&	43&	6.8\\\hline
+Mirage& terrorists\_win&	169&	26.9\\\hline
+Mirage&	NA&	12&	1.9\\\hline
+    \end{tabular}
+\end{table}
 
-XGBoost
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{Figs/03_win_condition_distribution.pdf}
+    \caption{Win type distribution by map}
+    \label{fig:placeholder}
+\end{figure}
 
-MLP
+\newpage
+Figure 4 shows the win shares by side and map among different teams. While the shares are more or less even, it can be inferred that some teams are better at playing the T side, likely due to being better attackers, and some being better on the CT side, likely being better defenders.
 
-LSTM
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Figs/04_team_win_rate_by_map_side.pdf}
+    \caption{Share of rounds won by side, map and team}
+    \label{fig:placeholder}
+\end{figure}
 
-Sci-kit learn
+\newpage
+Figure 5 shows a heatmap of CT win rate based on how many players are alive on each side. Unsurprisingly, CT win rates remain high if the CT side have an advantage in player number, and vice versa. The seemingly peculiar case of CTs losing some matches with 0 T players being alive is due to the CT side killing all T players, but not having enough time to defuse the planted bomb, resulting in a T victory.
 
-\url{https://github.com/markus-wa/demoinfocs-golang} [Go Demo-parser]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Figs/06_alive_player_win_rate_heatmap.pdf}
+    \caption{Heatmap of CT win rate according to how many players are alive on each side}
+    \label{fig:placeholder}
+\end{figure}
 
-\url{https://github.com/pnxenopoulos/awpy} [Python-based demo data analysis]
+\newpage
+Figure 6 shows box plots of the number of players alive at the end of rounds along with their average health. The T side being the attacking side usually has a lower average health at the end of a round. Figure 7 shows more clearly the distribution of alive players by side and map at the end of a round, with the most common occurence being that only one player survives on both sides.
 
-\url{https://github.com/ratulsarker/CS2_RoundPrediction} [Deep-Learning, a good example]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Figs/07_round_end_alive_and_health.pdf}
+    \caption{Number of players and their average health at the end of round by side and map}
+    \label{fig:placeholder}
+\end{figure}
 
-\url{https://github.com/Gary2005/cs-net} [Transformer-based round win prediction, predicts movement]
+\newpage
 
-\url{https://github.com/wyn0n0/CSMapWinPredict} [Replay and prediction with a display]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Figs/08_round_end_alive_distribution.pdf}
+    \caption{Distribution of alive players at the end of round by side and map}
+    \label{fig:placeholder}
+\end{figure}
 
-\url{https://github.com/eigenpaul/cs2-evalbar}
+\newpage
 
-\url{https://github.com/kamalchah/CounterStrikeWinProb}
+Figure 8 shows the percentage of rounds that had bomb plants occur. As was mentioned previously, Mirage is a map more favourable to the CT side, which could explain the lower number of bomb plants as compared to Dust2, which is a more balanced map for both sides. Figure 9 also shows that in both maps, bomb plants occured more frequently in the A site rather than B. However, as can be seen in figure 10, the T side would win a larger share of rounds on both maps if the chosen site was B instead of A, perhaps indicating that the B site is easier to defend, thus when T players successfully plant in the B site and start defending, with the CTs attacking, the T side is more likely to win the round.
 
-\url{https://github.com/TaiZo1/cs2-win-prediction}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Figs/09_bomb_plant_rate.pdf}
+    \caption{Percentage of rounds with bomb plant by map}
+    \label{fig:placeholder}
+\end{figure}
 
-1. go parser that allows to collate data from demo files based on events. Oriented towards
-efficiency and speed.
+\newpage
 
-2. similar to go parser and based on go parser, does splicing and other functions with different
-semantics, creates dataframes, etc. Perhaps less efficient but more user-friendly, has some features
-that go parser doesnt. [check what specifically]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{Figs/10_bomb_plant_site_distribution.pdf}
+    \caption{Distribution of which bomb site was chosen for planting by map}
+    \label{fig:placeholder}
+\end{figure}
 
-The question of "Why these two? Why not one or the other?"
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Figs/11_t_win_rate_by_plant_status.pdf}
+    \caption{Distribution of T side wins by bomb plant and bomb site choice status}
+    \label{fig:placeholder}
+\end{figure}
 
-3. CS2\_RoundPrediction. Uses Deep-Learning methods. Unknown license, so for now might only inspect.
-Can't use deep learning in our project.
+\newpage
+Another interesting area of exploration is how the buy-type affects win rate. A buy type indicates the strategy used to purchase equipment under different economic scenarios. A pistol buy (or pistol round) occurs during the first round of a match (or after switching sides at the half point), where players have only enough money to buy a secondary weapon (a pistol) and/or a utility grenade. A full buy means that players buy a primary weapon, armor and utilities according to their role, and this usually occurs when the players have money to spare. An eco round is the opposite, usually occurring when players have little money, which usually means purchasing a cheaper primary weapon, forgoing utilites or armor, or even purchasing nothing. A force buy occurs when players have little money, and either commit to a full buy leaving them with no money in case of a round loss, or spending what little money they have on the best equipment possible. A force buy is usually done as a risky strategy to break a losing streak, as winning rounds rewards the winning side with more money than losing.
 
-4. Cs-net: Transformer-based path prediction \& game-state forecasting for Counter-Strike 2. 3 key
-parts: path prediction, spatial-only models, 3D visualizer. Has pretrain functions. Uses 4 second
-windows. Documentation in Chinese, so unreliable information through translator.
+Table 5 shows the CT win rates according to the CT and T buy type, and figure 11 shows a heatmap of these win rates. Pistol rounds and full buy - full buy matchup rounds result in a fairly even CT - T win rate. Interestingly, in a force buy - force buy matchup, the T side is far more likely to win than the CT side.
 
-5. CsMapWinPredict: CS Demo Map is a Counter-Strike 2 replay and win-probability analysis project.
-It turns .dem recordings into an interactive radar replay, showing match progress alongside
-round-win estimates based on player status, equipment and the bomb situation. The model uses
-information available at the current point in the recording, with estimates usually updated about
-once per second. The prediction target is the current round winner, not the final result of the map
-or match. Last update 2026-10-18, Mirage-only.
+\begin{table}[H]
+    \centering
+\caption{CT and T buy types with corresponding CT win rates}
+\label{tab:placeholder}
+    \begin{tabular}{|c|c|c|c|}\hline
+CT buy type&	T buy type&	\% CT win rate& Number of CT win rounds \\\hline
+pistol&	pistol&	0.53&	120\\\hline
+eco&	force&	0&	5\\\hline
+eco&	full&	0.075&	40\\\hline
+force&	eco&	1&	12\\\hline
+force&	force&	0.22&	37\\\hline
+force&	full&	0.21&	150\\\hline
+full&	eco&	0.92&	78\\\hline
+full&	force&	0.72&	191\\\hline
+full&	full&	0.54&	613\\\hline
+    \end{tabular}
+\end{table}
 
-6. A CS2 round-probability and demo-analysis toolkit. It combines a gradient-boosted baseline with a
-temporal graph-transformer model, probability calibration, and a web-based analysis interface. It
-currently focuses on Inferno.
+\newpage
 
-7. A CS:GO round-win probability pipeline that specifically investigates player-position embeddings.
-This is conceptually relevant to your spatial-feature goal, although it targets the older CS:GO
-dataset and may require adaptation for CS2 demos.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Figs/13_buy_type_matchup_heatmap.pdf}
+    \caption{CT Win rate by side buy type across both maps}
+    \label{fig:placeholder}
+\end{figure}
 
-8. A professional-match round prediction pipeline with demo parsing, feature engineering, and
-logistic regression. It predicts from the freeze-time state, making it useful as a baseline, but it
-doesn't capture the full evolution of a round.
+\newpage
 
-9. X. Xia, A. Salinas, and F. Morstatter, “Precision under fire: Analysis and predictive modeling in
-Counter-Strike: Global Offensive,” IEEE Conference on Games (CoG), pp. 1–8, Aug. 2025, doi:
-\url{10.1109/cog64752.2025.11114164}.
+Data was also explored at the (approximately) 30 second snapshot, to see the how CT win rates change with one side having more players alive (Table 6, Figure 12), better equipment (Table 7) or having an advantage in player health point and armor conditions (Table 8). Perhaps unsurprisingly, having an advantage in player count, equipment value, health and armor results in a higher probability of winning the round.
 
-10.  “Predicting the outcome of CS:GO games using machine learning,” BACHELOR OF SCIENCE THESIS,
-CHALMERS UNIVERSITY OF TECHNOLOGY, 2018. [Online]. Available:
-\url{https://odr.chalmers.se/server/api/core/bitstreams/e919ca56-3995-46b1-9546-a09b83f8b172/content}
+\begin{table}[H]
+    \centering
+\caption{Alive player by side advantage and CT win rates with corresponding statistics, at 30s snapshot.
+Rounds indicates how many rounds had such an advantage. }
+\label{tab:placeholder}
+    \begin{tabular}{|c|c|c|c|c|}\hline
+Advantage&	Rounds&	\% CT win \\\hline
+More CTs alive&	300&	81\\\hline
+Equal player counts&	749&	50.7\\\hline
+More Ts alive&	208&	19.2\\\hline
+    \end{tabular}
+\end{table}
 
-11.  S. Jing, M. M. Awang, W. A. M. W. Pa, P. Pan, D. Memmert, and Z. Zhang, “Interpretable machine
-learning with SHAP for esports performance analysis of professional counter-strike players from 2012
-to 2025,” International Journal of Sports Science \& Coaching, vol. 21, no. 5, pp. 3298–3314, Oct.
-2025, doi: \url{10.1177/17479541251388864}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Figs/14_alive_advantage_at_30s.pdf}
+    \caption{Change in CT win rate by side alive player count advantage}
+    \label{fig:placeholder}
+\end{figure}
 
-12.  Y. Eshrah and Y. M. I. Hassan, "CS2AnalyticsAPP: A Multi-Player Shooter Game Analytics
-Framework," 2025 35th International Conference on Computer Theory and Applications (ICCTA),
-Alexandria, Egypt, 2025, pp. 119-124, doi: \url{10.1109/ICCTA68914.2025.11519898}.
+\newpage
 
-\section{Results}
+\begin{table}[H]
+    \centering
+\caption{Equipment advantage and CT win rates with corresponding statistics, at 30s snapshot.
+Rounds indicates how many rounds had such an advantage.
+Means calculated by taking every round (CT - T) value and then taking the mean of those values}
+\label{tab:placeholder}
+    \begin{tabular}{|c|c|c|c|c|}\hline
+Advantage&	Rounds&	\% CT win &	Mean equip. val. diff.&	Mean money diff. \\\hline
+CT higher equipment value&	793&	68.7&	9770&	5265 \\\hline
+Equal equipment value&	6&	50&	0&	-617 \\\hline
+T higher equipment value&	458&	25.1&	-8162&	-5151 \\\hline
+    \end{tabular}
+\end{table}
 
-The results achieved were ...
+\begin{table}[H]
+    \centering
+\caption{Player health point and armor advantage and CT win rates with corresponding statistics, at 30s snapshot.
+Means calculated by taking every round (CT - T) value and then taking the mean of those values}
+\label{tab:placeholder}
+    \begin{tabular}{|c|c|c|c|c|}\hline
+Advantage&	Rounds&	\% CT Win&	Mean HP diff.&	Mean armor diff. \\\hline
+CTs higher HP&	551&	68.4&	95.5&	120.1 \\\hline
+Equal HP&	342&	51.8&	0&	27.6 \\\hline
+Ts higher HP&	364& 29.9&	-76.7&	-84.4 \\\hline
+    \end{tabular}
+\end{table}
 
-\section{Conclusions}
-
-These conclusions follow ...
-
-% Acknowledgements should go at the end, before appendices and references
-
-\acks{We would like to thank... }
-
-% Manual newpage inserted to improve layout of sample file - not needed in
-% general before appendices/bibliography.
+This concludes the exploratory data analysis. The data and statistics chosen here are only a fraction of the data that is possible to visualize and explore, but nonetheless even in this narrow slice, some noteworthy findings showed up, e.g. the bomb site choice distribution compared to the win rates by bomb site choice.
 
 \bibliography{bibliography}
 
 \appendix
-\section*{Appendix A.}
+\section*{Appendix A. Variables in the rounds and rounds\_states datasets along with their data types.}
 \label{app:theorem}
 
-In this appendix we show that...
+ \begin{longtable}[c]{| c | c | c |}
+ \caption{Variables in the rounds and rounds\_states datasets along with their data types.\label{long}}\\
+
+ \hline
+ \multicolumn{3}{| c |}{Beginning of Table \ref{long}}\\
+ \hline
+ Variable & Dataset &  Variable data type\\
+ \hline
+ \endfirsthead
+
+ \hline
+ \multicolumn{3}{|c|}{Continuation of Table \ref{long}}\\
+ \hline
+ Variable & Dataset &  Variable data type\\
+ \hline
+ \endhead
+
+ \hline
+
+bomb\_planted&	Both rounds and round\_states&	logical \\\hline
+ct\_score\_before&	Both rounds and round\_states&	integer\\\hline
+ct\_team&	Both rounds and round\_states&	character\\\hline
+ct\_win&	Both rounds and round\_states&	logical\\\hline
+map&	Both rounds and round\_states&	character\\\hline
+match\_id&	Both rounds and round\_states&	character\\\hline
+part&	Both rounds and round\_states&	integer\\\hline
+plant\_site&	Both rounds and round\_states&	character\\\hline
+round\_num&	Both rounds and round\_states&	integer\\\hline
+t\_score\_before&	Both rounds and round\_states&	integer\\\hline
+t\_team&	Both rounds and round\_states&	character\\\hline
+winner\_side&	Both rounds and round\_states&	character\\\hline
+bomb\_carried&	round\_states&	logical\\\hline
+ct\_alive&	round\_states&	integer\\\hline
+ct\_armor&	round\_states&	integer\\\hline
+ct\_awps&	round\_states&	integer\\\hline
+ct\_defusers&	round\_states&	integer\\\hline
+ct\_equipment&	round\_states&	integer\\\hline
+ct\_flashes&	round\_states&	integer\\\hline
+ct\_he&	round\_states&	integer\\\hline
+ct\_helmets&	round\_states&	integer\\\hline
+ct\_hp&	round\_states&	integer\\\hline
+ct\_molotovs&	round\_states&	integer\\\hline
+ct\_money&	round\_states&	integer\\\hline
+ct\_rifles&	round\_states&	integer\\\hline
+ct\_smgs&	round\_states&	integer\\\hline
+ct\_smokes&	round\_states&	integer\\\hline
+seconds&	round\_states&	numeric\\\hline
+seconds\_since\_plant&	round\_states&	numeric\\\hline
+t\_alive&	round\_states&	integer\\\hline
+t\_armor&	round\_states&	integer\\\hline
+t\_awps&	round\_states&	integer\\\hline
+t\_defusers&	round\_states&	integer\\\hline
+t\_equipment&	round\_states&	integer\\\hline
+t\_flashes&	round\_states&	integer\\\hline
+t\_he&	round\_states&	integer\\\hline
+t\_helmets&	round\_states&	integer\\\hline
+t\_hp&	round\_states&	integer\\\hline
+t\_molotovs&	round\_states&	integer\\\hline
+t\_money&	round\_states&	integer\\\hline
+t\_rifles&	round\_states&	integer\\\hline
+t\_smgs&	round\_states&	integer\\\hline
+t\_smokes&	round\_states&	integer\\\hline
+tick&	round\_states&	integer\\\hline
+time\_remaining\_s&	round\_states&	numeric\\\hline
+ct\_buy\_type&	rounds&	character\\\hline
+ct\_equipment\_freeze\_end&	rounds&	integer\\\hline
+ct\_won\_previous\_round&	rounds&	logical\\\hline
+end\_tick&	rounds&	integer\\\hline
+first\_death\_side&	rounds&	character\\\hline
+freeze\_end\_tick&	rounds&	integer\\\hline
+is\_overtime&	rounds&	logical\\\hline
+is\_pistol\_round& rounds&	logical\\\hline
+plant\_tick&	rounds&	integer\\\hline
+reason\_name&	rounds&	character\\\hline
+round\_duration\_s&	rounds&	numeric\\\hline
+t\_buy\_type&	rounds&	character\\\hline
+t\_equipment\_freeze\_end&	rounds&	integer\\\hline
+winner\_team&	rounds&	character\\\hline
+\end{longtable}
+
 
 \end{document}
