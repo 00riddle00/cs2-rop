@@ -14,7 +14,7 @@ execute:
 
 ## Setup
 
-This report combines the dataset overview, round-level descriptive analysis, team/map/side comparisons, round-state analysis, and bomb/economy/player-state analyses into one logically ordered PDF report. Summary tables appear in the report and are also exported as CSV files to `data/analysis`. Figures are saved as PDF files under `reports/figures/cs2-combined_analysis`; CSV tables are saved under `data/analysis/cs2-combined_analysis`. These paths assume this QMD is stored in `cs2-rop/R`.
+This report combines the dataset overview, round-level descriptive analysis, team/map/side comparisons, round-state analysis, and bomb/economy/player-state analyses into one logically ordered PDF report. Summary tables appear in the report and are also exported as CSV files to `data/analysis`. Figures are saved as PDF files under `reports/figures/cs2-combined_analysis`; CSV tables are saved under `data/analysis/cs2-combined_analysis`. These paths are relative to the repository root; `make eda` renders this report from there.
 
 **How to read the tables:** Some PDF tables are shortened to fit the page. Their complete versions are saved as CSV files in `data/analysis/cs2-combined_analysis/`. Where a table is abbreviated, a note above it identifies the matching CSV filename. Figures are saved as PDFs in `reports/figures/cs2-combined_analysis/`.
 
