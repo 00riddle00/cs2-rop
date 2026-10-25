@@ -1,0 +1,2 @@
+check,value,interpretation
+enriched_rounds_not_in_rounds,0,All enriched round keys match a round in rounds; no unmatched enriched rounds.

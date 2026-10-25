@@ -1,0 +1,11 @@
+field,rounds_with_multiple_values,interpretation
+winner_side,0,Expected to remain constant within a round; non-zero counts merit investigation
+winner_team,0,Expected to remain constant within a round; non-zero counts merit investigation
+reason_name,0,Expected to remain constant within a round; non-zero counts merit investigation
+is_overtime,0,Expected to remain constant within a round; non-zero counts merit investigation
+is_pistol_round,0,Expected to remain constant within a round; non-zero counts merit investigation
+bomb_planted,626,Time-varying field: FALSE before plant and TRUE after plant is expected
+ct_buy_type,0,Expected to remain constant within a round; non-zero counts merit investigation
+t_buy_type,0,Expected to remain constant within a round; non-zero counts merit investigation
+first_death_side,0,Expected to remain constant within a round; non-zero counts merit investigation
+round_duration_s,0,Expected to remain constant within a round; non-zero counts merit investigation

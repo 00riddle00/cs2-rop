@@ -1,0 +1,9 @@
+dataset,column,missing_n,missing_pct
+round_states_enriched,seconds_since_plant,97855,84.21183982926136
+round_states_enriched,plant_site,97855,84.21183982926136
+round_states_enriched,plant_tick,47215,40.63218044595141
+round_states_enriched,ct_won_previous_round,4116,3.5421381915818277
+round_states_enriched,reason_name,1263,1.0869097512069603
+round_states_enriched,ct_buy_type,1198,1.030972194731543
+round_states_enriched,t_buy_type,1198,1.030972194731543
+round_states_enriched,first_death_side,217,0.18674538084870182

@@ -1,0 +1,8 @@
+map,reason_label,planted_rounds,median_seconds_until_plant,median_seconds_after_plant
+Dust2,bomb_defused,79,89,28.078125
+Dust2,target_bombed,129,79,40.484375
+Dust2,terrorists_win,124,82,20.0859375
+Mirage,bomb_defused,75,79,28.828125
+Mirage,target_bombed,105,80,40.484375
+Mirage,terrorists_win,107,76,17.640625
+Mirage,NA,7,91,33.859375

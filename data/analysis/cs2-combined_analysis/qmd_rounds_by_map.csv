@@ -1,0 +1,3 @@
+map,matches,rounds,pistol_rounds,overtime_rounds,planted_rounds,planted_pct,mean_duration_s,median_duration_s,ct_round_wins,t_round_wins
+Dust2,30,628,60,14,349,55.57324840764332,94.20429438694268,96.734375,312,316
+Mirage,30,629,60,16,312,49.60254372019078,89.74510631955485,91.296875,351,278

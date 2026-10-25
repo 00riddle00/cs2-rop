@@ -1,0 +1,60 @@
+column,dataset,data_type
+bomb_planted,Both rounds and round_states,logical
+ct_score_before,Both rounds and round_states,integer
+ct_team,Both rounds and round_states,character
+ct_win,Both rounds and round_states,logical
+map,Both rounds and round_states,character
+match_id,Both rounds and round_states,character
+part,Both rounds and round_states,integer
+plant_site,Both rounds and round_states,character
+round_num,Both rounds and round_states,integer
+t_score_before,Both rounds and round_states,integer
+t_team,Both rounds and round_states,character
+winner_side,Both rounds and round_states,character
+bomb_carried,round_states,logical
+ct_alive,round_states,integer
+ct_armor,round_states,integer
+ct_awps,round_states,integer
+ct_defusers,round_states,integer
+ct_equipment,round_states,integer
+ct_flashes,round_states,integer
+ct_he,round_states,integer
+ct_helmets,round_states,integer
+ct_hp,round_states,integer
+ct_molotovs,round_states,integer
+ct_money,round_states,integer
+ct_rifles,round_states,integer
+ct_smgs,round_states,integer
+ct_smokes,round_states,integer
+seconds,round_states,numeric
+seconds_since_plant,round_states,numeric
+t_alive,round_states,integer
+t_armor,round_states,integer
+t_awps,round_states,integer
+t_defusers,round_states,integer
+t_equipment,round_states,integer
+t_flashes,round_states,integer
+t_he,round_states,integer
+t_helmets,round_states,integer
+t_hp,round_states,integer
+t_molotovs,round_states,integer
+t_money,round_states,integer
+t_rifles,round_states,integer
+t_smgs,round_states,integer
+t_smokes,round_states,integer
+tick,round_states,integer
+time_remaining_s,round_states,numeric
+ct_buy_type,rounds,character
+ct_equipment_freeze_end,rounds,integer
+ct_won_previous_round,rounds,logical
+end_tick,rounds,integer
+first_death_side,rounds,character
+freeze_end_tick,rounds,integer
+is_overtime,rounds,logical
+is_pistol_round,rounds,logical
+plant_tick,rounds,integer
+reason_name,rounds,character
+round_duration_s,rounds,numeric
+t_buy_type,rounds,character
+t_equipment_freeze_end,rounds,integer
+winner_team,rounds,character

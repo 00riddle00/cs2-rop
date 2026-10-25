@@ -1,0 +1,10 @@
+dataset,column,missing_n,missing_pct
+rounds,plant_site,596,47.41447891805887
+rounds,plant_tick,596,47.41447891805887
+rounds,ct_won_previous_round,60,4.77326968973747
+rounds,reason_name,12,0.9546539379474941
+rounds,ct_buy_type,11,0.8750994431185362
+rounds,t_buy_type,11,0.8750994431185362
+rounds,first_death_side,2,0.15910898965791567
+round_states,seconds_since_plant,97855,84.21183982926136
+round_states,plant_site,97855,84.21183982926136

@@ -1,0 +1,10 @@
+ct_buy_type,t_buy_type,ct_win_rate,n
+pistol,pistol,0.525,120
+eco,force,0,5
+eco,full,0.075,40
+force,eco,1,12
+force,force,0.21621621621621623,37
+force,full,0.20666666666666667,150
+full,eco,0.9230769230769231,78
+full,force,0.7225130890052356,191
+full,full,0.5367047308319739,613
