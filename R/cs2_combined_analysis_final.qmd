@@ -3,6 +3,7 @@ title: "CS2 Dataset Overview and Exploratory Analysis"
 subtitle: "Round-level, round-state, and enriched data"
 format:
   pdf:
+    pdf-engine: pdflatex
     toc: true
     toc-depth: 3
     number-sections: true
