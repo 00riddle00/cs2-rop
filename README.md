@@ -256,6 +256,7 @@ cs2-rop/
 │   ├── raw_checksums.json       # Drive IDs and SHA-256 for all 61 recordings
 │   ├── processed/               # 60 committed match folders and processing summary
 │   ├── analysis/                # Committed round and per-second tables for R
+│   │   └── cs2_combined_analysis/  # Tables from the combined EDA report
 │   ├── processed_csv_sample/    # Committed full CSV export of one baseline match
 │   └── csv_export/              # Local CSV exports, ignored by Git
 ├── scripts/                     # Download, extract, recover, analysis tables,
@@ -264,6 +265,7 @@ cs2-rop/
 ├── notebooks/                   # Match inspection notebook
 ├── reports/                     # LaTeX report, bibliography and style file
 │   ├── figures/                 # Figures from the R scripts, used by the report
+│   │   └── cs2_combined_analysis/  # Figures from the combined EDA report
 │   └── eda/                     # Rendered Quarto EDA report (PDF)
 ├── docs/                        # Resources and literature
 ├── DESCRIPTION_PARAMETERS.md    # Research background and parameters
@@ -480,11 +482,11 @@ Add `--no-csv` to write Parquet only.
 
 `make eda` adds further tables to `data/analysis/`, derived from these two:
 
-| Table                       | Written by                                   | Contents                                                     |
-| --------------------------- | -------------------------------------------- | ------------------------------------------------------------ |
-| `round_states_enriched`     | `R/round_states_qmd_1.qmd`                   | `round_states` with round-level columns from `rounds` joined |
-| `winstreaks`                | `R/winstreaks.R`                             | Per-round win streaks of each match's two teams              |
-| `descriptive_*` (five CSVs) | `R/pro_team_map_side_descriptive_analysis.R` | Summaries by map, side, team and win condition               |
+| Table                                    | Written by                          | Contents                                                     |
+| ---------------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
+| `round_states_enriched`                  | `R/round_states_qmd_1.qmd`          | `round_states` with round-level columns from `rounds` joined |
+| `winstreaks`                             | `R/winstreaks.R`                    | Per-round win streaks of each match's two teams              |
+| `cs2_combined_analysis/qmd_*` (24 CSVs)  | `R/cs2_combined_analysis_final.qmd` | Summary tables of the combined EDA report                    |
 
 `make analysis` does not rebuild them. After rebuilding `rounds` and `round_states`,
 run `make eda` as well, so the derived tables match them. `round_states_enriched`
@@ -540,11 +542,13 @@ On Windows and macOS, CRAN provides prebuilt packages. If `arrow` causes trouble
 - **Still failing:** `renv::restore(exclude = "arrow")` installs everything else. The R
   scripts then read the tables with nanoparquet or the CSV copies instead.
 
-`make eda` also renders a [Quarto](https://quarto.org/) document to PDF, which needs
-the Quarto command-line tool (included in RStudio; otherwise from
-[quarto.org](https://quarto.org/docs/get-started/), or `quarto-cli-bin` from the AUR on
-Arch Linux) and a LaTeX distribution with pdflatex. Without one,
-`quarto install tinytex` installs a small LaTeX distribution.
+`make eda` also renders two [Quarto](https://quarto.org/) documents to PDF. This needs
+the Quarto command-line tool, not an R package (it is included in RStudio; otherwise
+install it from [quarto.org](https://quarto.org/docs/get-started/), or `quarto-cli-bin`
+from the AUR on Arch Linux), and a LaTeX distribution with pdflatex. Without one,
+`quarto install tinytex` installs a small LaTeX distribution. Both documents set
+`pdf-engine: pdflatex` in their YAML header instead of Quarto's default LuaLaTeX,
+which needs fonts that not every TeX installation includes.
 
 To add a package, install it from an R session started in the repository root
 (`install.packages("name")`), use it in a script, then record it and commit the
@@ -578,26 +582,28 @@ Without `arrow`, read the CSV copies with `readr::read_csv()`.
 `make eda` produces the initial data analysis for the report. Run it from the
 repository root; it runs, in order:
 
-1. [`R/eda_figures.R`](./R/eda_figures.R): prints a dataset summary per map and writes
+1. [`R/winstreaks.R`](./R/winstreaks.R): writes `data/analysis/winstreaks.csv`.
+2. [`R/eda_figures.R`](./R/eda_figures.R): prints a dataset summary per map and writes
    four figures to `reports/figures/fig_*.pdf` (win rate by side and map, CT win rate by
    players alive, CT win rate by buy types, and T win rate with and without a bomb
    plant).
-2. [`R/winstreaks.R`](./R/winstreaks.R): writes `data/analysis/winstreaks.csv`.
-3. [`R/pro_team_map_side_descriptive_analysis.R`](./R/pro_team_map_side_descriptive_analysis.R):
-   writes the five `data/analysis/descriptive_*.csv` summaries and the figures
-   `reports/figures/01_*.pdf` to `05_*.pdf`.
-4. [`R/round_states_qmd_1.qmd`](./R/round_states_qmd_1.qmd), rendered with Quarto
+3. [`R/round_states_qmd_1.qmd`](./R/round_states_qmd_1.qmd), rendered with Quarto
    from the repository root: writes `data/analysis/round_states_enriched.{csv,parquet}`
    and the report `reports/eda/round_states_qmd_1.pdf`.
+4. [`R/cs2_combined_analysis_final.qmd`](./R/cs2_combined_analysis_final.qmd), rendered
+   the same way after step 3, since it reads the enriched table: writes 24 summary
+   tables to `data/analysis/cs2_combined_analysis/`, 14 figures to
+   `reports/figures/cs2_combined_analysis/`, and the report
+   `reports/eda/cs2_combined_analysis_final.pdf`.
 
 ```text
 make eda
 ```
 
-Without Make, run the three scripts with `Rscript <script>` from the repository root,
-then `quarto render R/round_states_qmd_1.qmd --execute-dir .` and move the PDF to
-`reports/eda/`. After changing `data/processed/`, rebuild the analysis tables first
-with `make analysis`.
+Without Make, run the two scripts with `Rscript <script>` from the repository root,
+then render both documents in order with `quarto render <file> --execute-dir .` and
+move their PDFs from `R/` to `reports/eda/`. After changing `data/processed/`, rebuild
+the analysis tables first with `make analysis`.
 
 Each run rewrites the figure PDFs even when nothing changed, because R stores the
 creation time in them. Restore them with `git restore reports/` unless a figure
