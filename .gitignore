@@ -135,6 +135,7 @@ vignettes/*.pdf
 R/*.html
 R/*.pdf
 R/*.tex
+R/*.rmarkdown
 R/*_files/
 
 # R Environment Variables
