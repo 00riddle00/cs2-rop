@@ -14,9 +14,9 @@ execute:
 
 ## Setup
 
-This report combines the dataset overview, round-level descriptive analysis, team/map/side comparisons, round-state analysis, and bomb/economy/player-state analyses into one logically ordered PDF report. Summary tables appear in the report and are also exported as CSV files to `../data/analysis`. Figures are saved as PDF files under `../report/figures/cs2-combined_analysis`; CSV tables are saved under `../data/analysis/cs2-combined_analysis`. These paths assume this QMD is stored in `cs2-rop/R`.
+This report combines the dataset overview, round-level descriptive analysis, team/map/side comparisons, round-state analysis, and bomb/economy/player-state analyses into one logically ordered PDF report. Summary tables appear in the report and are also exported as CSV files to `data/analysis`. Figures are saved as PDF files under `reports/figures/cs2-combined_analysis`; CSV tables are saved under `data/analysis/cs2-combined_analysis`. These paths assume this QMD is stored in `cs2-rop/R`.
 
-**How to read the tables:** Some PDF tables are shortened to fit the page. Their complete versions are saved as CSV files in `../data/analysis/cs2-combined_analysis/`. Where a table is abbreviated, a note above it identifies the matching CSV filename. Figures are saved as PDFs in `../report/figures/cs2-combined_analysis/`.
+**How to read the tables:** Some PDF tables are shortened to fit the page. Their complete versions are saved as CSV files in `data/analysis/cs2-combined_analysis/`. Where a table is abbreviated, a note above it identifies the matching CSV filename. Figures are saved as PDFs in `reports/figures/cs2-combined_analysis/`.
 
 ```{r}
 library(tidyverse)
@@ -24,11 +24,11 @@ library(arrow)
 library(knitr)
 library(scales)
 
-rounds_file <- "../data/analysis/rounds.parquet"
-states_file <- "../data/analysis/round_states.parquet"
-enriched_file <- "../data/analysis/round_states_enriched.parquet"
-figures_dir <- "../reports/figures/cs2-combined_analysis"
-tables_dir <- "../data/analysis/cs2-combined_analysis"
+rounds_file <- "data/analysis/rounds.parquet"
+states_file <- "data/analysis/round_states.parquet"
+enriched_file <- "data/analysis/round_states_enriched.parquet"
+figures_dir <- "reports/figures/cs2-combined_analysis"
+tables_dir <- "data/analysis/cs2-combined_analysis"
 dir.create(figures_dir, showWarnings = FALSE, recursive = TRUE)
 dir.create(tables_dir, showWarnings = FALSE, recursive = TRUE)
 
@@ -56,9 +56,9 @@ show_table <- function(x, digits = 2) {
 # State where readers can find the complete CSV whenever a PDF table is abbreviated.
 pdf_table_note <- function(csv_name) {
   cat(
-    "**Note:** This PDF table is abbreviated for readability. The complete table is available in `../data/analysis/cs2-combined_analysis/",
+    "**Note:** This PDF table is abbreviated for readability. The complete table is available in `data/analysis/cs2-combined_analysis/",
     csv_name,
-    "`. Other CSV exports are in `../data/analysis/cs2-combined_analysis/`.",
+    "`. Other CSV exports are in `data/analysis/cs2-combined_analysis/`.",
     sep = ""
   )
 }
@@ -246,7 +246,7 @@ rounds_by_map_pdf <- rounds_by_map |>
 
 cat(
   "**Note:** This PDF table is shortened to fit the page. The complete table is saved as ",
-  "`../data/analysis/cs2-combined_analysis/qmd_rounds_by_map.csv`.",
+  "`data/analysis/cs2-combined_analysis/qmd_rounds_by_map.csv`.",
   sep = ""
 )
 show_table(rounds_by_map_pdf)
@@ -881,4 +881,4 @@ save_csv(health_armor_summary, "qmd_health_armor_advantage_summary.csv")
 - Snapshot rows from the same round are not independent observations. Analyses intended to compare round outcomes should use one selected snapshot per round, as in the 30-second and round-end sections.
 - `ct_win` is the eventual round outcome repeated across snapshots; do not treat every snapshot as an independent outcome for predictive modelling. If building predictive models, split training and test data by match or round to avoid leakage.
 - Round-end and bomb timing analyses use periodic snapshots and therefore approximate the exact event times.
-- All figures are saved as PDFs in `../report/figures/cs2-combined_analysis`, and CSV tables are saved in `../data/analysis/cs2-combined_analysis`.
+- All figures are saved as PDFs in `reports/figures/cs2-combined_analysis`, and CSV tables are saved in `data/analysis/cs2-combined_analysis`.
