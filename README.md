@@ -209,6 +209,12 @@ uv run --no-sync python -B scripts/extract_awpy.py --input data/raw/mouz-vs-spir
 
 Add `--force` to either command to regenerate a match whose folder already exists.
 
+After extraction, rebuild the analysis tables:
+
+```text
+uv run --no-sync python -B scripts/build_analysis_tables.py
+```
+
 ### Windows
 
 The Python scripts and the R analysis work on Windows as on Linux and macOS. For the
@@ -240,12 +246,6 @@ inside the Linux file system rather than on a Windows drive, which is much slowe
 The Windows setup has not been tested end to end. Tell the team if something does
 not work.
 
-After extraction, rebuild the analysis tables:
-
-```text
-uv run --no-sync python -B scripts/build_analysis_tables.py
-```
-
 ## Repository layout
 
 ```text
@@ -260,10 +260,11 @@ cs2-rop/
 │   └── csv_export/              # Local CSV exports, ignored by Git
 ├── scripts/                     # Download, extract, recover, analysis tables,
 │                                # verify, export
-├── R/                           # R analysis scripts (EDA figures)
+├── R/                           # R analysis scripts and the Quarto EDA report
 ├── notebooks/                   # Match inspection notebook
 ├── reports/                     # LaTeX report, bibliography and style file
-│   └── figures/                 # Figures from the R scripts, used by the report
+│   ├── figures/                 # Figures from the R scripts, used by the report
+│   └── eda/                     # Rendered Quarto EDA report (PDF)
 ├── docs/                        # Resources and literature
 ├── DESCRIPTION_PARAMETERS.md    # Research background and parameters
 ├── Makefile                     # Setup, extraction, and development commands
@@ -274,6 +275,7 @@ cs2-rop/
 ├── renv.lock                    # Locked R package versions
 ├── renv/                        # renv activation script; library/ ignored by Git
 ├── .Rprofile                    # Activates renv when R starts in the repository
+├── cs2-rop.Rproj                # RStudio project; opens R in the repository root
 └── .renvignore                  # Folders renv does not scan for R dependencies
 ```
 
@@ -381,7 +383,7 @@ notebook outputs before adding them to Git.
 | `data/raw/`                  | Normal `.dem` recordings, from the [shared Google Drive folder](https://drive.google.com/drive/folders/1UgOOA8CaxJsiOhflHg3al98Yb-lQi989) | No, except `.gitkeep` |
 | `data/raw_split/`            | The two split recordings                                                                                                                  | No, except `.gitkeep` |
 | `data/processed/`            | 60 match folders and `processed_summary.csv`                                                                                              | Yes                   |
-| `data/analysis/`             | Round and per-second analysis tables, Parquet and CSV                                                                                     | Yes                   |
+| `data/analysis/`             | Analysis tables for R and the tables derived from them in `make eda`                                                                      | Yes                   |
 | `data/processed_csv_sample/` | Full CSV export of one baseline match                                                                                                     | Yes                   |
 | `data/csv_export/`           | Local CSV inspection exports                                                                                                              | No                    |
 
@@ -476,6 +478,20 @@ uv run --no-sync python -B scripts/build_analysis_tables.py
 
 Add `--no-csv` to write Parquet only.
 
+`make eda` adds further tables to `data/analysis/`, derived from these two:
+
+| Table                       | Written by                                   | Contents                                                     |
+| --------------------------- | -------------------------------------------- | ------------------------------------------------------------ |
+| `round_states_enriched`     | `R/round_states_qmd_1.qmd`                   | `round_states` with round-level columns from `rounds` joined |
+| `winstreaks`                | `R/winstreaks.R`                             | Per-round win streaks of each match's two teams              |
+| `descriptive_*` (five CSVs) | `R/pro_team_map_side_descriptive_analysis.R` | Summaries by map, side, team and win condition               |
+
+`make analysis` does not rebuild them. After rebuilding `rounds` and `round_states`,
+run `make eda` as well, so the derived tables match them. `round_states_enriched`
+carries the round-level columns listed above as known only later in the round, and
+the win streaks include the outcome of the round itself, so neither can be used as
+prediction features as they are.
+
 ### R setup with renv
 
 The analysis uses **R 4.6.1**. R packages are managed per project with
@@ -513,8 +529,22 @@ sudo apt install libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev 
   libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff-dev libjpeg-dev
 ```
 
-Compiling `arrow` from source takes a while. On Windows and macOS, CRAN provides
-prebuilt packages.
+On Windows and macOS, CRAN provides prebuilt packages. If `arrow` causes trouble:
+
+- **Linux:** set `NOT_CRAN=true` before installing it, so its C++ library is downloaded
+  prebuilt instead of compiled, for example
+  `Sys.setenv(NOT_CRAN = "true"); renv::restore()` in R.
+- **Builds failing on R 4.6:** packages reused from an older R installation (for
+  example from `~/.local/share/R/library`) can fail to compile or load on R 4.6. Run
+  `renv::update()` in the project to replace them with current versions.
+- **Still failing:** `renv::restore(exclude = "arrow")` installs everything else. The R
+  scripts then read the tables with nanoparquet or the CSV copies instead.
+
+`make eda` also renders a [Quarto](https://quarto.org/) document to PDF, which needs
+the Quarto command-line tool (included in RStudio; otherwise from
+[quarto.org](https://quarto.org/docs/get-started/), or `quarto-cli-bin` from the AUR on
+Arch Linux) and a LaTeX distribution with pdflatex. Without one,
+`quarto install tinytex` installs a small LaTeX distribution.
 
 To add a package, install it from an R session started in the repository root
 (`install.packages("name")`), use it in a script, then record it and commit the
@@ -545,18 +575,36 @@ states <- arrow::read_parquet("data/analysis/round_states.parquet")
 
 Without `arrow`, read the CSV copies with `readr::read_csv()`.
 
-[`R/eda_figures.R`](./R/eda_figures.R) produces the initial data analysis for the
-report: it prints a dataset summary per map and writes four figures as PDF to
-`reports/figures/` (win rate by side and map, CT win rate by players alive, CT win rate
-by buy types, and T win rate with and without a bomb plant). Run it from the
-repository root:
+`make eda` produces the initial data analysis for the report. Run it from the
+repository root; it runs, in order:
+
+1. [`R/eda_figures.R`](./R/eda_figures.R): prints a dataset summary per map and writes
+   four figures to `reports/figures/fig_*.pdf` (win rate by side and map, CT win rate by
+   players alive, CT win rate by buy types, and T win rate with and without a bomb
+   plant).
+2. [`R/winstreaks.R`](./R/winstreaks.R): writes `data/analysis/winstreaks.csv`.
+3. [`R/pro_team_map_side_descriptive_analysis.R`](./R/pro_team_map_side_descriptive_analysis.R):
+   writes the five `data/analysis/descriptive_*.csv` summaries and the figures
+   `reports/figures/01_*.pdf` to `05_*.pdf`.
+4. [`R/round_states_qmd_1.qmd`](./R/round_states_qmd_1.qmd), rendered with Quarto
+   from the repository root: writes `data/analysis/round_states_enriched.{csv,parquet}`
+   and the report `reports/eda/round_states_qmd_1.pdf`.
 
 ```text
 make eda
 ```
 
-or `Rscript R/eda_figures.R` without Make. After changing `data/processed/`, rebuild
-the analysis tables first with `make analysis`.
+Without Make, run the three scripts with `Rscript <script>` from the repository root,
+then `quarto render R/round_states_qmd_1.qmd --execute-dir .` and move the PDF to
+`reports/eda/`. After changing `data/processed/`, rebuild the analysis tables first
+with `make analysis`.
+
+Each run rewrites the figure PDFs even when nothing changed, because R stores the
+creation time in them. Restore them with `git restore reports/` unless a figure
+actually changed.
+
+The four radar heatmaps in `reports/figures/` (`*_SimpleRadar.png`) are made by hand,
+not by `make eda`; their backgrounds come from SimpleRadar.
 
 **Preserve identifier precision:** `steamid` is a `uint64` identifier, not a numeric
 measurement. Converting it to an R double loses precision for these large IDs.
@@ -587,7 +635,8 @@ Use `make help` for the full target list:
 - `make parse-all`: Extract missing normal matches, then the split match if missing.
 - `make parse-dust2` / `make parse-mirage`: Extract one baseline match.
 - `make analysis`: Rebuild the two analysis tables in `data/analysis/`.
-- `make eda`: Run the R script that writes the EDA figures to `reports/figures/`.
+- `make eda`: Run the R EDA scripts and render the Quarto report; see
+  [Analysis in R](#analysis-in-r).
 - `make pylint`: Run Ruff and Black, including automatic fixes and formatting.
 - `make shlint`: Run ShellCheck and shfmt; these tools are installed separately.
 - `make lint`: Run Python and shell linting/formatting.
