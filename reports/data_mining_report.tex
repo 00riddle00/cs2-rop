@@ -59,7 +59,7 @@
 \maketitle
 
 \begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
-The Counter Strike 2 Round Outcome Prediction (CS2-ROP) project aims to predict the outcome of rounds played in the video game Counter Strike 2 using in-game metrics, with a primary focus on player location data in the game map. Machine learning models are used that take the selected in-game metrics at snapshot time frames during a round as input, and produce a quasi real time prediction of which team is more probable to win the round.
+The Counter Strike 2 Round Outcome Prediction (CS2-ROP) project aims to predict the outcome of rounds played in the video game Counter Strike 2 using in-game metrics, with a primary focus on player location data in the game map. Machine learning models are used that take the selected in-game metrics at snapshot time frames during a round as input, and produce a quasi-real time prediction of which team is more probable to win the round.
 
 \end{abstract}
 
@@ -73,31 +73,31 @@ The Counter Strike 2 Round Outcome Prediction (CS2-ROP) project aims to predict 
 
 Our data mining research investigates the game of Counter-Strike 2 (CS2) by trying to predict the outcome of the round based on a player's position on the map and other factors like side, health, weapons, team economy, etc. In a CS2 game, a single map is played until one of the teams wins 13 rounds out of 24. In the case of a tie, 12-12, teams play 6 tie-breaker rounds until one team wins 4 rounds. There are two sides in each match, Counter-Terrorists (CT) and Terrorists (T). Each map is played differently due to different geometry that produces unique game situations, timings, and optimal positions for each side. Due to the unique nature of each map, in order to predict a round-win outcome, all factors must be taken into consideration on a map-to-map basis.
 
-The core premise of why researching CS2 is particularly interesting is because the players in the game operate on limited knowledge under certain fog-of-war and intrinsically perform probabilistic estimations about the intentions and the positions of the enemy side. While dueling is a completely mechanical skill, and may take a second to end, estimations about enemy positions and optimal ways to counter them are purely informational and take up the majority of the game. So probabilistic models might shine light not only about some extrinsic qualities of the game, like what factors determine win outcomes the most, but also give insights into how the game is played in itself. Other games also have similar qualities like fog-of-war or prediction of the opposing side's intentions, however, CS2 is unique in the fact that due to it's digital nature, every event and facet of the game is stored as information and can be extracted as data and reproduced near-verbatim, making it a desirable medium for data mining.
+The core premise of why researching CS2 is particularly interesting is because the players in the game operate on limited knowledge under certain fog-of-war and intrinsically perform probabilistic estimations about the intentions and the positions of the enemy side. While dueling is a completely mechanical skill, and may take a second to end, estimations about enemy positions and optimal ways to counter them are purely informational and take up the majority of the game. So probabilistic models might shine light not only about some extrinsic qualities of the game, like what factors determine win outcomes the most, but also give insights into how the game is played in itself. Other games also have similar qualities like fog-of-war or prediction of the opposing side's intentions, however, CS2 is unique in the fact that due to its digital nature, every event and facet of the game is stored as information and can be extracted as data and reproduced near-verbatim, making it a desirable medium for data mining.
 
-Round win conditions for each side are different. For Ts it is either:
+Round win conditions for each side are different. For Ts it is either: 
 
 \begin{enumerate}
     \item Planting the bomb at Bombsites and successfully running out the timer (40 s) of the bomb
-    \item Eliminating all CTs.
+    \item Eliminating all CTs. 
 \end{enumerate}
 
-For CTs it's:
+For CTs it's: 
 
 \begin{enumerate}
-\item Defusing the planted bomb,
-\item Eliminating all Ts,
-\item Running out the round timer (115 s), as long as a bomb is not planted.
+\item Defusing the planted bomb, 
+\item Eliminating all Ts, 
+\item Running out the round timer (115 s), as long as a bomb is not planted. 
 \end{enumerate}
 Due to this dynamic, Ts are considered the attacking side, and CTs the defending side. Round win-rates are fairly even for both sides on most maps played at the professional level, though with a slight skew towards the CT side. Still, some maps retain equal side win-distribution, such as the quintessential "well balanced" map Dust2.
 
-The reason why the above mentioned parameters were chosen \textbf{[What parameters?]}is because all of them are expected produce a greater consistency in data, while also removing uninformative randomness. The null hypothesis of this research is that round outcomes are random and don't depend on player positions and other in-game factors, therefore it is required to remove out-of-game random factors as much as possible in order not to conflict the two. As with all games, there is an element of randomness, which must be controlled for in order for a game to be considered competitive (i.e. skill-based) and predictable. It is a somewhat desirable quality for a game or a sport to be predictable "on-paper", where quantitative features inform the outcome of the game, and statistics are often used for this reason.
+The reason why the aforementioned parameters were chosen is because all of them are expected to produce a greater consistency in data, while also removing uninformative randomness. The null hypothesis of this research is that round outcomes are random and don't depend on player positions and other in-game factors, therefore it is required to remove out-of-game random factors as much as possible in order not to conflict the two. As with all games, there is an element of randomness, which must be controlled for in order for a game to be considered competitive (i.e. skill-based) and predictable. It is a somewhat desirable quality for a game or a sport to be predictable "on-paper", where quantitative features inform the outcome of the game, and statistics are often used for this reason.
 
-In CS2, professional player performance is generally more consistent than that of casual players, because of the regularity of the team roster, effective team communication, knowledge of the optimal strategy in different scenarios and high individual skill. The teams also have greater parity with each other and consistently outperform teams outside of top 10. The teams, no matter the period, are a benchmark of 'how the game should be played' at the highest skill-level.
+In CS2, professional player performance is generally more consistent than that of casual players, because of the regularity of the team roster, effective team communication, knowledge of the optimal strategy in different scenarios and high individual skill. The teams also have greater parity with each other and consistently outperform teams outside of top 10. The teams, no matter the period, are a benchmark of 'how the game should be played' at the highest skill level. 
 
 The same can be said for matches played in LAN tournaments as opposed to On-Line games, where match outcomes are more predictable due to better connectivity quality, uniformity of environment (that is, all players play in one area, rather than in separate locations) and other factors which in on-line games are harder to define quantitatively.
 
-For our research, we chose to investigate professional games of the top 10 teams playing each other based on hltv.org CS Rating 3.0 (teams) which is, if not one of the most robust rating systems for CS2 player performance ranking, at least the most widely accepted and used. The hltv.org database evaluates whether the teams at the time of their match were in the top 10 and filters out only these results. Of all types of matches, only LAN (Local Area Network) tournament matches were selected. The time frame chosen spanned from 2026-08-01 to 2026-10-11, totaling 72 days, during which 60 overall matches were played, of which the majority of them were BO3 (Best of 3), with BO5 occuring rarely, and BO1 only once. During these matches, 150 games overall were played. We've used convenient in-built data filtering options in hltv.org/stats for queries and slicing.
+For our research, we chose to investigate professional games of the top 10 teams playing each other based on hltv.org CS Rating 3.0 (teams) which is, if not one of the most robust rating systems for CS2 player performance ranking, at least the most widely accepted and used. The hltv.org database evaluates whether the teams at the time of their match were in the top 10 and filters out only these results. Of all types of matches, only LAN (Local Area Network) tournament matches were selected. The time frame chosen spanned from 2026-08-01 to 2026-10-11, totaling 72 days, during which 60 matches were played. These matches consisted of games played in a "best-of" format, and for each game a different map is picked. The majority of matches were BO3 (Best of 3), with BO5 occurring rarely, and BO1 only once. 150 games overall were played. We've used convenient in-built data filtering options in hltv.org/stats for queries and slicing. We chose the two most played maps, Dust2 and Mirage. Of the 150 games played in the 60 matches of the period, 30 were on Dust2 and 30 on Mirage, together making up 40\% of all games. At least one of the two maps was played in 47 of the 60 matches (78.3\%).
 
 We chose two of the most played maps, Dust2 and Mirage, which, out of 7 maps in the official map pool, were played by the teams 30 times each during the selected period, which is 40\% of the time. Out of all 60 matches, one of these two maps were played 33 times, both of these maps 14, and 13 matches where neither of them were played. Altogether, out of 60 matches, 47 times at least one of the maps were played, which is 78.33\%.
 
@@ -107,13 +107,13 @@ The short time frame of 72 days was chosen due to the ever-changing nature of on
 
 In general, many of the decisions were also driven by the fact that our approach will require machine learning model training. In an initial data test, a single match played on one map produced 1,600,000 rows of unfiltered tabular info. It is assumed that the amount of possible interactions between variables will be extremely high, thus narrowing will make it more manageable for the intended scope of our research.
 
-One of the key challenges in initializing a relevant database is parsing the Demo files that store the entire information about a game tick-by-tick. Tick rate is the rate of recorded instances per second. Actual matches have 128 tickrate, CS2 Demo files have 64 tickrate to save space. While this may incur some loss of information, 64 instances per second is considered enough to account for all of the important events, except micromovements or minuscule information about crosshair placement or accurate hitbox hit instances.
+One of the key challenges in initializing a relevant database is parsing the Demo files that store the entire information about a game tick-by-tick. Tick rate is the rate of recorded instances per second. Actual matches have 128 tick rate, CS2 Demo files have 64 tick rate to save space. While this may incur some loss of information, 64 instances per second is considered enough to account for all of the important events, except micromovements or minuscule information about crosshair placement or accurate hitbox hit instances.
 
 \section{Literature Review}
 
-Machine learning methods have been applied for sports outcome prediction, for example football (\cite{moya-2025football}, \cite{berrar-2024football}, \cite{mills-2024football}), basketball (\cite{chen2021nba}, \cite{ouyang2024nba}, \cite{alves-2025nba}), and esports (\cite{stanlly2022dota}, \cite{makarov-2017dota}, \cite{shen2022lol}). However, the niche of research concerning CS2 (and by extension Counter Strike: Global Offensive, the game version before CS2) is very narrow, especially with regards to match or round outcome prediction. For that reason, this literature review mainly seeks to highlight the studies which have the most relevance to our established goal, that is round outcome prediction using in-game metrics, as well as reviewing publicly available tools that have sought to achieve similar goals.
+Machine learning methods have been applied for sports outcome prediction, for example football (\cite{moya-2025football}, \cite{berrar-2024football}, \cite{mills-2024football}), basketball (\cite{chen2021nba}, \cite{ouyang2024nba}, \cite{alves-2025nba}), and esports (\cite{stanlly2022dota}, \cite{makarov-2017dota}, \cite{shen2022lol}). However, the niche of research concerning CS2 (and by extension Counter Strike: Global Offensive, the game version before CS2) is very narrow, especially with regards to match or round outcome prediction. For that reason, this literature review mainly seeks to highlight the studies which have the most relevance to our established goal, that is round outcome prediction using in-game metrics, as well as reviewing publicly available tools that have sought to achieve similar goals. 
 
-Of primary interest was the work done by \cite{xia2025_cs} To the best of our knowledge, it is the only study focused on round win and match win prediction using spatial positioning as one of the key predictors. XGBoost, Logistic regression and Decision tree ML methods were implemented. While the data was limited to CS:GO professional matches in 2022 and only the Dust2 map, the results showed that both XGBoost and Logistic regression could be used to effectively predict match wins with approx. 86\% accuracy, and player death in a given time window with approx. 66\% accuracy, with key predictors being economic factors, spatial positioning and team coordination.
+Of primary interest was the work done by \cite{xia2025_cs} To the best of our knowledge, it is the only study focused on round win and match win prediction using spatial positioning as one of the key predictors. XGBoost, Logistic regression and Decision tree ML methods were implemented. While the data was limited to CS:GO professional matches in 2022 and only the Dust2 map, the results showed that both XGBoost and Logistic regression could be used to effectively predict match wins with approx. 86\% accuracy, and player death in a given time window with approx. 66\% accuracy, with key predictors being economic factors, spatial positioning and team coordination. 
 
 Less relevant, but still noteworthy are two studies by Jing et al. In \cite{jing2025_cs}, the authors used machine learning methods (primarily XGBoost), along with SHAP for intrepretation, to distinguish key performance metrics in CSGO and CS2 professional players that correlate with a higher HLTV player rating. While this study is very valuable in determining performance characteristics that could possibly be used as features for predictions, it is also limited by the fact that the features used were highly correlated, and that the response variable is a HLTV rating which has been turned into a binary value representing "good" and "okay" players. In \cite{jing2026network_cs}, the authors continued their work in identifying key performance metrics by conducting network analysis of how different metrics associate with each other. While the strongest associations found were rather obvious, e.g. the metric "Kills per round" being highly associated with "Rounds with kills", an interesting finding was that the dominant network nodes shifted from an aggression focused play-style in CS:GO, to a more balanced play-style prioritizing a mixture of defense and offense in CS2. This could mean that features selected for CS:GO match or round prediction may not be suitable for CS2, and vice versa.
 
@@ -125,19 +125,19 @@ Moving on to the publicly available tools. One of the most similar in goals and 
 
 A recently updated project csmapwinpredict (\cite{csmapwinpredict}) has a very similar scope of analyzing Demo file for predicting the current round winner of CS2 matches in real time (updated approximately once per second). One of its key advantages is the live demo replay function, where one can see win-rate probability as the replay goes, a potentially useful feature for testing. While not stated explicitly, a look at the round win probability evaluation code shows the use of sklearn's DummyClassifier, ColumnTransformer, SimpleImputer and LogisticRegression modules, indicating the project to be based on machine and deep learning methods. However, there are limitations, as stated by the project authors: "Predictions and map settings currently focus on Mirage. Results on other maps have not been verified. Large Demos may require substantial processing time and memory." The fact that the tool is based on Mirage serves our research, though only partially and some reservations have to made. Additionally, the slow processing time of large demos could become a liability if scaling a solution would ever be considered, and our project prefers to have that option in case we need a greater dataset.
 
-Another CS2 prediction tool is CS2\_RoundPrediction (\cite{cs2roundprediction}) which "Predicts which team (CT or T) will win a given round in CS2 using deep learning on mid-round game state snapshots." The MLP Tuned (Optuna, 50 trials) model showed the best results, MLP Standard (86 features) coming second and KNN (k=3) coming in third. Other methods used were Logistic regression, Random Forest, LSTM and XGBoost. Top predictive features were 1. man\_advantage (player count differential, 29.8\%), 2. equipment\_advantage (8.4\%), 3. health\_advantage (4.7\%), 4. and t\_allive, kills\_this\_round\_t, armor/helmet\_counts (presumably < 4.7 \%). Their analysis involved 530 matches, 9,746 rounds and 161,271 snapshots, with 86 features extracted from mid-round game state, and a class balance of 48.9\% CT wins / 51.1\% T wins.
+Another CS2 prediction tool is CS2\_RoundPrediction (\cite{cs2roundprediction}) which "Predicts which team (CT or T) will win a given round in CS2 using deep learning on mid-round game state snapshots." The MLP Tuned (Optuna, 50 trials) model showed the best results, MLP Standard (86 features) coming second and KNN (k=3) coming in third. Other methods used were Logistic regression, Random Forest, LSTM and XGBoost. Top predictive features were 1. man\_advantage (player count differential, 29.8\%), 2. equipment\_advantage (8.4\%), 3. health\_advantage (4.7\%), 4. and t\_alive, kills\_this\_round\_t, armor/helmet\_counts (presumably < 4.7 \%). Their analysis involved 530 matches, 9,746 rounds and 161,271 snapshots, with 86 features extracted from mid-round game state, and a class balance of 48.9\% CT wins / 51.1\% T wins.
 
 Another lean but effective round outcome predictor project is CSGOPredictor (\cite{csgopredictor}). This tool used Logistic Regression with a robust, verified and prepared dataset of 700 demos for model training to predict CS:GO round outcomes. The total number of snapshots in the dataset were 122411, with the snapshots being i.i.d, treated as individual data points. The project also provides data analysis documentation, which other sources lack. It is one of the more used datasets for many similar projects and comparisons of results and methods can readily be made between them.
 
 Two deep learning based tools for CS2 are worth mentioning here, despite deep learning falling outside of the scope of our work. cs2-evalbar (\cite{cs2evalbar}) is a neural network based tool, using a "roughly 70K-parameter GraphTemporalTransformer over a 20-second, 4 Hz state window." It claims meaningful results by game phase (<15s, 30-60s >=90s) with accuracies of 0.60, 0.68, 0.88 respectively. Another interesting finding is that the project claims "extra capacity overfits near 95 groups, but widening can help once the dataset reaches 142 groups." One big caveat is that the application was trained on Inferno, a map which we will not use in our work, so the results could be difficult to compare.
 
-cs-net (\cite{csnet}) is a transformer-based path prediction \& game-state forecasting tool for Counter-Strike 2 trained with Pro architecture (d\_model=768, 138.7M params). While the intended use is for player movement, per-player win rate, survival probability and future kill probablity prediction, it is still an interesting example for comparison between DL and ML solutions. However, the detailed documentation is in Chinese, so correct reproducibility may be unreliable because of translation.
+cs-net (\cite{csnet}) is a transformer-based path prediction \& game-state forecasting tool for Counter-Strike 2 trained with Pro architecture (d\_model=768, 138.7M params). While the intended use is for player movement, per-player win rate, survival probability and future kill probability prediction, it is still an interesting example for comparison between DL and ML solutions. However, the detailed documentation is in Chinese, so correct reproducibility may be unreliable because of translation. 
 
 \section{Data}
 
 \subsection{Data set}
 
-From the hltv.org database (hltv), the top 10 teams by hltv ranking were chosen and 60 matches were downloaded as demo files for the maps Dust2 and Mirage in which these teams were playing. Awpy was used to parse the data in the demo files. A total of 1257 rounds were parsed, generating various categories of parsed data, such as economy, kill and death, round state data, etc.
+From the hltv.org database (hltv), the top 10 teams by hltv ranking were chosen and 60 matches were downloaded as demo files for the maps Dust2 and Mirage in which these teams were playing. Awpy was used to parse the data in the demo files. A total of 1257 rounds were parsed, generating various categories of parsed data, such as economy, kill and death, round state data, etc. 
 
 The names of the top 10 teams selected were: 9z, Aurora, FURIA, FUT, FaZe, Falcons, G2, Legacy, MOUZ, NAVI (also referred to as Natus Vincere), Spirit, Vitality
 
@@ -161,9 +161,9 @@ round\_states\_enriched &	116201 &	59 &	250917 &	60 &	1257 \\
 
 \subsection{Exploratory data analysis}
 
-Using the data in the enriched round states dataset, exploratory data analysis was performed. First we present some information about the dataset itself.
+Using the data in the enriched round states dataset, exploratory data analysis was performed. First we present some information about the dataset itself. 
 
-Table 2 lists the missing values in the enriched round dataset. seconds\_since\_plant, plant\_site and plant\_tick have many missing values because they are computed only if a bomb plant occurs during a round. ct\_won\_previous\_round can only be computed from the second round onwards, thus values are missing for the first round. The remaining missing values belong to the match Falcons vs Natus Vincere on the Mirage map, due to an error during demo file parsing. Data imputation was not attempted. If imputation for this match will prove to be impossible, then it will be removed from the dataset.
+Table 2 lists the missing values in the enriched round dataset. seconds\_since\_plant, plant\_site and plant\_tick have many missing values because they are computed only if a bomb plant occurs during a round. ct\_won\_previous\_round can only be computed from the second round onwards, thus values are missing for the first round. The remaining missing values belong to the match Falcons vs Natus Vincere on the Mirage map, due to an error during demo file parsing. Data imputation was not attempted. If imputing the missing data for this match will prove to be impossible, then it will be removed from the dataset.
 
 \begin{table}[H]
     \centering
@@ -199,23 +199,23 @@ Mirage&	30&	629\\\hline
 Next, we provide some data related to in-game metrics. Figure 1 provides information about round duration by map. The distribution looks approximately normal, with both the Dust2 and Mirage maximum appearing at about 115 seconds, which is how much time a single round can take without a bomb plant occuring.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\linewidth]{figures/cs2_combined_analysis/01_round_duration_distribution.pdf}
+    \includegraphics[width=1.0\linewidth]{Figs/01_round_duration_distribution.pdf}
     \caption{Round duration distribution by map type}
     \label{fig:placeholder}
 \end{figure}
 
 \newpage
-Figure 2 provides information about round-win share by map and side. Dust2 seems to have a very balanced win share for both sides, while Mirage favors the CT side.
+Figure 2 provides information about round-win share by map and side. Dust2 seems to have a very balanced win share for both sides, while Mirage favors the CT side. 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\linewidth]{figures/cs2_combined_analysis/02_side_win_share_by_map.pdf}
+    \includegraphics[width=1.0\linewidth]{Figs/02_side_win_share_by_map.pdf}
     \caption{Side win share by map}
     \label{fig:placeholder}
 \end{figure}
 
 \newpage
-Table 4 and Figure 3 shows the win types by map. The missing values the Mirage map are from the previously mentioned match with error in data parsing. ct\_win and terrorist\_win types are achieved by one side killing all players from the other side without a bomb being planted. target\_bombed is a T side victory by bomb plant with the CT side not being able to defuse it in time, and bomb\_defused is the CT victory type where they manage to defuse the bomb in time. target\_saved is a CT side win by running out the timer, that is the T side is unable to plant the bomb in time.
+Table 4 and Figure 3 shows the win types by map. The missing values the Mirage map are from the previously mentioned match with error in data parsing. ct\_win and terrorist\_win types are achieved by one side killing all players from the other side without a bomb being planted. target\_bombed is a T side victory by bomb plant with the CT side not being able to defuse it in time, and bomb\_defused is the CT victory type where they manage to defuse the bomb in time. target\_saved is a CT side win by running out the timer, that is the T side is unable to plant the bomb in time. 
 
 \begin{table}[H]
     \centering
@@ -239,7 +239,7 @@ Mirage&	NA&	12&	1.9\\\hline
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\linewidth]{figures/cs2_combined_analysis/03_win_condition_distribution.pdf}
+    \includegraphics[width=0.85\linewidth]{Figs/03_win_condition_distribution.pdf}
     \caption{Win type distribution by map}
     \label{fig:placeholder}
 \end{figure}
@@ -249,27 +249,27 @@ Figure 4 shows the win shares by side and map among different teams. While the s
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{figures/cs2_combined_analysis/04_team_win_rate_by_map_side.pdf}
+    \includegraphics[width=1\linewidth]{Figs/04_team_win_rate_by_map_side.pdf}
     \caption{Share of rounds won by side, map and team}
     \label{fig:placeholder}
 \end{figure}
 
 \newpage
-Figure 5 shows a heatmap of CT win rate based on how many players are alive on each side. Unsurprisingly, CT win rates remain high if the CT side have an advantage in player number, and vice versa. The seemingly peculiar case of CTs losing some matches with 0 T players being alive is due to the CT side killing all T players, but not having enough time to defuse the planted bomb, resulting in a T victory.
+Figure 5 shows a heatmap of CT win rate based on how many players are alive on each side. Unsurprisingly, CT win rates remain high if the CT side has an advantage in player number, and vice versa. The seemingly peculiar case of CTs losing some matches with 0 T players being alive is due to the CT side killing all T players, but not having enough time to defuse the planted bomb, resulting in a T victory.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{figures/cs2_combined_analysis/06_alive_player_win_rate_heatmap.pdf}
+    \includegraphics[width=1\linewidth]{Figs/06_alive_player_win_rate_heatmap.pdf}
     \caption{Heatmap of CT win rate according to how many players are alive on each side}
     \label{fig:placeholder}
 \end{figure}
 
 \newpage
-Figure 6 shows box plots of the number of players alive at the end of rounds along with their average health. The T side being the attacking side usually has a lower average health at the end of a round. Figure 7 shows more clearly the distribution of alive players by side and map at the end of a round, with the most common occurence being that only one player survives on both sides.
+Figure 6 shows box plots of the number of players alive at the end of rounds along with their average health. The T side being the attacking side usually has a lower average health at the end of a round. Figure 7 shows more clearly the distribution of alive players by side and map at the end of a round, with the most common occurrence being that only one player survives on both sides.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{figures/cs2_combined_analysis/07_round_end_alive_and_health.pdf}
+    \includegraphics[width=1\linewidth]{Figs/07_round_end_alive_and_health.pdf}
     \caption{Number of players and their average health at the end of round by side and map}
     \label{fig:placeholder}
 \end{figure}
@@ -278,18 +278,18 @@ Figure 6 shows box plots of the number of players alive at the end of rounds alo
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{figures/cs2_combined_analysis/08_round_end_alive_distribution.pdf}
+    \includegraphics[width=1\linewidth]{Figs/08_round_end_alive_distribution.pdf}
     \caption{Distribution of alive players at the end of round by side and map}
     \label{fig:placeholder}
 \end{figure}
 
 \newpage
 
-Figure 8 shows the percentage of rounds that had bomb plants occur. As was mentioned previously, Mirage is a map more favourable to the CT side, which could explain the lower number of bomb plants as compared to Dust2, which is a more balanced map for both sides. Figure 9 also shows that in both maps, bomb plants occured more frequently in the A site rather than B. However, as can be seen in figure 10, the T side would win a larger share of rounds on both maps if the chosen site was B instead of A, perhaps indicating that the B site is easier to defend, thus when T players successfully plant in the B site and start defending, with the CTs attacking, the T side is more likely to win the round.
+Figure 8 shows the percentage of rounds that had bomb plants occur. As was mentioned previously, Mirage is a map more favourable to the CT side, which could explain the lower number of bomb plants as compared to Dust2, which is a more balanced map for both sides. Figure 9 also shows that in both maps, bomb plants occurred more frequently in the A site rather than B. However, as can be seen in figure 10, the T side would win a larger share of rounds on both maps if the chosen site was B instead of A, perhaps indicating that the B site is easier to defend, thus when T players successfully plant in the B site and start defending, with the CTs attacking, the T side is more likely to win the round.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{figures/cs2_combined_analysis/09_bomb_plant_rate.pdf}
+    \includegraphics[width=1\linewidth]{Figs/09_bomb_plant_rate.pdf}
     \caption{Percentage of rounds with bomb plant by map}
     \label{fig:placeholder}
 \end{figure}
@@ -298,20 +298,20 @@ Figure 8 shows the percentage of rounds that had bomb plants occur. As was menti
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\linewidth]{figures/cs2_combined_analysis/10_bomb_plant_site_distribution.pdf}
+    \includegraphics[width=0.7\linewidth]{Figs/10_bomb_plant_site_distribution.pdf}
     \caption{Distribution of which bomb site was chosen for planting by map}
     \label{fig:placeholder}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{figures/cs2_combined_analysis/11_t_win_rate_by_plant_status.pdf}
+    \includegraphics[width=1\linewidth]{Figs/11_t_win_rate_by_plant_status.pdf}
     \caption{Distribution of T side wins by bomb plant and bomb site choice status}
     \label{fig:placeholder}
 \end{figure}
 
 \newpage
-Another interesting area of exploration is how the buy-type affects win rate. A buy type indicates the strategy used to purchase equipment under different economic scenarios. A pistol buy (or pistol round) occurs during the first round of a match (or after switching sides at the half point), where players have only enough money to buy a secondary weapon (a pistol) and/or a utility grenade. A full buy means that players buy a primary weapon, armor and utilities according to their role, and this usually occurs when the players have money to spare. An eco round is the opposite, usually occurring when players have little money, which usually means purchasing a cheaper primary weapon, forgoing utilites or armor, or even purchasing nothing. A force buy occurs when players have little money, and either commit to a full buy leaving them with no money in case of a round loss, or spending what little money they have on the best equipment possible. A force buy is usually done as a risky strategy to break a losing streak, as winning rounds rewards the winning side with more money than losing.
+Another interesting area of exploration is how the buy-type affects win rate. A buy type indicates the strategy used to purchase equipment under different economic scenarios. A pistol buy (or pistol round) occurs during the first round of a match (or after switching sides at the half point), where players have only enough money to buy a secondary weapon (a pistol) and/or a utility grenade. A full buy means that players buy a primary weapon, armor and utilities according to their role, and this usually occurs when the players have money to spare. An eco round is the opposite, usually occurring when players have little money, which usually means purchasing a cheaper primary weapon, forgoing utilities or armor, or even purchasing nothing. A force buy occurs when players have little money, and either commit to a full buy leaving them with no money in case of a round loss, or spending what little money they have on the best equipment possible. A force buy is usually done as a risky strategy to break a losing streak, as winning rounds rewards the winning side with more money than losing.
 
 Table 5 shows the CT win rates according to the CT and T buy type, and figure 11 shows a heatmap of these win rates. Pistol rounds and full buy - full buy matchup rounds result in a fairly even CT - T win rate. Interestingly, in a force buy - force buy matchup, the T side is far more likely to win than the CT side.
 
@@ -337,14 +337,14 @@ full&	full&	0.54&	613\\\hline
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{figures/cs2_combined_analysis/13_buy_type_matchup_heatmap.pdf}
+    \includegraphics[width=1\linewidth]{Figs/13_buy_type_matchup_heatmap.pdf}
     \caption{CT Win rate by side buy type across both maps}
     \label{fig:placeholder}
 \end{figure}
 
 \newpage
 
-Data was also explored at the (approximately) 30 second snapshot, to see the how CT win rates change with one side having more players alive (Table 6, Figure 12), better equipment (Table 7) or having an advantage in player health point and armor conditions (Table 8). Perhaps unsurprisingly, having an advantage in player count, equipment value, health and armor results in a higher probability of winning the round.
+Data was also explored at the (approximately) 30 second snapshot, to see how CT win rates change with one side having more players alive (Table 6, Figure 12), better equipment (Table 7) or having an advantage in player health point and armor conditions (Table 8). Perhaps unsurprisingly, having an advantage in player count, equipment value, health and armor results in a higher probability of winning the round.
 
 \begin{table}[H]
     \centering
@@ -361,7 +361,7 @@ More Ts alive&	208&	19.2\\\hline
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{figures/cs2_combined_analysis/14_alive_advantage_at_30s.pdf}
+    \includegraphics[width=1\linewidth]{Figs/14_alive_advantage_at_30s.pdf}
     \caption{Change in CT win rate by side alive player count advantage}
     \label{fig:placeholder}
 \end{figure}
@@ -405,7 +405,7 @@ This concludes the exploratory data analysis. The data and statistics chosen her
 
  \begin{longtable}[c]{| c | c | c |}
  \caption{Variables in the rounds and rounds\_states datasets along with their data types.\label{long}}\\
-
+ 
  \hline
  \multicolumn{3}{| c |}{Beginning of Table \ref{long}}\\
  \hline
