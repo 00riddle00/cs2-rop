@@ -1,0 +1,3272 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>CS2 Dataset Overview and Initial Analysis</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="cs2_dataset_overview_files/libs/clipboard/clipboard.min.js"></script>
+<script src="cs2_dataset_overview_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="cs2_dataset_overview_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="cs2_dataset_overview_files/libs/quarto-html/popper.min.js"></script>
+<script src="cs2_dataset_overview_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="cs2_dataset_overview_files/libs/quarto-html/anchor.min.js"></script>
+<link href="cs2_dataset_overview_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="cs2_dataset_overview_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="cs2_dataset_overview_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="cs2_dataset_overview_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="cs2_dataset_overview_files/libs/bootstrap/bootstrap-215b371544c282197b31c8aa00ce3677.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup"><span class="header-section-number">1</span> Setup</a></li>
+  <li><a href="#dataset-structure" id="toc-dataset-structure" class="nav-link" data-scroll-target="#dataset-structure"><span class="header-section-number">2</span> 2. Dataset structure</a>
+  <ul class="collapse">
+  <li><a href="#overview-of-the-three-datasets" id="toc-overview-of-the-three-datasets" class="nav-link" data-scroll-target="#overview-of-the-three-datasets"><span class="header-section-number">2.1</span> 2.1 Overview of the three datasets</a></li>
+  <li><a href="#column-names-and-data-types" id="toc-column-names-and-data-types" class="nav-link" data-scroll-target="#column-names-and-data-types"><span class="header-section-number">2.2</span> 2.2 Column names and data types</a></li>
+  <li><a href="#maps-and-teams" id="toc-maps-and-teams" class="nav-link" data-scroll-target="#maps-and-teams"><span class="header-section-number">2.3</span> 2.3 Maps and teams</a></li>
+  </ul></li>
+  <li><a href="#round-level-data-rounds.parquet" id="toc-round-level-data-rounds.parquet" class="nav-link" data-scroll-target="#round-level-data-rounds.parquet"><span class="header-section-number">3</span> 2.1 Round-level data: <code>rounds.parquet</code></a>
+  <ul class="collapse">
+  <li><a href="#duplicate-round-keys" id="toc-duplicate-round-keys" class="nav-link" data-scroll-target="#duplicate-round-keys"><span class="header-section-number">3.1</span> Duplicate round keys</a></li>
+  <li><a href="#round-summary-by-map" id="toc-round-summary-by-map" class="nav-link" data-scroll-target="#round-summary-by-map"><span class="header-section-number">3.2</span> Round summary by map</a></li>
+  <li><a href="#match-length" id="toc-match-length" class="nav-link" data-scroll-target="#match-length"><span class="header-section-number">3.3</span> Match length</a></li>
+  <li><a href="#round-outcomes-by-map-and-winning-side" id="toc-round-outcomes-by-map-and-winning-side" class="nav-link" data-scroll-target="#round-outcomes-by-map-and-winning-side"><span class="header-section-number">3.4</span> Round outcomes by map and winning side</a></li>
+  </ul></li>
+  <li><a href="#round-state-data-round_states.parquet" id="toc-round-state-data-round_states.parquet" class="nav-link" data-scroll-target="#round-state-data-round_states.parquet"><span class="header-section-number">4</span> 2.2 Round-state data: <code>round_states.parquet</code></a>
+  <ul class="collapse">
+  <li><a href="#snapshots-per-round" id="toc-snapshots-per-round" class="nav-link" data-scroll-target="#snapshots-per-round"><span class="header-section-number">4.1</span> Snapshots per round</a></li>
+  <li><a href="#snapshot-timing-and-missing-values" id="toc-snapshot-timing-and-missing-values" class="nav-link" data-scroll-target="#snapshot-timing-and-missing-values"><span class="header-section-number">4.2</span> Snapshot timing and missing values</a></li>
+  <li><a href="#alive-player-advantage-and-eventual-outcome" id="toc-alive-player-advantage-and-eventual-outcome" class="nav-link" data-scroll-target="#alive-player-advantage-and-eventual-outcome"><span class="header-section-number">4.3</span> Alive-player advantage and eventual outcome</a></li>
+  </ul></li>
+  <li><a href="#enriched-round-state-data" id="toc-enriched-round-state-data" class="nav-link" data-scroll-target="#enriched-round-state-data"><span class="header-section-number">5</span> 2.3 Enriched round-state data</a>
+  <ul class="collapse">
+  <li><a href="#check-row-counts-and-round-keys" id="toc-check-row-counts-and-round-keys" class="nav-link" data-scroll-target="#check-row-counts-and-round-keys"><span class="header-section-number">5.1</span> Check row counts and round keys</a></li>
+  <li><a href="#missingness-in-enriched-data" id="toc-missingness-in-enriched-data" class="nav-link" data-scroll-target="#missingness-in-enriched-data"><span class="header-section-number">5.2</span> Missingness in enriched data</a></li>
+  <li><a href="#check-round-level-fields-for-consistency" id="toc-check-round-level-fields-for-consistency" class="nav-link" data-scroll-target="#check-round-level-fields-for-consistency"><span class="header-section-number">5.3</span> Check round-level fields for consistency</a></li>
+  </ul></li>
+  <li><a href="#initial-descriptive-characteristics" id="toc-initial-descriptive-characteristics" class="nav-link" data-scroll-target="#initial-descriptive-characteristics"><span class="header-section-number">6</span> 3. Initial descriptive characteristics</a>
+  <ul class="collapse">
+  <li><a href="#overall-summary" id="toc-overall-summary" class="nav-link" data-scroll-target="#overall-summary"><span class="header-section-number">6.1</span> Overall summary</a></li>
+  <li><a href="#round-duration-distribution" id="toc-round-duration-distribution" class="nav-link" data-scroll-target="#round-duration-distribution"><span class="header-section-number">6.2</span> Round duration distribution</a></li>
+  <li><a href="#bomb-plant-rate-by-map" id="toc-bomb-plant-rate-by-map" class="nav-link" data-scroll-target="#bomb-plant-rate-by-map"><span class="header-section-number">6.3</span> Bomb plant rate by map</a></li>
+  <li><a href="#buy-type-distribution-by-map-and-side" id="toc-buy-type-distribution-by-map-and-side" class="nav-link" data-scroll-target="#buy-type-distribution-by-map-and-side"><span class="header-section-number">6.4</span> Buy-type distribution by map and side</a></li>
+  </ul></li>
+  <li><a href="#initial-analysis-ideas" id="toc-initial-analysis-ideas" class="nav-link" data-scroll-target="#initial-analysis-ideas"><span class="header-section-number">7</span> 4. Initial analysis ideas</a>
+  <ul class="collapse">
+  <li><a href="#bomb-plant-and-round-outcome" id="toc-bomb-plant-and-round-outcome" class="nav-link" data-scroll-target="#bomb-plant-and-round-outcome"><span class="header-section-number">7.1</span> 4.1 Bomb plant and round outcome</a></li>
+  <li><a href="#alive-player-advantage-at-30-seconds" id="toc-alive-player-advantage-at-30-seconds" class="nav-link" data-scroll-target="#alive-player-advantage-at-30-seconds"><span class="header-section-number">7.2</span> 4.2 Alive-player advantage at 30 seconds</a></li>
+  <li><a href="#equipment-and-economy-advantage-at-30-seconds" id="toc-equipment-and-economy-advantage-at-30-seconds" class="nav-link" data-scroll-target="#equipment-and-economy-advantage-at-30-seconds"><span class="header-section-number">7.3</span> 4.3 Equipment and economy advantage at 30 seconds</a></li>
+  <li><a href="#health-and-armor-advantage-at-30-seconds" id="toc-health-and-armor-advantage-at-30-seconds" class="nav-link" data-scroll-target="#health-and-armor-advantage-at-30-seconds"><span class="header-section-number">7.4</span> 4.4 Health and armor advantage at 30 seconds</a></li>
+  </ul></li>
+  <li><a href="#notes-and-interpretation" id="toc-notes-and-interpretation" class="nav-link" data-scroll-target="#notes-and-interpretation"><span class="header-section-number">8</span> Notes and interpretation</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">CS2 Dataset Overview and Initial Analysis</h1>
+<p class="subtitle lead">Sections 2, 2.1, 2.2, 2.3, 3 and 4</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="setup" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="setup"><span class="header-section-number">1</span> Setup</h2>
+<p>This report reads the three Parquet datasets, prints descriptive tables directly into the rendered report, and saves figures as PDF files in <code>../reports/figures</code>.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Paths are relative to the directory containing this QMD file.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>rounds_file <span class="ot">&lt;-</span> <span class="st">"../data/analysis/rounds.parquet"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>states_file <span class="ot">&lt;-</span> <span class="st">"../data/analysis/round_states.parquet"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>enriched_file <span class="ot">&lt;-</span> <span class="st">"../data/analysis/round_states_enriched.parquet"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>figures_dir <span class="ot">&lt;-</span> <span class="st">"../reports/figures"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(figures_dir, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>rounds <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(rounds_file) <span class="sc">|&gt;</span> <span class="fu">as_tibble</span>()</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>round_states <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(states_file) <span class="sc">|&gt;</span> <span class="fu">as_tibble</span>()</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>round_states_enriched <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(enriched_file) <span class="sc">|&gt;</span> <span class="fu">as_tibble</span>()</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(<span class="fu">c</span>(<span class="st">"match_id"</span>, <span class="st">"map"</span>, <span class="st">"round_num"</span>) <span class="sc">%in%</span> <span class="fu">names</span>(rounds)))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(<span class="fu">c</span>(<span class="st">"match_id"</span>, <span class="st">"map"</span>, <span class="st">"round_num"</span>, <span class="st">"tick"</span>, <span class="st">"seconds"</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                <span class="st">"ct_alive"</span>, <span class="st">"t_alive"</span>, <span class="st">"ct_win"</span>) <span class="sc">%in%</span> <span class="fu">names</span>(round_states)))</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(<span class="fu">c</span>(<span class="st">"match_id"</span>, <span class="st">"map"</span>, <span class="st">"round_num"</span>) <span class="sc">%in%</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>                <span class="fu">names</span>(round_states_enriched)))</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Save each ggplot as a PDF.</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>save_pdf <span class="ot">&lt;-</span> <span class="cf">function</span>(plot, filename, <span class="at">width =</span> <span class="dv">9</span>, <span class="at">height =</span> <span class="dv">6</span>) {</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggsave</span>(</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">filename =</span> <span class="fu">file.path</span>(figures_dir, filename),</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot =</span> plot,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">width =</span> width,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">height =</span> height,</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">device =</span> grDevices<span class="sc">::</span>cairo_pdf</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Consistent table display in the rendered report.</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>show_table <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">digits =</span> <span class="dv">2</span>) {</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(x, <span class="at">digits =</span> digits, <span class="at">format =</span> <span class="st">"html"</span>)</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="dataset-structure" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="dataset-structure"><span class="header-section-number">2</span> 2. Dataset structure</h2>
+<section id="overview-of-the-three-datasets" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="overview-of-the-three-datasets"><span class="header-section-number">2.1</span> 2.1 Overview of the three datasets</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dataset_overview <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dataset =</span> <span class="fu">c</span>(<span class="st">"rounds"</span>, <span class="st">"round_states"</span>, <span class="st">"round_states_enriched"</span>),</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">rows =</span> <span class="fu">c</span>(<span class="fu">nrow</span>(rounds), <span class="fu">nrow</span>(round_states), <span class="fu">nrow</span>(round_states_enriched)),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">columns =</span> <span class="fu">c</span>(<span class="fu">ncol</span>(rounds), <span class="fu">ncol</span>(round_states), <span class="fu">ncol</span>(round_states_enriched)),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">missing_cells =</span> <span class="fu">c</span>(<span class="fu">sum</span>(<span class="fu">is.na</span>(rounds)), <span class="fu">sum</span>(<span class="fu">is.na</span>(round_states)),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">sum</span>(<span class="fu">is.na</span>(round_states_enriched))),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">unique_matches =</span> <span class="fu">c</span>(<span class="fu">n_distinct</span>(rounds<span class="sc">$</span>match_id),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">n_distinct</span>(round_states<span class="sc">$</span>match_id),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">n_distinct</span>(round_states_enriched<span class="sc">$</span>match_id)),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">unique_rounds =</span> <span class="fu">c</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">nrow</span>(<span class="fu">distinct</span>(rounds, match_id, round_num)),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">nrow</span>(<span class="fu">distinct</span>(round_states, match_id, round_num)),</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">nrow</span>(<span class="fu">distinct</span>(round_states_enriched, match_id, round_num))</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(dataset_overview)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">dataset</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rows</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">columns</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">missing_cells</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">unique_matches</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">unique_rounds</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: right;">1257</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">1288</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">1257</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: right;">116201</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">195710</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">1257</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: right;">116201</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">250917</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">1257</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="column-names-and-data-types" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="column-names-and-data-types"><span class="header-section-number">2.2</span> 2.2 Column names and data types</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>column_overview <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">dataset =</span> <span class="st">"rounds"</span>, <span class="at">column =</span> <span class="fu">names</span>(rounds),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">data_type =</span> <span class="fu">map_chr</span>(rounds, <span class="sc">~</span> <span class="fu">paste</span>(<span class="fu">class</span>(.x), <span class="at">collapse =</span> <span class="st">"/"</span>))),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">dataset =</span> <span class="st">"round_states"</span>, <span class="at">column =</span> <span class="fu">names</span>(round_states),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">data_type =</span> <span class="fu">map_chr</span>(round_states, <span class="sc">~</span> <span class="fu">paste</span>(<span class="fu">class</span>(.x), <span class="at">collapse =</span> <span class="st">"/"</span>))),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">dataset =</span> <span class="st">"round_states_enriched"</span>, <span class="at">column =</span> <span class="fu">names</span>(round_states_enriched),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">data_type =</span> <span class="fu">map_chr</span>(round_states_enriched,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                             <span class="sc">~</span> <span class="fu">paste</span>(<span class="fu">class</span>(.x), <span class="at">collapse =</span> <span class="st">"/"</span>)))</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(column_overview)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">dataset</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">column</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">data_type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">match_id</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">map</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">part</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">round_num</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">is_overtime</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">is_pistol_round</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">ct_team</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">t_team</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">ct_score_before</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">t_score_before</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">ct_won_previous_round</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">ct_buy_type</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">t_buy_type</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">ct_equipment_freeze_end</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">t_equipment_freeze_end</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">bomb_planted</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">plant_site</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">first_death_side</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">freeze_end_tick</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">plant_tick</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">end_tick</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">round_duration_s</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">winner_side</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">winner_team</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">ct_win</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rounds</td>
+<td style="text-align: left;">reason_name</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">match_id</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">map</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">part</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">round_num</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">tick</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">seconds</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">time_remaining_s</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">bomb_planted</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">seconds_since_plant</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">plant_site</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">bomb_carried</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_team</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_team</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_score_before</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_score_before</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_alive</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_hp</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_armor</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_helmets</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_defusers</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_equipment</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_money</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_rifles</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_awps</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_smgs</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_smokes</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_flashes</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_he</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_molotovs</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_alive</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_hp</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_armor</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_helmets</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_defusers</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_equipment</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_money</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_rifles</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_awps</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_smgs</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_smokes</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_flashes</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_he</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">t_molotovs</td>
+<td style="text-align: left;">integer</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">winner_side</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: left;">ct_win</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">match_id</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">map</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">part</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">round_num</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">tick</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">seconds</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">time_remaining_s</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">bomb_planted</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">seconds_since_plant</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">plant_site</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">bomb_carried</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_team</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_team</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_score_before</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_score_before</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_alive</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_hp</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_armor</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_helmets</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_defusers</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_equipment</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_money</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_rifles</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_awps</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_smgs</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_smokes</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_flashes</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_he</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_molotovs</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_alive</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_hp</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_armor</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_helmets</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_defusers</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_equipment</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_money</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_rifles</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_awps</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_smgs</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_smokes</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_flashes</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_he</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_molotovs</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">winner_side</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_win</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">is_overtime</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">is_pistol_round</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_won_previous_round</td>
+<td style="text-align: left;">logical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_buy_type</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_buy_type</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">ct_equipment_freeze_end</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">t_equipment_freeze_end</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">first_death_side</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">freeze_end_tick</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">plant_tick</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">end_tick</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">round_duration_s</td>
+<td style="text-align: left;">numeric</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">winner_team</td>
+<td style="text-align: left;">character</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: left;">reason_name</td>
+<td style="text-align: left;">character</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="maps-and-teams" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="maps-and-teams"><span class="header-section-number">2.3</span> 2.3 Maps and teams</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>map_overview <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(map) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">rounds =</span> <span class="fu">n</span>(), <span class="at">matches =</span> <span class="fu">n_distinct</span>(match_id), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(map_overview)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">map</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">matches</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: right;">628</td>
+<td style="text-align: right;">30</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: right;">629</td>
+<td style="text-align: right;">30</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>team_overview <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  rounds <span class="sc">|&gt;</span> <span class="fu">transmute</span>(<span class="at">team =</span> ct_team),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  rounds <span class="sc">|&gt;</span> <span class="fu">transmute</span>(<span class="at">team =</span> t_team)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(team)) <span class="sc">|&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(team) <span class="sc">|&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(team)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(team_overview)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">team</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">9z</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Aurora</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FURIA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FUT</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FaZe</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Falcons</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">G2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Legacy</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MOUZ</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NAVI</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Spirit</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Vitality</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="round-level-data-rounds.parquet" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="round-level-data-rounds.parquet"><span class="header-section-number">3</span> 2.1 Round-level data: <code>rounds.parquet</code></h2>
+<p>Each row is expected to represent one round.</p>
+<section id="duplicate-round-keys" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="duplicate-round-keys"><span class="header-section-number">3.1</span> Duplicate round keys</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>round_key_check <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(match_id, round_num, <span class="at">name =</span> <span class="st">"rows_per_round"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(rows_per_round <span class="sc">&gt;</span> <span class="dv">1</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">duplicate_round_keys =</span> <span class="fu">nrow</span>(round_key_check)) <span class="sc">|&gt;</span> <span class="fu">show_table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">duplicate_round_keys</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">nrow</span>(round_key_check) <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="fu">show_table</span>(round_key_check)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="round-summary-by-map" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="round-summary-by-map"><span class="header-section-number">3.2</span> Round summary by map</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>rounds_by_map <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(map) <span class="sc">|&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">matches =</span> <span class="fu">n_distinct</span>(match_id),</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">pistol_rounds =</span> <span class="fu">sum</span>(is_pistol_round <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">overtime_rounds =</span> <span class="fu">sum</span>(is_overtime <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">planted_rounds =</span> <span class="fu">sum</span>(bomb_planted <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">planted_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(bomb_planted <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_duration_s =</span> <span class="fu">mean</span>(round_duration_s, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_duration_s =</span> <span class="fu">median</span>(round_duration_s, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(rounds_by_map)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">map</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">matches</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">pistol_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">overtime_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">planted_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">planted_pct</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">mean_duration_s</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">median_duration_s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: right;">628</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">349</td>
+<td style="text-align: right;">55.57</td>
+<td style="text-align: right;">94.20</td>
+<td style="text-align: right;">96.73</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: right;">629</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">312</td>
+<td style="text-align: right;">49.60</td>
+<td style="text-align: right;">89.75</td>
+<td style="text-align: right;">91.30</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="match-length" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="match-length"><span class="header-section-number">3.3</span> Match length</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rounds_per_match <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(match_id, map, round_num) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(match_id, map, <span class="at">name =</span> <span class="st">"rounds_in_match"</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>match_length_summary <span class="ot">&lt;-</span> rounds_per_match <span class="sc">|&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">matches =</span> <span class="fu">n</span>(),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_rounds =</span> <span class="fu">min</span>(rounds_in_match),</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">q1_rounds =</span> <span class="fu">quantile</span>(rounds_in_match, <span class="fl">0.25</span>),</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_rounds =</span> <span class="fu">median</span>(rounds_in_match),</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_rounds =</span> <span class="fu">mean</span>(rounds_in_match),</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">q3_rounds =</span> <span class="fu">quantile</span>(rounds_in_match, <span class="fl">0.75</span>),</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_rounds =</span> <span class="fu">max</span>(rounds_in_match)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(match_length_summary)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">matches</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">min_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">q1_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">median_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">mean_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">q3_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">max_rounds</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">18.75</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">20.95</td>
+<td style="text-align: right;">22.25</td>
+<td style="text-align: right;">35</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="round-outcomes-by-map-and-winning-side" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="round-outcomes-by-map-and-winning-side"><span class="header-section-number">3.4</span> Round outcomes by map and winning side</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>round_outcomes <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(map, winner_side, <span class="at">name =</span> <span class="st">"rounds"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(map) <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percentage =</span> <span class="dv">100</span> <span class="sc">*</span> rounds <span class="sc">/</span> <span class="fu">sum</span>(rounds)) <span class="sc">|&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(round_outcomes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">map</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">winner_side</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">counter-terrorist</td>
+<td style="text-align: right;">312</td>
+<td style="text-align: right;">49.68</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">terrorist</td>
+<td style="text-align: right;">316</td>
+<td style="text-align: right;">50.32</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">counter-terrorist</td>
+<td style="text-align: right;">351</td>
+<td style="text-align: right;">55.80</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">terrorist</td>
+<td style="text-align: right;">278</td>
+<td style="text-align: right;">44.20</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>p_round_outcomes <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  round_outcomes, <span class="fu">aes</span>(<span class="at">x =</span> map, <span class="at">y =</span> percentage, <span class="at">fill =</span> winner_side)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, percentage)),</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">position =</span> <span class="fu">position_stack</span>(<span class="at">vjust =</span> <span class="fl">0.5</span>), <span class="at">size =</span> <span class="fl">3.5</span>) <span class="sc">+</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Round outcomes by map"</span>, <span class="at">x =</span> <span class="st">"Map"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Percentage of rounds"</span>, <span class="at">fill =</span> <span class="st">"Winning side"</span>) <span class="sc">+</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>p_round_outcomes</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cs2_dataset_overview_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save_pdf</span>(p_round_outcomes, <span class="st">"21_round_outcomes_by_map.pdf"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+</section>
+<section id="round-state-data-round_states.parquet" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="round-state-data-round_states.parquet"><span class="header-section-number">4</span> 2.2 Round-state data: <code>round_states.parquet</code></h2>
+<p>Each row is a snapshot of a round at a particular time. Snapshots from the same round are repeated observations, not independent rounds.</p>
+<section id="snapshots-per-round" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="snapshots-per-round"><span class="header-section-number">4.1</span> Snapshots per round</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>snapshots_per_round <span class="ot">&lt;-</span> round_states <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(match_id, map, round_num, <span class="at">name =</span> <span class="st">"snapshots"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>snapshot_count_summary <span class="ot">&lt;-</span> snapshots_per_round <span class="sc">|&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_snapshots =</span> <span class="fu">min</span>(snapshots),</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">q1_snapshots =</span> <span class="fu">quantile</span>(snapshots, <span class="fl">0.25</span>),</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_snapshots =</span> <span class="fu">median</span>(snapshots),</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_snapshots =</span> <span class="fu">mean</span>(snapshots),</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">q3_snapshots =</span> <span class="fu">quantile</span>(snapshots, <span class="fl">0.75</span>),</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_snapshots =</span> <span class="fu">max</span>(snapshots)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(snapshot_count_summary)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">min_snapshots</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">q1_snapshots</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">median_snapshots</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">mean_snapshots</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">q3_snapshots</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">max_snapshots</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1257</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">92.44</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">156</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="snapshot-timing-and-missing-values" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="snapshot-timing-and-missing-values"><span class="header-section-number">4.2</span> Snapshot timing and missing values</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>snapshot_timing <span class="ot">&lt;-</span> round_states <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_seconds =</span> <span class="fu">min</span>(seconds, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_seconds =</span> <span class="fu">median</span>(seconds, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_seconds =</span> <span class="fu">max</span>(seconds, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_time_remaining =</span> <span class="fu">min</span>(time_remaining_s, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_time_remaining =</span> <span class="fu">max</span>(time_remaining_s, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(snapshot_timing)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">min_seconds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">median_seconds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">max_seconds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">min_time_remaining</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">max_time_remaining</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">155</td>
+<td style="text-align: right;">-0.98</td>
+<td style="text-align: right;">115.2</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>snapshot_missingness <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">column =</span> <span class="fu">names</span>(round_states),</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">missing_values =</span> <span class="fu">map_int</span>(round_states, <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.x))),</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">100</span> <span class="sc">*</span> missing_values <span class="sc">/</span> <span class="fu">nrow</span>(round_states)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(missing_values))</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(snapshot_missingness)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">column</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">missing_values</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">missing_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">seconds_since_plant</td>
+<td style="text-align: right;">97855</td>
+<td style="text-align: right;">84.21</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plant_site</td>
+<td style="text-align: right;">97855</td>
+<td style="text-align: right;">84.21</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">match_id</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">map</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">part</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_num</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tick</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">seconds</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">time_remaining_s</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bomb_planted</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bomb_carried</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_team</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_team</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_score_before</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_score_before</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_alive</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_hp</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_armor</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_helmets</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_defusers</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_equipment</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_money</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_rifles</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_awps</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_smgs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_smokes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_flashes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_he</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_molotovs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_alive</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_hp</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_armor</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_helmets</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_defusers</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_equipment</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_money</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_rifles</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_awps</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_smgs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_smokes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_flashes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_he</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_molotovs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">winner_side</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_win</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="alive-player-advantage-and-eventual-outcome" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="alive-player-advantage-and-eventual-outcome"><span class="header-section-number">4.3</span> Alive-player advantage and eventual outcome</h3>
+<p>This is a snapshot-level exploratory comparison. Because the same round contributes multiple snapshots, the percentages below should not be interpreted as independent-round estimates.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>state_advantage <span class="ot">&lt;-</span> round_states <span class="sc">|&gt;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">alive_difference =</span> ct_alive <span class="sc">-</span> t_alive,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">alive_advantage =</span> <span class="fu">case_when</span>(</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>      alive_difference <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"CT advantage"</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>      alive_difference <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"T advantage"</span>,</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>      alive_difference <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"Equal alive players"</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_character_</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>advantage_by_outcome <span class="ot">&lt;-</span> state_advantage <span class="sc">|&gt;</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ct_win), <span class="sc">!</span><span class="fu">is.na</span>(alive_advantage)) <span class="sc">|&gt;</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(alive_advantage) <span class="sc">|&gt;</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">snapshots =</span> <span class="fu">n</span>(),</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">ct_round_win_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(ct_win, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(advantage_by_outcome)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">alive_advantage</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">snapshots</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ct_round_win_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">CT advantage</td>
+<td style="text-align: right;">28565</td>
+<td style="text-align: right;">83.42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Equal alive players</td>
+<td style="text-align: right;">60682</td>
+<td style="text-align: right;">50.68</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">T advantage</td>
+<td style="text-align: right;">26954</td>
+<td style="text-align: right;">10.40</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>p_alive_advantage <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  advantage_by_outcome, <span class="fu">aes</span>(<span class="at">x =</span> alive_advantage, <span class="at">y =</span> ct_round_win_pct)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, ct_round_win_pct)), <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>),</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.08</span>))) <span class="sc">+</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"CT round-win percentage by alive-player advantage"</span>,</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Snapshot-level descriptive comparison"</span>,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Player-count state"</span>, <span class="at">y =</span> <span class="st">"CT round wins (%)"</span>) <span class="sc">+</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">15</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>p_alive_advantage</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cs2_dataset_overview_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save_pdf</span>(p_alive_advantage, <span class="st">"22_alive_advantage_by_outcome.pdf"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+</section>
+<section id="enriched-round-state-data" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="enriched-round-state-data"><span class="header-section-number">5</span> 2.3 Enriched round-state data</h2>
+<section id="check-row-counts-and-round-keys" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="check-row-counts-and-round-keys"><span class="header-section-number">5.1</span> Check row counts and round keys</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>enrichment_comparison <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dataset =</span> <span class="fu">c</span>(<span class="st">"round_states"</span>, <span class="st">"round_states_enriched"</span>),</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">rows =</span> <span class="fu">c</span>(<span class="fu">nrow</span>(round_states), <span class="fu">nrow</span>(round_states_enriched)),</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">columns =</span> <span class="fu">c</span>(<span class="fu">ncol</span>(round_states), <span class="fu">ncol</span>(round_states_enriched)),</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">unique_rounds =</span> <span class="fu">c</span>(</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">nrow</span>(<span class="fu">distinct</span>(round_states, match_id, round_num)),</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">nrow</span>(<span class="fu">distinct</span>(round_states_enriched, match_id, round_num))</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(enrichment_comparison)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">dataset</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rows</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">columns</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">unique_rounds</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">round_states</td>
+<td style="text-align: right;">116201</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">1257</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_states_enriched</td>
+<td style="text-align: right;">116201</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">1257</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>snapshot_key_check <span class="ot">&lt;-</span> round_states_enriched <span class="sc">|&gt;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(match_id, round_num, tick, <span class="at">name =</span> <span class="st">"rows_per_snapshot"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(rows_per_snapshot <span class="sc">&gt;</span> <span class="dv">1</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">duplicate_match_round_tick_keys =</span> <span class="fu">nrow</span>(snapshot_key_check)) <span class="sc">|&gt;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">show_table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">duplicate_match_round_tick_keys</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">nrow</span>(snapshot_key_check) <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="fu">show_table</span>(snapshot_key_check)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>unmatched_rounds <span class="ot">&lt;-</span> round_states_enriched <span class="sc">|&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(match_id, round_num) <span class="sc">|&gt;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(rounds <span class="sc">|&gt;</span> <span class="fu">distinct</span>(match_id, round_num),</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"match_id"</span>, <span class="st">"round_num"</span>))</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">enriched_rounds_not_in_rounds =</span> <span class="fu">nrow</span>(unmatched_rounds)) <span class="sc">|&gt;</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">show_table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">enriched_rounds_not_in_rounds</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="missingness-in-enriched-data" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="missingness-in-enriched-data"><span class="header-section-number">5.2</span> Missingness in enriched data</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>enriched_missingness <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">column =</span> <span class="fu">names</span>(round_states_enriched),</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">missing_values =</span> <span class="fu">map_int</span>(round_states_enriched, <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.x))),</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">100</span> <span class="sc">*</span> missing_values <span class="sc">/</span> <span class="fu">nrow</span>(round_states_enriched)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(missing_values))</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(enriched_missingness)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">column</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">missing_values</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">missing_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">seconds_since_plant</td>
+<td style="text-align: right;">97855</td>
+<td style="text-align: right;">84.21</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">plant_site</td>
+<td style="text-align: right;">97855</td>
+<td style="text-align: right;">84.21</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">plant_tick</td>
+<td style="text-align: right;">47215</td>
+<td style="text-align: right;">40.63</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_won_previous_round</td>
+<td style="text-align: right;">4116</td>
+<td style="text-align: right;">3.54</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">reason_name</td>
+<td style="text-align: right;">1263</td>
+<td style="text-align: right;">1.09</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_buy_type</td>
+<td style="text-align: right;">1198</td>
+<td style="text-align: right;">1.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_buy_type</td>
+<td style="text-align: right;">1198</td>
+<td style="text-align: right;">1.03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">first_death_side</td>
+<td style="text-align: right;">217</td>
+<td style="text-align: right;">0.19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">match_id</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">map</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">part</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_num</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tick</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">seconds</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">time_remaining_s</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bomb_planted</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bomb_carried</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_team</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_team</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_score_before</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_score_before</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_alive</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_hp</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_armor</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_helmets</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_defusers</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_equipment</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_money</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_rifles</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_awps</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_smgs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_smokes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_flashes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_he</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_molotovs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_alive</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_hp</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_armor</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_helmets</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_defusers</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_equipment</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_money</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_rifles</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_awps</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_smgs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_smokes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_flashes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_he</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_molotovs</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">winner_side</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_win</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">is_overtime</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">is_pistol_round</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ct_equipment_freeze_end</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t_equipment_freeze_end</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">freeze_end_tick</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">end_tick</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_duration_s</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">winner_team</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="check-round-level-fields-for-consistency" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="check-round-level-fields-for-consistency"><span class="header-section-number">5.3</span> Check round-level fields for consistency</h3>
+<p>These fields should generally be constant across all snapshots belonging to the same round.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>round_level_fields <span class="ot">&lt;-</span> <span class="fu">intersect</span>(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">"winner_side"</span>, <span class="st">"winner_team"</span>, <span class="st">"reason_name"</span>, <span class="st">"is_overtime"</span>,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"is_pistol_round"</span>, <span class="st">"bomb_planted"</span>, <span class="st">"ct_buy_type"</span>, <span class="st">"t_buy_type"</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"first_death_side"</span>, <span class="st">"round_duration_s"</span>),</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(round_states_enriched)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>round_constant_checks <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(round_level_fields, <span class="cf">function</span>(field) {</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  round_states_enriched <span class="sc">|&gt;</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(match_id, round_num) <span class="sc">|&gt;</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">distinct_values =</span> <span class="fu">n_distinct</span>(.data[[field]], <span class="at">na.rm =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">field =</span> field,</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">rounds_with_multiple_values =</span> <span class="fu">sum</span>(distinct_values <span class="sc">&gt;</span> <span class="dv">1</span>),</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(round_constant_checks)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">field</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds_with_multiple_values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">winner_side</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">winner_team</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">reason_name</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">is_overtime</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">is_pistol_round</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bomb_planted</td>
+<td style="text-align: right;">626</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ct_buy_type</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t_buy_type</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">first_death_side</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">round_duration_s</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="initial-descriptive-characteristics" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="initial-descriptive-characteristics"><span class="header-section-number">6</span> 3. Initial descriptive characteristics</h2>
+<section id="overall-summary" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="overall-summary"><span class="header-section-number">6.1</span> Overall summary</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>overall_summary <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">matches =</span> <span class="fu">n_distinct</span>(match_id),</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">maps =</span> <span class="fu">n_distinct</span>(map),</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">teams_ct =</span> <span class="fu">n_distinct</span>(ct_team),</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">teams_t =</span> <span class="fu">n_distinct</span>(t_team),</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">planted_rounds =</span> <span class="fu">sum</span>(bomb_planted <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">planted_round_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(bomb_planted <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">pistol_rounds =</span> <span class="fu">sum</span>(is_pistol_round <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">overtime_rounds =</span> <span class="fu">sum</span>(is_overtime <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_round_duration_s =</span> <span class="fu">mean</span>(round_duration_s, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_round_duration_s =</span> <span class="fu">median</span>(round_duration_s, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(overall_summary)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">matches</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">maps</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">teams_ct</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">teams_t</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">planted_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">planted_round_pct</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">pistol_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">overtime_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">mean_round_duration_s</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">median_round_duration_s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">1257</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">661</td>
+<td style="text-align: right;">52.59</td>
+<td style="text-align: right;">120</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">91.97</td>
+<td style="text-align: right;">94.5</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="round-duration-distribution" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="round-duration-distribution"><span class="header-section-number">6.2</span> Round duration distribution</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>p_duration <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  rounds <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(round_duration_s)),</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> round_duration_s)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>) <span class="sc">+</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of round duration"</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Round duration (seconds)"</span>, <span class="at">y =</span> <span class="st">"Number of rounds"</span>) <span class="sc">+</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>p_duration</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cs2_dataset_overview_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save_pdf</span>(p_duration, <span class="st">"03_round_duration_distribution.pdf"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="bomb-plant-rate-by-map" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="bomb-plant-rate-by-map"><span class="header-section-number">6.3</span> Bomb plant rate by map</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>plant_summary <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(map) <span class="sc">|&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">planted_rounds =</span> <span class="fu">sum</span>(bomb_planted <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">plant_rate_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(bomb_planted <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(plant_summary)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">map</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">total_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">planted_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">plant_rate_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: right;">628</td>
+<td style="text-align: right;">349</td>
+<td style="text-align: right;">55.57</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: right;">629</td>
+<td style="text-align: right;">312</td>
+<td style="text-align: right;">49.60</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>p_plant_rate <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(plant_summary, <span class="fu">aes</span>(<span class="at">x =</span> map, <span class="at">y =</span> plant_rate_pct)) <span class="sc">+</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, plant_rate_pct)), <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>),</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.08</span>))) <span class="sc">+</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Bomb plant rate by map"</span>, <span class="at">x =</span> <span class="st">"Map"</span>,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Rounds with a bomb plant (%)"</span>) <span class="sc">+</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>p_plant_rate</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cs2_dataset_overview_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save_pdf</span>(p_plant_rate, <span class="st">"03_bomb_plant_rate.pdf"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="buy-type-distribution-by-map-and-side" class="level3" data-number="6.4">
+<h3 data-number="6.4" class="anchored" data-anchor-id="buy-type-distribution-by-map-and-side"><span class="header-section-number">6.4</span> Buy-type distribution by map and side</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>buy_type_summary <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  rounds <span class="sc">|&gt;</span> <span class="fu">count</span>(map, <span class="at">buy_type =</span> ct_buy_type, <span class="at">name =</span> <span class="st">"rounds"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">side =</span> <span class="st">"CT"</span>),</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  rounds <span class="sc">|&gt;</span> <span class="fu">count</span>(map, <span class="at">buy_type =</span> t_buy_type, <span class="at">name =</span> <span class="st">"rounds"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">side =</span> <span class="st">"T"</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(map, side) <span class="sc">|&gt;</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percentage =</span> <span class="dv">100</span> <span class="sc">*</span> rounds <span class="sc">/</span> <span class="fu">sum</span>(rounds)) <span class="sc">|&gt;</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(buy_type_summary)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">map</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">buy_type</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">side</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">eco</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">3.18</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">force</td>
+<td style="text-align: right;">105</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">16.72</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">443</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">70.54</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">pistol</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">9.55</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">eco</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">3.97</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">force</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">14.94</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">439</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">69.79</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">pistol</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">9.54</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">CT</td>
+<td style="text-align: right;">1.75</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">eco</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">7.32</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">force</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">15.92</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">422</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">67.20</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">pistol</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">9.55</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">eco</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">7.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">force</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">21.14</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">full</td>
+<td style="text-align: right;">381</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">60.57</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">pistol</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">9.54</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">T</td>
+<td style="text-align: right;">1.75</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>p_buy_types <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  buy_type_summary, <span class="fu">aes</span>(<span class="at">x =</span> buy_type, <span class="at">y =</span> percentage, <span class="at">fill =</span> side)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Buy-type distribution by map and side"</span>,</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Buy type"</span>, <span class="at">y =</span> <span class="st">"Percentage of rounds"</span>, <span class="at">fill =</span> <span class="st">"Side"</span>) <span class="sc">+</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">30</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>p_buy_types</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cs2_dataset_overview_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save_pdf</span>(p_buy_types, <span class="st">"03_buy_type_distribution.pdf"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+</section>
+<section id="initial-analysis-ideas" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="initial-analysis-ideas"><span class="header-section-number">7</span> 4. Initial analysis ideas</h2>
+<p>These comparisons are descriptive, not causal. For round-level comparisons, use one observation per round. The state-based analyses below select the latest snapshot at or before 30 seconds.</p>
+<section id="bomb-plant-and-round-outcome" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="bomb-plant-and-round-outcome"><span class="header-section-number">7.1</span> 4.1 Bomb plant and round outcome</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>plant_outcomes <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">plant_status =</span> <span class="fu">case_when</span>(</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>      bomb_planted <span class="sc">%in%</span> <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Planted"</span>,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>      bomb_planted <span class="sc">%in%</span> <span class="cn">FALSE</span> <span class="sc">~</span> <span class="st">"Not planted"</span>,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Unknown"</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(map, plant_status) <span class="sc">|&gt;</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">ct_win_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(ct_win, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(plant_outcomes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">map</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">plant_status</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ct_win_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">Not planted</td>
+<td style="text-align: right;">279</td>
+<td style="text-align: right;">83.51</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">Planted</td>
+<td style="text-align: right;">349</td>
+<td style="text-align: right;">22.64</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">Not planted</td>
+<td style="text-align: right;">317</td>
+<td style="text-align: right;">86.12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">Planted</td>
+<td style="text-align: right;">312</td>
+<td style="text-align: right;">25.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>plant_site_outcomes <span class="ot">&lt;-</span> rounds <span class="sc">|&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(bomb_planted <span class="sc">%in%</span> <span class="cn">TRUE</span>, <span class="sc">!</span><span class="fu">is.na</span>(plant_site)) <span class="sc">|&gt;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(map, plant_site) <span class="sc">|&gt;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">planted_rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">ct_win_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(ct_win, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(plant_site_outcomes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">map</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">plant_site</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">planted_rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ct_win_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">A</td>
+<td style="text-align: right;">199</td>
+<td style="text-align: right;">26.63</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_dust2</td>
+<td style="text-align: left;">B</td>
+<td style="text-align: right;">150</td>
+<td style="text-align: right;">17.33</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">A</td>
+<td style="text-align: right;">187</td>
+<td style="text-align: right;">31.55</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">de_mirage</td>
+<td style="text-align: left;">B</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">15.20</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="alive-player-advantage-at-30-seconds" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="alive-player-advantage-at-30-seconds"><span class="header-section-number">7.2</span> 4.2 Alive-player advantage at 30 seconds</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>state_at_30s <span class="ot">&lt;-</span> round_states_enriched <span class="sc">|&gt;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(seconds <span class="sc">&lt;=</span> <span class="dv">30</span>) <span class="sc">|&gt;</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(match_id, round_num) <span class="sc">|&gt;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="at">order_by =</span> seconds, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">alive_difference =</span> ct_alive <span class="sc">-</span> t_alive,</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">alive_advantage =</span> <span class="fu">case_when</span>(</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>      alive_difference <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"CT has more alive"</span>,</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>      alive_difference <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"T has more alive"</span>,</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>      alive_difference <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"Equal alive players"</span>,</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_character_</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>alive_outcome_30s <span class="ot">&lt;-</span> state_at_30s <span class="sc">|&gt;</span></span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ct_win), <span class="sc">!</span><span class="fu">is.na</span>(alive_advantage)) <span class="sc">|&gt;</span></span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(alive_advantage) <span class="sc">|&gt;</span></span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">ct_win_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(ct_win, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(alive_outcome_30s)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">alive_advantage</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ct_win_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">CT has more alive</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">81.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Equal alive players</td>
+<td style="text-align: right;">749</td>
+<td style="text-align: right;">50.73</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">T has more alive</td>
+<td style="text-align: right;">208</td>
+<td style="text-align: right;">19.23</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="equipment-and-economy-advantage-at-30-seconds" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="equipment-and-economy-advantage-at-30-seconds"><span class="header-section-number">7.3</span> 4.3 Equipment and economy advantage at 30 seconds</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>economy_summary <span class="ot">&lt;-</span> round_states_enriched <span class="sc">|&gt;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">equipment_difference =</span> ct_equipment <span class="sc">-</span> t_equipment,</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">money_difference =</span> ct_money <span class="sc">-</span> t_money</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(match_id, round_num) <span class="sc">|&gt;</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(seconds <span class="sc">&lt;=</span> <span class="dv">30</span>) <span class="sc">|&gt;</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="at">order_by =</span> seconds, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(ct_win),</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(equipment_difference),</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(money_difference)</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">equipment_advantage =</span> <span class="fu">case_when</span>(</span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>      equipment_difference <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"CT higher equipment"</span>,</span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>      equipment_difference <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"T higher equipment"</span>,</span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>      equipment_difference <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"Equal equipment"</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(equipment_advantage) <span class="sc">|&gt;</span></span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb36-25"><a href="#cb36-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">ct_win_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(ct_win, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb36-26"><a href="#cb36-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_equipment_difference =</span> <span class="fu">mean</span>(equipment_difference, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb36-27"><a href="#cb36-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_money_difference =</span> <span class="fu">mean</span>(money_difference, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb36-28"><a href="#cb36-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb36-29"><a href="#cb36-29" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb36-30"><a href="#cb36-30" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(economy_summary)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">equipment_advantage</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ct_win_pct</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">mean_equipment_difference</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">mean_money_difference</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">CT higher equipment</td>
+<td style="text-align: right;">793</td>
+<td style="text-align: right;">68.73</td>
+<td style="text-align: right;">9770.11</td>
+<td style="text-align: right;">5265.07</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Equal equipment</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">50.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">-616.67</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">T higher equipment</td>
+<td style="text-align: right;">458</td>
+<td style="text-align: right;">25.11</td>
+<td style="text-align: right;">-8162.12</td>
+<td style="text-align: right;">-5150.87</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="health-and-armor-advantage-at-30-seconds" class="level3" data-number="7.4">
+<h3 data-number="7.4" class="anchored" data-anchor-id="health-and-armor-advantage-at-30-seconds"><span class="header-section-number">7.4</span> 4.4 Health and armor advantage at 30 seconds</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>health_armor_summary <span class="ot">&lt;-</span> round_states_enriched <span class="sc">|&gt;</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">hp_difference =</span> ct_hp <span class="sc">-</span> t_hp,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">armor_difference =</span> ct_armor <span class="sc">-</span> t_armor</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(match_id, round_num) <span class="sc">|&gt;</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(seconds <span class="sc">&lt;=</span> <span class="dv">30</span>) <span class="sc">|&gt;</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="at">order_by =</span> seconds, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ct_win)) <span class="sc">|&gt;</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">hp_advantage =</span> <span class="fu">case_when</span>(</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>      hp_difference <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"CT higher HP"</span>,</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>      hp_difference <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"T higher HP"</span>,</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>      hp_difference <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">"Equal HP"</span>,</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_character_</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(hp_advantage) <span class="sc">|&gt;</span></span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">rounds =</span> <span class="fu">n</span>(),</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">ct_win_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(ct_win, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_hp_difference =</span> <span class="fu">mean</span>(hp_difference, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_armor_difference =</span> <span class="fu">mean</span>(armor_difference, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(health_armor_summary)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">hp_advantage</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rounds</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">ct_win_pct</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">mean_hp_difference</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">mean_armor_difference</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">CT higher HP</td>
+<td style="text-align: right;">551</td>
+<td style="text-align: right;">68.42</td>
+<td style="text-align: right;">95.50</td>
+<td style="text-align: right;">120.13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Equal HP</td>
+<td style="text-align: right;">342</td>
+<td style="text-align: right;">51.75</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">27.62</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">T higher HP</td>
+<td style="text-align: right;">364</td>
+<td style="text-align: right;">29.95</td>
+<td style="text-align: right;">-76.66</td>
+<td style="text-align: right;">-84.38</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="notes-and-interpretation" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="notes-and-interpretation"><span class="header-section-number">8</span> Notes and interpretation</h2>
+<ul>
+<li><code>rounds.parquet</code> contains round-level records; <code>round_states.parquet</code> contains multiple time snapshots per round.</li>
+<li><code>round_states_enriched.parquet</code> adds round-level information to each snapshot. The row count should normally remain the same as the original snapshot data.</li>
+<li>Missing <code>seconds_since_plant</code> and <code>plant_site</code> values may be expected in rounds or snapshots where the bomb has not been planted.</li>
+<li>The snapshot-level alive-advantage summary in section 2.2 weights rounds with more snapshots more heavily. Use the one-snapshot-per-round analysis in section 4.2 for a more comparable round-level description.</li>
+<li>The 30-second analyses use the latest available snapshot at or before 30 seconds; it may not be exactly 30 seconds.</li>
+<li>Figures are saved as PDF files in <code>../reports/figures</code>.</li>
+</ul>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
