@@ -27,7 +27,7 @@ library(scales)
 rounds_file <- "../data/analysis/rounds.parquet"
 states_file <- "../data/analysis/round_states.parquet"
 enriched_file <- "../data/analysis/round_states_enriched.parquet"
-figures_dir <- "../report/figures/cs2-combined_analysis"
+figures_dir <- "../reports/figures/cs2-combined_analysis"
 tables_dir <- "../data/analysis/cs2-combined_analysis"
 dir.create(figures_dir, showWarnings = FALSE, recursive = TRUE)
 dir.create(tables_dir, showWarnings = FALSE, recursive = TRUE)

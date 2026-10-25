@@ -128,6 +128,15 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
+# Quarto render output in R/
+#   Rendering a .qmd writes its report and helper files next to it. Rendered
+#   reports are kept in reports/eda/ instead, so only the .qmd sources are
+#   committed here.
+R/*.html
+R/*.pdf
+R/*.tex
+R/*_files/
+
 # R Environment Variables
 .Renviron
 
