@@ -1,0 +1,383 @@
+---
+title: "Player location density grid"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+Loading packages, Dust2 snapshots and filtering out round start snapshots, and from that keeping only match_id, tick, name, side, x, y, z, round_num, team_clan_name, health.
+
+```{r}
+pacman::p_load(tidyverse, stringr)
+setwd("/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/processed")
+
+snapshot_files = list.files(path = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/processed", pattern = "snapshots.parquet", recursive = TRUE)
+
+snapshot_data = data.frame()
+
+for (file in snapshot_files){
+  path = paste("/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/processed/", file, sep="")
+  current_file = as.data.frame(arrow::read_parquet(path))
+  if( str_detect(current_file$match_id[1], "dust2") ){
+    next
+  }
+  
+  # Getting the round start snapshots.
+  round_start_snapshots = current_file %>%
+    distinct(tick, round_num) %>%
+    arrange(tick) %>%
+    group_by(round_num) %>%
+    mutate(
+      snapshot_number = row_number(),
+      remove_snapshot = snapshot_number == 1
+    ) %>%
+    ungroup()
+  
+  # Removing the round start snapshots. The logic is that
+  # in the first snapshot, the players are not moving.
+  # This creates high density cells at the spawns,
+  # which is not very informative for round outcome prediction
+  current_file = current_file %>%
+    anti_join(
+      round_start_snapshots %>%
+        filter(remove_snapshot) %>%
+        select(tick),
+      by = "tick"
+    )
+  
+  snapshot_data = bind_rows(current_file, snapshot_data)
+}
+
+snapshot_data_filtered = snapshot_data %>%
+  select(match_id, tick, name, side, x, y, z, round_num, team_clan_name, health) %>%
+  mutate(dead = ifelse(health > 0, F, T)) %>% # Adding a player dead field
+  select(!health)
+
+rm(snapshot_data)
+```
+
+Quadtree code from player coordinates throughout all matches.
+
+```{r}
+map_min_x = min(snapshot_data_filtered$x)
+map_max_x = max(snapshot_data_filtered$x)
+
+map_min_y = min(snapshot_data_filtered$y)
+map_max_y = max(snapshot_data_filtered$y)
+
+players = snapshot_data_filtered %>%
+  select(x, y, dead) %>%
+  filter(dead == T) %>%
+  as.data.frame()
+
+# --- VIBE CODING THE QUADTREE WITH CHATGPT STARTS HERE ---
+
+count_points = function(cell, players){
+  # If player coordinates fall into cell coordinates
+  # Add that player to the player count for that cell
+  sum(
+    players$x >= cell$xmin &
+      players$x < cell$xmax &
+      players$y >= cell$ymin &
+      players$y < cell$ymax
+  )
+}
+
+subdivide_cell = function(cell, players, threshold, max_depth){
+  # Get how many players are in current cell
+  count = count_points(cell, players)
+  
+  # If the number of players in current cell is less or eq to the threshold OR
+  # If the depth of division of the current cell is larger or equal to the max
+  # Return the undivided cell
+  if(count <= threshold || cell$depth >= max_depth){
+    cell$count = count
+    return(list(cell))
+  }
+  
+  # Get current cell coordinate midpoints
+  xmid = (cell$xmin + cell$xmax) / 2 
+  ymid = (cell$ymin + cell$ymax) / 2
+  
+  # Subdivided cell coordinates
+  children = data.frame(
+    # View the children cells as:
+    # _ _ _ _ _ _ _ _
+    #       |
+    # Cell 1| Cell 2
+    # _ _ _ | _ _ _ _
+    #       |
+    # Cell 3| Cell 4
+    # _ _ _ | _ _ _ _
+    #
+    # So in left-to-right order:
+    # xmin_cell1 = xmin, xmin_cell2 = xmid, xmin_cell3 = xmin ...
+    # xmax_cell1 = xmid, xmax_cell2 = xmax ...
+    # And so on. The cells share some of the points
+    # Which is why they are laid out like so
+    xmin = c(cell$xmin, xmid, cell$xmin, xmid),
+    xmax = c(xmid, cell$xmax, xmid, cell$xmax),
+    ymin = c(cell$ymin, cell$ymin, ymid, ymid),
+    ymax = c(ymid, ymid, cell$ymax, cell$ymax),
+    depth = cell$depth + 1
+  )
+  result = list()
+  
+  # Recursive subdivision into four smaller cells
+  for(i in 1:4){
+    result = c(
+      result,
+      subdivide_cell(
+        children[i, ],
+        players,
+        threshold,
+        max_depth
+      )
+    )
+  }
+  result
+}
+
+# Start with initial cell which is the entire map with no subdivisions
+initial_cell = data.frame(
+  xmin = map_min_x,
+  xmax = map_max_x,
+  ymin = map_min_y,
+  ymax = map_max_y,
+  depth = 0
+)
+
+# VIBE CODING THE QUADTREE WITH CHATGPT ENDS HERE
+```
+
+Creating the adaptive grids for different cell player count thresholds
+
+```{r}
+# Create the adaptive grid by binding the recursive subdivisions
+# Single map testing showed 100 and 80 to be a good player num threshold, so
+# the assumption is that threshold*map_number should be good too
+
+# The cells are not normalized according to count / area, so they 
+# Represent direct counts, not densities (frequency of cell occupancy).
+# Adding density field which is normalized compared to the player counts
+adaptive_grid_t60 = do.call(
+  rbind,
+  subdivide_cell(
+    initial_cell,
+    players,
+    threshold = 60*length(unique(snapshot_data_filtered$match_id)),
+    max_depth = 7
+  )
+)%>%
+  mutate(area = (xmax-xmin) * (ymax-ymin)) %>%
+  mutate(density = count / area)
+
+adaptive_grid_t80 = do.call(
+  rbind,
+  subdivide_cell(
+    initial_cell,
+    players,
+    threshold = 80*length(unique(snapshot_data_filtered$match_id)),
+    max_depth = 7
+  )
+)%>%
+  mutate(area = (xmax-xmin) * (ymax-ymin)) %>%
+  mutate(density = count / area)
+
+adaptive_grid_t100 = do.call(
+  rbind,
+  subdivide_cell(
+    initial_cell,
+    players,
+    threshold = 100*length(unique(snapshot_data_filtered$match_id)),
+    max_depth = 7
+  )
+)%>%
+  mutate(area = (xmax-xmin) * (ymax-ymin)) %>%
+  mutate(density = count / area)
+
+adaptive_grid_t120 = do.call(
+  rbind,
+  subdivide_cell(
+    initial_cell,
+    players,
+    threshold = 120*length(unique(snapshot_data_filtered$match_id)),
+    max_depth = 7
+  )
+)%>%
+  mutate(area = (xmax-xmin) * (ymax-ymin)) %>%
+  mutate(density = count / area)
+```
+
+Plotting all that shit
+
+```{r}
+thr_60 = ggplot() +
+  geom_rect(
+    data = adaptive_grid_t60,
+    aes(
+      xmin = xmin,
+      xmax = xmax,
+      ymin = ymin,
+      ymax = ymax,
+      fill = density
+    ),
+    colour = "white",
+    linewidth = 0.1
+  ) +
+  scale_fill_viridis_c(
+    limits = c(
+      0,
+      quantile(adaptive_grid_t60$density, 0.90, na.rm = TRUE)
+    ),
+    oob = scales::squish
+  ) +
+  coord_fixed() +
+  theme_minimal()
+
+thr_60
+
+thr_80 = ggplot() +
+  geom_rect(
+    data = adaptive_grid_t80,
+    aes(
+      xmin = xmin,
+      xmax = xmax,
+      ymin = ymin,
+      ymax = ymax,
+      fill = density
+    ),
+    colour = "white",
+    linewidth = 0.1
+  ) +
+  scale_fill_viridis_c(
+    limits = c(
+      0,
+      quantile(adaptive_grid_t80$density, 0.90, na.rm = TRUE)
+    ),
+    oob = scales::squish
+  ) +
+  coord_fixed() +
+  theme_minimal()
+
+thr_80
+
+thr_100 = ggplot() +
+  geom_rect(
+    data = adaptive_grid_t100,
+    aes(
+      xmin = xmin,
+      xmax = xmax,
+      ymin = ymin,
+      ymax = ymax,
+      fill = density
+    ),
+    colour = "white",
+    linewidth = 0.1
+  ) +
+  scale_fill_viridis_c(
+    limits = c(
+      0,
+      quantile(adaptive_grid_t100$density, 0.90, na.rm = TRUE)
+    ),
+    oob = scales::squish
+  ) +
+  coord_fixed() +
+  theme_minimal()
+
+thr_100
+
+thr_120 = ggplot() +
+  geom_rect(
+    data = adaptive_grid_t120,
+    aes(
+      xmin = xmin,
+      xmax = xmax,
+      ymin = ymin,
+      ymax = ymax,
+      fill = density
+    ),
+    colour = "white",
+    linewidth = 0.1
+  ) +
+  scale_fill_viridis_c(
+    limits = c(
+      0,
+      quantile(adaptive_grid_t100$density, 0.90, na.rm = TRUE)
+    ),
+    oob = scales::squish
+  ) +
+  coord_fixed() +
+  theme_minimal()
+
+thr_120
+```
+
+Writing to files
+
+```{r}
+write.csv(
+  adaptive_grid_t60,
+  file = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/analysis/player_location_grid_analysis/mirage_grid_dead_thr60_depth7.csv"
+)
+
+write.csv(
+  adaptive_grid_t80,
+  file = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/analysis/player_location_grid_analysis/mirage_grid_dead_thr80_depth7.csv"
+)
+
+write.csv(
+  adaptive_grid_t100,
+  file = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/analysis/player_location_grid_analysis/mirage_grid_dead_thr100_depth7.csv"
+)
+
+write.csv(
+  adaptive_grid_t120,
+  file = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/analysis/player_location_grid_analysis/mirage_grid_dead_thr120_depth7.csv"
+)
+```
+
+Saving the plots
+
+```{r}
+ggsave(
+  filename = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/analysis/player_location_grid_analysis/mirage/plots/mirage_grid_dead_thr60_depth7.svg",
+  plot = thr_60,
+  width = 2000,
+  height = 2000,
+  units = "px",
+  dpi = 96,
+  scale = 0.3
+)
+
+ggsave(
+  filename = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/analysis/player_location_grid_analysis/mirage/plots/mirage_grid_dead_thr80_depth7.svg",
+  plot = thr_80,
+  width = 2000,
+  height = 2000,
+  units = "px",
+  dpi = 96,
+  scale = 0.3
+)
+
+ggsave(
+  filename = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/analysis/player_location_grid_analysis/mirage/plots/mirage_grid_dead_thr100_depth7.svg",
+  plot = thr_100,
+  width = 2000,
+  height = 2000,
+  units = "px",
+  dpi = 96,
+  scale = 0.3
+)
+
+ggsave(
+  filename = "/home/augustas/Documents/DM/Data Mining/Project/CSGO/Github/cs2-rop-main/data/analysis/player_location_grid_analysis/mirage/plots/mirage_grid_dead_thr120_depth7.svg",
+  plot = thr_120,
+  width = 2000,
+  height = 2000,
+  units = "px",
+  dpi = 96,
+  scale = 0.3
+)
+```
